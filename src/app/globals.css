@@ -1,26 +1,101 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --purple-primary: #6B21A8;
+  --purple-dark: #2E1065;
+  --purple-secondary: #9333EA;
+  --purple-accent: #EDE9FE;
+  --purple-pale: #F8F6FC;
+  --main-bg: #F8F6FC;
+  --card-bg: #FFFFFF;
+  --text-primary: #1C1326;
+  --text-secondary: #6E6280;
+  --border-subtle: #EAE2F2;
+  --status-success: #198754;
+  --status-warning: #D97706;
+  --status-error: #DC4444;
+  --status-info: #6B21A8;
+
+  /* Aliases for backwards compatibility */
+  --teal-primary: #6B21A8;
+  --teal-dark: #2E1065;
+  --teal-secondary: #9333EA;
+  --mint-accent: #EDE9FE;
+  --mint-pale: #F8F6FC;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --font-serif: var(--font-serif);
+  --color-purple-primary: #6B21A8;
+  --color-purple-dark: #2E1065;
+  --color-purple-secondary: #9333EA;
+  --color-purple-accent: #EDE9FE;
+  --color-purple-pale: #F8F6FC;
+  --color-main-bg: #F8F6FC;
+  --color-card-bg: #FFFFFF;
+  --color-text-primary: #1C1326;
+  --color-text-secondary: #6E6280;
+  --color-border-subtle: #EAE2F2;
+  --color-status-success: #198754;
+  --color-status-warning: #D97706;
+  --color-status-error: #DC4444;
+  --color-status-info: #6B21A8;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Aliases for backwards compatibility */
+  --color-teal-primary: #6B21A8;
+  --color-teal-dark: #2E1065;
+  --color-teal-secondary: #9333EA;
+  --color-mint-accent: #EDE9FE;
+  --color-mint-pale: #F8F6FC;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #F8F6FC;
+  color: #1C1326;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #DDD4EC;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #BAA7DA;
+}
+
+/* Base button defaults */
+button {
+  cursor: pointer;
+}
+
+/* Direct helper utilities */
+.font-serif {
+  font-family: var(--font-serif), "Playfair Display", Georgia, Cambria, serif;
+}
+.bg-purple-primary { background-color: #6B21A8; }
+.bg-purple-dark { background-color: #2E1065; }
+.bg-purple-secondary { background-color: #9333EA; }
+.bg-purple-pale { background-color: #F8F6FC; }
+.bg-purple-accent { background-color: #EDE9FE; }
+.text-purple-primary { color: #6B21A8; }
+.text-purple-dark { color: #2E1065; }
+.border-subtle { border-color: #EAE2F2; }
+
+/* Teal / mint class aliases mapped to purple */
+.bg-teal-primary { background-color: #6B21A8; }
+.bg-teal-dark { background-color: #2E1065; }
+.bg-teal-secondary { background-color: #9333EA; }
+.bg-mint-pale { background-color: #F8F6FC; }
+.bg-mint-accent { background-color: #EDE9FE; }
+.text-teal-primary { color: #6B21A8; }
+.text-teal-dark { color: #2E1065; }
