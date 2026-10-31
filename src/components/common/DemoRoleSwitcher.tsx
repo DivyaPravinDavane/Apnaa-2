@@ -8,9 +8,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 interface DemoRoleSwitcherProps {
   onOpenLanding?: () => void;
+  onSelectRole?: (role: UserRole) => void;
 }
 
-export function DemoRoleSwitcher({ onOpenLanding }: DemoRoleSwitcherProps) {
+export function DemoRoleSwitcher({ onOpenLanding, onSelectRole }: DemoRoleSwitcherProps) {
   const { currentRole, setRole, currentUser, resetDemoData } = useSociety();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -74,6 +75,7 @@ export function DemoRoleSwitcher({ onOpenLanding }: DemoRoleSwitcherProps) {
                     key={item.role}
                     onClick={() => {
                       setRole(item.role);
+                      if (onSelectRole) onSelectRole(item.role);
                       setIsOpen(false);
                     }}
                     className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all ${
@@ -109,7 +111,7 @@ export function DemoRoleSwitcher({ onOpenLanding }: DemoRoleSwitcherProps) {
                   }}
                   className="w-full mt-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-[#6B21A8] text-xs font-bold transition-colors border border-purple-200"
                 >
-                  <span>View Public Landing & Login Page</span>
+                  <span>View Society Overview & Campus</span>
                 </button>
               )}
             </div>

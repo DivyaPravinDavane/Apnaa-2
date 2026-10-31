@@ -81,6 +81,10 @@ function MainAppShell() {
         />
         {/* Floating Demo Role Switcher also available on landing */}
         <DemoRoleSwitcher
+          onSelectRole={(role) => {
+            setIsAuthenticated(true);
+            setRole(role);
+          }}
           onOpenLanding={() => setIsAuthenticated(false)}
         />
         <ToastContainer />

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useSociety } from '@/context/SocietyContext';
 import { UserRole } from '@/types';
 import {
@@ -8,7 +8,12 @@ import {
   ShieldCheck,
   Calendar,
   Lock,
-  ChevronDown,
+  ArrowRight,
+  Sparkles,
+  Building2,
+  Shield,
+  UserCheck,
+  Home,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -18,24 +23,10 @@ interface LandingLoginPageProps {
 
 export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
   const { setRole } = useSociety();
-  const [authMethod, setAuthMethod] = useState<'mobile' | 'email'>('mobile');
-  const [mobileNumber, setMobileNumber] = useState('');
-  const [emailAddress, setEmailAddress] = useState('');
-  const [isOtpStep, setIsOtpStep] = useState(false);
-  const [otpCode, setOtpCode] = useState('8492');
 
   const handleQuickDemoLogin = (role: UserRole) => {
     setRole(role);
     onLoginSuccess(role);
-  };
-
-  const handleContinueAuth = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isOtpStep) {
-      setIsOtpStep(true);
-    } else {
-      handleQuickDemoLogin('resident');
-    }
   };
 
   return (
@@ -67,7 +58,7 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
             href="#home"
             className="text-[#6B21A8] underline underline-offset-8 decoration-2 decoration-[#6B21A8]"
           >
-            Home
+            Overview
           </a>
           <a
             href="#features"
@@ -76,283 +67,198 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
             Features
           </a>
           <a
-            href="#about"
+            href="#amenities"
             className="text-[#6E6280] hover:text-[#6B21A8] transition-colors"
           >
-            About
+            Amenities
           </a>
           <a
-            href="#contact"
+            href="#access"
             className="text-[#6E6280] hover:text-[#6B21A8] transition-colors"
           >
-            Contact
+            Direct Access
           </a>
         </div>
 
-        {/* Right Login Pill */}
+        {/* Right CTA Button */}
         <div>
           <button
             onClick={() => handleQuickDemoLogin('resident')}
-            className="px-6 py-2 rounded-full bg-[#6B21A8] hover:bg-[#581C87] text-white text-xs font-semibold transition-all shadow-sm active:scale-95 cursor-pointer"
+            className="px-6 py-2.5 rounded-full bg-[#6B21A8] hover:bg-[#581C87] text-white text-xs font-semibold transition-all shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer"
           >
-            Login
+            <span>Enter Portal</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
       </nav>
 
       {/* 2. MAIN HERO SECTION */}
-      <main className="flex-1 max-w-[1400px] w-full mx-auto px-6 sm:px-10 lg:px-16 py-4 lg:py-8 relative flex flex-col justify-between">
-        <div className="relative min-h-[580px] lg:min-h-[600px] flex flex-col justify-center">
-          {/* Background 3D Architectural Isometric Campus - Center Right */}
-          <div className="absolute right-0 top-0 bottom-0 w-full lg:w-[65%] h-full pointer-events-none select-none overflow-hidden">
-            <Image
-              src="/images/smart_society_campus_isometric.jpg"
-              alt="Smart Society Isometric 3D Architectural Campus"
-              fill
-              className="object-cover object-center lg:object-[left_center]"
-              priority
-            />
-            {/* Seamless gradient blend on the left edge melting into #F8F6FC */}
-            <div className="absolute inset-0 bg-gradient-to-r from-[#F8F6FC] via-[#F8F6FC]/85 lg:via-[#F8F6FC]/40 to-transparent" />
-            {/* Soft blend on the top */}
-            <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[#F8F6FC] to-transparent" />
-            {/* Soft blend on the bottom */}
-            <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#F8F6FC] to-transparent" />
-          </div>
+      <main className="flex-1 max-w-[1400px] w-full mx-auto px-6 sm:px-10 lg:px-16 py-4 lg:py-6 relative flex flex-col justify-center">
+        {/* Grid Layout: Left Content & Right Clear Campus Showcase */}
+        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+          {/* Left Content Column (5 cols on lg) */}
+          <div className="lg:col-span-5 space-y-6 pt-2 lg:pt-0">
+            {/* Pill Tag */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-100/70 border border-purple-200/80 text-xs font-semibold text-[#6B21A8]">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Smart Residential Platform</span>
+            </div>
 
-          {/* Grid Layout: Left Content (Hero text, Features, Actions) & Right (Floating Login Card) */}
-          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            {/* Left Content Column (7 cols) */}
-            <div className="lg:col-span-7 space-y-6 pt-2 lg:pt-0">
-              <h1 className="font-serif text-5xl sm:text-6xl lg:text-[62px] font-bold text-[#1C1326] tracking-tight leading-[1.08]">
-                A Smarter<br />
-                Way to Live Together
-              </h1>
+            <h1 className="font-serif text-4xl sm:text-5xl lg:text-[54px] font-bold text-[#1C1326] tracking-tight leading-[1.08]">
+              A Smarter<br />
+              Way to Live Together
+            </h1>
 
-              <p className="text-sm sm:text-base text-[#6E6280] max-w-md leading-relaxed">
-                Modern society management, seamless visitor access, amenity booking and a stronger community — all in one place.
-              </p>
+            <p className="text-sm sm:text-base text-[#6E6280] max-w-lg leading-relaxed">
+              Modern society management, seamless visitor access, amenity booking and a stronger community — all in one unified, crystal-clear experience.
+            </p>
 
-              {/* 4 Feature Badges with Delicate Circular Outlines */}
-              <div className="grid grid-cols-4 gap-3 sm:gap-5 max-w-lg pt-2">
-                {/* 1. Visitor Management */}
-                <div className="flex flex-col items-center text-center space-y-2">
-                  <div className="w-12 h-12 rounded-full border border-[#D8C7EE] bg-white/70 backdrop-blur-xs flex items-center justify-center text-[#6B21A8] shadow-2xs">
-                    <User className="w-5 h-5 stroke-[1.8]" />
-                  </div>
-                  <span className="text-[11px] font-medium text-[#1C1326] leading-tight">
-                    Visitor<br />Management
-                  </span>
+            {/* 4 Feature Badges with Delicate Circular Outlines */}
+            <div className="grid grid-cols-4 gap-3 max-w-md pt-1">
+              {/* 1. Visitor Management */}
+              <div className="flex flex-col items-center text-center space-y-2">
+                <div className="w-11 h-11 rounded-full border border-[#D8C7EE] bg-white/80 backdrop-blur-xs flex items-center justify-center text-[#6B21A8] shadow-2xs hover:scale-105 transition-transform">
+                  <User className="w-5 h-5 stroke-[1.8]" />
                 </div>
-
-                {/* 2. Amenity Booking */}
-                <div className="flex flex-col items-center text-center space-y-2">
-                  <div className="w-12 h-12 rounded-full border border-[#D8C7EE] bg-white/70 backdrop-blur-xs flex items-center justify-center text-[#6B21A8] shadow-2xs">
-                    <ShieldCheck className="w-5 h-5 stroke-[1.8]" />
-                  </div>
-                  <span className="text-[11px] font-medium text-[#1C1326] leading-tight">
-                    Amenity<br />Booking
-                  </span>
-                </div>
-
-                {/* 3. Community Events */}
-                <div className="flex flex-col items-center text-center space-y-2">
-                  <div className="w-12 h-12 rounded-full border border-[#D8C7EE] bg-white/70 backdrop-blur-xs flex items-center justify-center text-[#6B21A8] shadow-2xs">
-                    <Calendar className="w-5 h-5 stroke-[1.8]" />
-                  </div>
-                  <span className="text-[11px] font-medium text-[#1C1326] leading-tight">
-                    Community<br />Events
-                  </span>
-                </div>
-
-                {/* 4. Secure Access */}
-                <div className="flex flex-col items-center text-center space-y-2">
-                  <div className="w-12 h-12 rounded-full border border-[#D8C7EE] bg-white/70 backdrop-blur-xs flex items-center justify-center text-[#6B21A8] shadow-2xs">
-                    <Lock className="w-5 h-5 stroke-[1.8]" />
-                  </div>
-                  <span className="text-[11px] font-medium text-[#1C1326] leading-tight">
-                    Secure<br />Access
-                  </span>
-                </div>
+                <span className="text-[11px] font-medium text-[#1C1326] leading-tight">
+                  Visitor<br />Passes
+                </span>
               </div>
 
-              {/* Action Buttons: Get Started & Learn More */}
-              <div className="flex items-center gap-3 pt-3">
-                <button
-                  onClick={() => handleQuickDemoLogin('resident')}
-                  className="px-7 py-3 rounded-full bg-[#6B21A8] hover:bg-[#581C87] text-white font-semibold text-xs tracking-wide shadow-sm transition-all active:scale-95 cursor-pointer"
-                >
-                  Get Started
-                </button>
-                <button
-                  onClick={() => handleQuickDemoLogin('resident')}
-                  className="px-7 py-3 rounded-full border border-[#D8C7EE] bg-transparent hover:bg-white/80 text-[#1C1326] font-semibold text-xs tracking-wide transition-all shadow-2xs active:scale-95 cursor-pointer"
-                >
-                  Learn More
-                </button>
+              {/* 2. Amenity Booking */}
+              <div className="flex flex-col items-center text-center space-y-2">
+                <div className="w-11 h-11 rounded-full border border-[#D8C7EE] bg-white/80 backdrop-blur-xs flex items-center justify-center text-[#6B21A8] shadow-2xs hover:scale-105 transition-transform">
+                  <ShieldCheck className="w-5 h-5 stroke-[1.8]" />
+                </div>
+                <span className="text-[11px] font-medium text-[#1C1326] leading-tight">
+                  Amenity<br />Booking
+                </span>
+              </div>
+
+              {/* 3. Community Events */}
+              <div className="flex flex-col items-center text-center space-y-2">
+                <div className="w-11 h-11 rounded-full border border-[#D8C7EE] bg-white/80 backdrop-blur-xs flex items-center justify-center text-[#6B21A8] shadow-2xs hover:scale-105 transition-transform">
+                  <Calendar className="w-5 h-5 stroke-[1.8]" />
+                </div>
+                <span className="text-[11px] font-medium text-[#1C1326] leading-tight">
+                  Events &<br />Notices
+                </span>
+              </div>
+
+              {/* 4. Secure Access */}
+              <div className="flex flex-col items-center text-center space-y-2">
+                <div className="w-11 h-11 rounded-full border border-[#D8C7EE] bg-white/80 backdrop-blur-xs flex items-center justify-center text-[#6B21A8] shadow-2xs hover:scale-105 transition-transform">
+                  <Lock className="w-5 h-5 stroke-[1.8]" />
+                </div>
+                <span className="text-[11px] font-medium text-[#1C1326] leading-tight">
+                  Gate<br />Security
+                </span>
               </div>
             </div>
 
-            {/* Right Column: Floating "Welcome Back" Login Card (5 cols) */}
-            <div className="lg:col-span-5 flex justify-end">
-              <div className="w-full max-w-[380px] bg-white rounded-[28px] p-7 sm:p-8 shadow-[0_20px_50px_rgba(40,15,60,0.08)] border border-white space-y-5">
-                {/* Heading & Subtitle */}
-                <div>
-                  <h2 className="font-serif text-[26px] font-bold text-[#1C1326] tracking-tight">
-                    Welcome Back
-                  </h2>
-                  <p className="text-xs text-[#6E6280] mt-1">
-                    Login to your Smart Society account
-                  </p>
-                </div>
+            {/* Primary Action Button */}
+            <div className="pt-2">
+              <button
+                onClick={() => handleQuickDemoLogin('resident')}
+                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-[#6B21A8] hover:bg-[#581C87] text-white font-semibold text-sm tracking-wide shadow-md transition-all active:scale-95 flex items-center justify-center gap-2.5 cursor-pointer"
+              >
+                <span>Enter Smart Society Portal</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
 
-                {/* Segmented Switcher (Mobile / Email) */}
-                <div className="flex p-1 bg-[#F1ECF9] rounded-xl text-xs font-semibold">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAuthMethod('mobile');
-                      setIsOtpStep(false);
-                    }}
-                    className={`flex-1 py-1.5 rounded-lg transition-all text-center cursor-pointer ${
-                      authMethod === 'mobile'
-                        ? 'bg-white text-[#6B21A8] shadow-2xs font-semibold'
-                        : 'text-[#6E6280] hover:text-[#1C1326]'
-                    }`}
-                  >
-                    Mobile
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAuthMethod('email');
-                      setIsOtpStep(false);
-                    }}
-                    className={`flex-1 py-1.5 rounded-lg transition-all text-center cursor-pointer ${
-                      authMethod === 'email'
-                        ? 'bg-white text-[#6B21A8] shadow-2xs font-semibold'
-                        : 'text-[#6E6280] hover:text-[#1C1326]'
-                    }`}
-                  >
-                    Email
-                  </button>
-                </div>
+            {/* Instant Role Access - No Login Required */}
+            <div className="pt-2 space-y-2.5">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#6E6280]">
+                  Instant Role Access
+                </span>
+                <span className="text-[9px] font-bold text-[#6B21A8] bg-purple-100 px-2 py-0.5 rounded-full uppercase">
+                  1-Tap Demo
+                </span>
+              </div>
 
-                {/* Input Field & Submit */}
-                <form onSubmit={handleContinueAuth} className="space-y-4">
-                  {!isOtpStep ? (
-                    authMethod === 'mobile' ? (
-                      <div className="flex items-center border border-[#E4D7F2] rounded-xl overflow-hidden focus-within:border-[#6B21A8] bg-white transition-colors">
-                        <button
-                          type="button"
-                          className="px-3 py-2.5 bg-slate-50/60 border-r border-[#E4D7F2] text-xs font-semibold text-slate-700 flex items-center gap-1 cursor-default"
-                        >
-                          <span>+91</span>
-                          <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-                        </button>
-                        <input
-                          type="tel"
-                          value={mobileNumber}
-                          onChange={(e) => setMobileNumber(e.target.value)}
-                          placeholder="Enter mobile number"
-                          className="flex-1 px-3 py-2.5 text-xs focus:outline-none placeholder:text-slate-400 text-slate-800"
-                        />
-                      </div>
-                    ) : (
-                      <div className="border border-[#E4D7F2] rounded-xl overflow-hidden focus-within:border-[#6B21A8] bg-white transition-colors">
-                        <input
-                          type="email"
-                          value={emailAddress}
-                          onChange={(e) => setEmailAddress(e.target.value)}
-                          placeholder="Enter registered email"
-                          className="w-full px-3.5 py-2.5 text-xs focus:outline-none placeholder:text-slate-400 text-slate-800"
-                        />
-                      </div>
-                    )
-                  ) : (
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                        Enter OTP (Demo: 8492)
-                      </label>
-                      <input
-                        type="text"
-                        maxLength={4}
-                        value={otpCode}
-                        onChange={(e) => setOtpCode(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border-2 border-[#6B21A8] text-center font-mono font-bold text-lg tracking-widest text-[#6B21A8]"
-                      />
-                    </div>
-                  )}
-
-                  {/* Continue Button */}
-                  <button
-                    type="submit"
-                    className="w-full py-3 rounded-xl bg-[#6B21A8] hover:bg-[#581C87] text-white font-semibold text-xs tracking-wide shadow-sm transition-all active:scale-95 cursor-pointer"
-                  >
-                    {isOtpStep ? 'Verify & Enter' : 'Continue'}
-                  </button>
-                </form>
-
-                {/* Subtext */}
-                <p className="text-[11px] text-center text-[#6E6280]">
-                  Don&apos;t have an account?{' '}
-                  <span
-                    onClick={() => handleQuickDemoLogin('resident')}
-                    className="text-[#6B21A8] font-semibold hover:underline cursor-pointer"
-                  >
-                    Contact your society admin
-                  </span>
-                </p>
-
-                {/* 1-Tap Quick Demo Role Access for easy reviewer testing */}
-                <div className="pt-3 border-t border-slate-100 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                      1-Tap Demo Roles
-                    </span>
-                    <span className="text-[9px] font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full">
-                      Instant Access
-                    </span>
+              <div className="grid grid-cols-2 gap-2 max-w-md">
+                <button
+                  type="button"
+                  onClick={() => handleQuickDemoLogin('resident')}
+                  className="p-2.5 rounded-xl border border-purple-200/90 bg-white hover:border-[#6B21A8] hover:bg-purple-50/50 transition-all text-left shadow-2xs flex items-center gap-2.5 group cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-purple-100 group-hover:bg-[#6B21A8] text-[#6B21A8] group-hover:text-white flex items-center justify-center transition-colors flex-shrink-0">
+                    <Home className="w-4 h-4" />
                   </div>
-
-                  <div className="grid grid-cols-2 gap-1.5 text-left">
-                    <button
-                      type="button"
-                      onClick={() => handleQuickDemoLogin('resident')}
-                      className="px-2.5 py-1.5 rounded-xl border border-slate-200 hover:border-[#6B21A8] hover:bg-purple-50/50 transition-all text-left cursor-pointer"
-                    >
-                      <p className="text-[11px] font-bold text-slate-900">Resident</p>
-                      <p className="text-[9px] text-slate-500 truncate">Priya (A-1204)</p>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleQuickDemoLogin('admin')}
-                      className="px-2.5 py-1.5 rounded-xl border border-slate-200 hover:border-[#6B21A8] hover:bg-purple-50/50 transition-all text-left cursor-pointer"
-                    >
-                      <p className="text-[11px] font-bold text-slate-900">Admin</p>
-                      <p className="text-[9px] text-slate-500 truncate">Rajesh (C-402)</p>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleQuickDemoLogin('security')}
-                      className="px-2.5 py-1.5 rounded-xl border border-slate-200 hover:border-[#6B21A8] hover:bg-purple-50/50 transition-all text-left cursor-pointer"
-                    >
-                      <p className="text-[11px] font-bold text-slate-900">Security</p>
-                      <p className="text-[9px] text-slate-500 truncate">Gate 1 Terminal</p>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleQuickDemoLogin('facility')}
-                      className="px-2.5 py-1.5 rounded-xl border border-slate-200 hover:border-[#6B21A8] hover:bg-purple-50/50 transition-all text-left cursor-pointer"
-                    >
-                      <p className="text-[11px] font-bold text-slate-900">Facility</p>
-                      <p className="text-[9px] text-slate-500 truncate">Clubhouse Desk</p>
-                    </button>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-[#1C1326]">Resident</p>
+                    <p className="text-[10px] text-[#6E6280] truncate">Priya (A-1204)</p>
                   </div>
-                </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleQuickDemoLogin('admin')}
+                  className="p-2.5 rounded-xl border border-purple-200/90 bg-white hover:border-[#6B21A8] hover:bg-purple-50/50 transition-all text-left shadow-2xs flex items-center gap-2.5 group cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-purple-100 group-hover:bg-[#6B21A8] text-[#6B21A8] group-hover:text-white flex items-center justify-center transition-colors flex-shrink-0">
+                    <Building2 className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-[#1C1326]">Admin</p>
+                    <p className="text-[10px] text-[#6E6280] truncate">Rajesh (C-402)</p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleQuickDemoLogin('security')}
+                  className="p-2.5 rounded-xl border border-purple-200/90 bg-white hover:border-[#6B21A8] hover:bg-purple-50/50 transition-all text-left shadow-2xs flex items-center gap-2.5 group cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-purple-100 group-hover:bg-[#6B21A8] text-[#6B21A8] group-hover:text-white flex items-center justify-center transition-colors flex-shrink-0">
+                    <Shield className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-[#1C1326]">Security</p>
+                    <p className="text-[10px] text-[#6E6280] truncate">Gate 1 Terminal</p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleQuickDemoLogin('facility')}
+                  className="p-2.5 rounded-xl border border-purple-200/90 bg-white hover:border-[#6B21A8] hover:bg-purple-50/50 transition-all text-left shadow-2xs flex items-center gap-2.5 group cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-purple-100 group-hover:bg-[#6B21A8] text-[#6B21A8] group-hover:text-white flex items-center justify-center transition-colors flex-shrink-0">
+                    <UserCheck className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-[#1C1326]">Facility</p>
+                    <p className="text-[10px] text-[#6E6280] truncate">Clubhouse Desk</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: 100% CLEAR, Crisp 3D Campus Architectural Showcase (7 cols on lg) */}
+          <div className="lg:col-span-7">
+            <div className="relative w-full h-[380px] sm:h-[460px] lg:h-[540px] xl:h-[580px] rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(46,16,101,0.08)] border border-[#E9DDF5] bg-[#F2F2EA] group">
+              <Image
+                src="/images/smart_society_campus_isometric.jpg"
+                alt="Green Valley Residency 3D Architectural Campus"
+                fill
+                className="object-cover object-center group-hover:scale-[1.02] transition-transform duration-700 ease-out"
+                priority
+                sizes="(max-width: 1024px) 100vw, 60vw"
+              />
+
+              {/* Floating Campus Badge */}
+              <div className="absolute top-4 left-4 sm:top-5 sm:left-5 px-3.5 py-1.5 rounded-full bg-white/95 backdrop-blur-md border border-[#EDE9FE] shadow-sm flex items-center gap-2 text-xs font-semibold text-[#2E1065]">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Green Valley Residency • 3D Campus View</span>
+              </div>
+
+              {/* Floating Amenities Highlights Badge */}
+              <div className="absolute bottom-4 right-4 sm:bottom-5 sm:right-5 px-4 py-2 rounded-full bg-[#2E1065]/90 backdrop-blur-md text-white text-xs font-medium shadow-md flex items-center gap-2">
+                <span>Clubhouse • Swimming Pool • Gate Security</span>
               </div>
             </div>
           </div>
