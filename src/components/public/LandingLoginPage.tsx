@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSociety } from '@/context/SocietyContext';
 import { UserRole } from '@/types';
 import {
@@ -14,6 +14,18 @@ import {
   Shield,
   UserCheck,
   Home,
+  QrCode,
+  CalendarCheck,
+  BellRing,
+  Car,
+  FileText,
+  CheckCircle2,
+  Clock,
+  MapPin,
+  Users,
+  Check,
+  ChevronRight,
+  Flame,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -23,83 +35,140 @@ interface LandingLoginPageProps {
 
 export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
   const { setRole } = useSociety();
+  const [activeSection, setActiveSection] = useState<'overview' | 'features' | 'amenities' | 'access'>('overview');
 
   const handleQuickDemoLogin = (role: UserRole) => {
     setRole(role);
     onLoginSuccess(role);
   };
 
+  const scrollToSection = (sectionId: 'overview' | 'features' | 'amenities' | 'access') => {
+    setActiveSection(sectionId);
+    const el = document.getElementById(sectionId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // Scroll listener to highlight the active navbar item based on scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections: ('overview' | 'features' | 'amenities' | 'access')[] = ['overview', 'features', 'amenities', 'access'];
+      const scrollY = window.scrollY + 180;
+
+      for (const section of sections) {
+        const el = document.getElementById(section);
+        if (el) {
+          const top = el.offsetTop;
+          const height = el.offsetHeight;
+          if (scrollY >= top && scrollY < top + height) {
+            setActiveSection(section);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-[#F8F6FC] text-[#1C1326] flex flex-col justify-between selection:bg-[#6B21A8] selection:text-white">
-      {/* 1. TOP NAVBAR */}
-      <nav className="h-20 px-6 sm:px-10 lg:px-16 flex items-center justify-between bg-transparent max-w-[1400px] w-full mx-auto relative z-20">
-        {/* Brand Logo with Twin Leaves Emblem */}
-        <div className="flex items-center gap-3">
-          <svg viewBox="0 0 36 36" fill="none" className="w-9 h-9 flex-shrink-0" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="18" cy="18" r="17" fill="#6B21A8" />
-            <path d="M18 7C18 7 10 11.5 10 19C10 23 13.5 26 18 26C22.5 26 26 23 26 19C26 11.5 18 7 18 7Z" fill="#EDE9FE"/>
-            <path d="M18 10V25" stroke="#6B21A8" strokeWidth="1.5" strokeLinecap="round"/>
-            <path d="M18 15.5C15 14 12.5 15.5 12.5 15.5" stroke="#6B21A8" strokeWidth="1.2" strokeLinecap="round"/>
-            <path d="M18 19.5C21 18 23.5 19.5 23.5 19.5" stroke="#6B21A8" strokeWidth="1.2" strokeLinecap="round"/>
-          </svg>
-          <div>
-            <span className="font-bold text-[17px] text-[#1C1326] tracking-tight leading-tight block">
-              Smart Society
-            </span>
-            <span className="text-[10px] text-[#6E6280] font-medium tracking-wide block">
-              Connected • Secure • Together
-            </span>
+    <div className="min-h-screen bg-[#F8F6FC] text-[#1C1326] flex flex-col selection:bg-[#6B21A8] selection:text-white scroll-smooth">
+      {/* 1. STICKY TOP NAVBAR */}
+      <header className="sticky top-0 z-50 bg-[#F8F6FC]/90 backdrop-blur-md border-b border-[#EAE2F2]/60">
+        <nav className="h-20 px-6 sm:px-10 lg:px-16 flex items-center justify-between max-w-[1400px] w-full mx-auto">
+          {/* Brand Logo with Twin Leaves Emblem */}
+          <div 
+            onClick={() => scrollToSection('overview')}
+            className="flex items-center gap-3 cursor-pointer select-none"
+          >
+            <svg viewBox="0 0 36 36" fill="none" className="w-9 h-9 flex-shrink-0" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="18" cy="18" r="17" fill="#6B21A8" />
+              <path d="M18 7C18 7 10 11.5 10 19C10 23 13.5 26 18 26C22.5 26 26 23 26 19C26 11.5 18 7 18 7Z" fill="#EDE9FE"/>
+              <path d="M18 10V25" stroke="#6B21A8" strokeWidth="1.5" strokeLinecap="round"/>
+              <path d="M18 15.5C15 14 12.5 15.5 12.5 15.5" stroke="#6B21A8" strokeWidth="1.2" strokeLinecap="round"/>
+              <path d="M18 19.5C21 18 23.5 19.5 23.5 19.5" stroke="#6B21A8" strokeWidth="1.2" strokeLinecap="round"/>
+            </svg>
+            <div>
+              <span className="font-bold text-[17px] text-[#1C1326] tracking-tight leading-tight block">
+                Smart Society
+              </span>
+              <span className="text-[10px] text-[#6E6280] font-medium tracking-wide block">
+                Connected • Secure • Together
+              </span>
+            </div>
           </div>
-        </div>
 
-        {/* Center Nav Links */}
-        <div className="hidden md:flex items-center gap-9 text-[13px] font-semibold text-[#1C1326]">
-          <a
-            href="#home"
-            className="text-[#6B21A8] underline underline-offset-8 decoration-2 decoration-[#6B21A8]"
-          >
-            Overview
-          </a>
-          <a
-            href="#features"
-            className="text-[#6E6280] hover:text-[#6B21A8] transition-colors"
-          >
-            Features
-          </a>
-          <a
-            href="#amenities"
-            className="text-[#6E6280] hover:text-[#6B21A8] transition-colors"
-          >
-            Amenities
-          </a>
-          <a
-            href="#access"
-            className="text-[#6E6280] hover:text-[#6B21A8] transition-colors"
-          >
-            Direct Access
-          </a>
-        </div>
+          {/* Center Nav Links: Overview, Features, Amenities, Direct Access */}
+          <div className="hidden md:flex items-center gap-9 text-[13px] font-semibold">
+            <button
+              type="button"
+              onClick={() => scrollToSection('overview')}
+              className={`transition-colors cursor-pointer ${
+                activeSection === 'overview'
+                  ? 'text-[#6B21A8] underline underline-offset-8 decoration-2 decoration-[#6B21A8]'
+                  : 'text-[#6E6280] hover:text-[#6B21A8]'
+              }`}
+            >
+              Overview
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollToSection('features')}
+              className={`transition-colors cursor-pointer ${
+                activeSection === 'features'
+                  ? 'text-[#6B21A8] underline underline-offset-8 decoration-2 decoration-[#6B21A8]'
+                  : 'text-[#6E6280] hover:text-[#6B21A8]'
+              }`}
+            >
+              Features
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollToSection('amenities')}
+              className={`transition-colors cursor-pointer ${
+                activeSection === 'amenities'
+                  ? 'text-[#6B21A8] underline underline-offset-8 decoration-2 decoration-[#6B21A8]'
+                  : 'text-[#6E6280] hover:text-[#6B21A8]'
+              }`}
+            >
+              Amenities
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollToSection('access')}
+              className={`transition-colors cursor-pointer ${
+                activeSection === 'access'
+                  ? 'text-[#6B21A8] underline underline-offset-8 decoration-2 decoration-[#6B21A8]'
+                  : 'text-[#6E6280] hover:text-[#6B21A8]'
+              }`}
+            >
+              Direct Access
+            </button>
+          </div>
 
-        {/* Right CTA Button */}
-        <div>
-          <button
-            onClick={() => handleQuickDemoLogin('resident')}
-            className="px-6 py-2.5 rounded-full bg-[#6B21A8] hover:bg-[#581C87] text-white text-xs font-semibold transition-all shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer"
-          >
-            <span>Enter Portal</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </nav>
+          {/* Right CTA Button */}
+          <div>
+            <button
+              onClick={() => handleQuickDemoLogin('resident')}
+              className="px-6 py-2.5 rounded-full bg-[#6B21A8] hover:bg-[#581C87] text-white text-xs font-semibold transition-all shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>Enter Portal</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </nav>
+      </header>
 
-      {/* 2. MAIN HERO SECTION */}
-      <main className="flex-1 max-w-[1400px] w-full mx-auto px-6 sm:px-10 lg:px-16 py-4 lg:py-6 relative flex flex-col justify-center">
-        {/* Grid Layout: Left Content & Right Clear Campus Showcase */}
-        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-          {/* Left Content Column (5 cols on lg) */}
-          <div className="lg:col-span-5 space-y-6 pt-2 lg:pt-0">
-            {/* Pill Tag */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-100/70 border border-purple-200/80 text-xs font-semibold text-[#6B21A8]">
+      {/* =========================================================================
+          SECTION 1: OVERVIEW (HERO & 3D CAMPUS SHOWCASE)
+         ========================================================================= */}
+      <section id="overview" className="max-w-[1400px] w-full mx-auto px-6 sm:px-10 lg:px-16 pt-8 pb-16 lg:py-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+          {/* Left Hero Content (5 cols) */}
+          <div className="lg:col-span-5 space-y-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-100/80 border border-purple-200/90 text-xs font-semibold text-[#6B21A8]">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Smart Residential Platform</span>
             </div>
@@ -113,11 +182,13 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
               Modern society management, seamless visitor access, amenity booking and a stronger community — all in one unified, crystal-clear experience.
             </p>
 
-            {/* 4 Feature Badges with Delicate Circular Outlines */}
+            {/* 4 Feature Badges with Circular Outlines */}
             <div className="grid grid-cols-4 gap-3 max-w-md pt-1">
-              {/* 1. Visitor Management */}
-              <div className="flex flex-col items-center text-center space-y-2">
-                <div className="w-11 h-11 rounded-full border border-[#D8C7EE] bg-white/80 backdrop-blur-xs flex items-center justify-center text-[#6B21A8] shadow-2xs hover:scale-105 transition-transform">
+              <div 
+                onClick={() => scrollToSection('features')}
+                className="flex flex-col items-center text-center space-y-2 cursor-pointer group"
+              >
+                <div className="w-11 h-11 rounded-full border border-[#D8C7EE] bg-white/80 flex items-center justify-center text-[#6B21A8] shadow-2xs group-hover:bg-purple-100 group-hover:scale-105 transition-all">
                   <User className="w-5 h-5 stroke-[1.8]" />
                 </div>
                 <span className="text-[11px] font-medium text-[#1C1326] leading-tight">
@@ -125,9 +196,11 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
                 </span>
               </div>
 
-              {/* 2. Amenity Booking */}
-              <div className="flex flex-col items-center text-center space-y-2">
-                <div className="w-11 h-11 rounded-full border border-[#D8C7EE] bg-white/80 backdrop-blur-xs flex items-center justify-center text-[#6B21A8] shadow-2xs hover:scale-105 transition-transform">
+              <div 
+                onClick={() => scrollToSection('amenities')}
+                className="flex flex-col items-center text-center space-y-2 cursor-pointer group"
+              >
+                <div className="w-11 h-11 rounded-full border border-[#D8C7EE] bg-white/80 flex items-center justify-center text-[#6B21A8] shadow-2xs group-hover:bg-purple-100 group-hover:scale-105 transition-all">
                   <ShieldCheck className="w-5 h-5 stroke-[1.8]" />
                 </div>
                 <span className="text-[11px] font-medium text-[#1C1326] leading-tight">
@@ -135,9 +208,11 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
                 </span>
               </div>
 
-              {/* 3. Community Events */}
-              <div className="flex flex-col items-center text-center space-y-2">
-                <div className="w-11 h-11 rounded-full border border-[#D8C7EE] bg-white/80 backdrop-blur-xs flex items-center justify-center text-[#6B21A8] shadow-2xs hover:scale-105 transition-transform">
+              <div 
+                onClick={() => scrollToSection('features')}
+                className="flex flex-col items-center text-center space-y-2 cursor-pointer group"
+              >
+                <div className="w-11 h-11 rounded-full border border-[#D8C7EE] bg-white/80 flex items-center justify-center text-[#6B21A8] shadow-2xs group-hover:bg-purple-100 group-hover:scale-105 transition-all">
                   <Calendar className="w-5 h-5 stroke-[1.8]" />
                 </div>
                 <span className="text-[11px] font-medium text-[#1C1326] leading-tight">
@@ -145,9 +220,11 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
                 </span>
               </div>
 
-              {/* 4. Secure Access */}
-              <div className="flex flex-col items-center text-center space-y-2">
-                <div className="w-11 h-11 rounded-full border border-[#D8C7EE] bg-white/80 backdrop-blur-xs flex items-center justify-center text-[#6B21A8] shadow-2xs hover:scale-105 transition-transform">
+              <div 
+                onClick={() => scrollToSection('features')}
+                className="flex flex-col items-center text-center space-y-2 cursor-pointer group"
+              >
+                <div className="w-11 h-11 rounded-full border border-[#D8C7EE] bg-white/80 flex items-center justify-center text-[#6B21A8] shadow-2xs group-hover:bg-purple-100 group-hover:scale-105 transition-all">
                   <Lock className="w-5 h-5 stroke-[1.8]" />
                 </div>
                 <span className="text-[11px] font-medium text-[#1C1326] leading-tight">
@@ -157,88 +234,24 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
             </div>
 
             {/* Primary Action Button */}
-            <div className="pt-2">
+            <div className="pt-2 flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => handleQuickDemoLogin('resident')}
-                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-[#6B21A8] hover:bg-[#581C87] text-white font-semibold text-sm tracking-wide shadow-md transition-all active:scale-95 flex items-center justify-center gap-2.5 cursor-pointer"
+                className="px-8 py-3.5 rounded-2xl bg-[#6B21A8] hover:bg-[#581C87] text-white font-semibold text-sm tracking-wide shadow-md transition-all active:scale-95 flex items-center justify-center gap-2.5 cursor-pointer"
               >
                 <span>Enter Smart Society Portal</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
-            </div>
-
-            {/* Instant Role Access - No Login Required */}
-            <div className="pt-2 space-y-2.5">
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#6E6280]">
-                  Instant Role Access
-                </span>
-                <span className="text-[9px] font-bold text-[#6B21A8] bg-purple-100 px-2 py-0.5 rounded-full uppercase">
-                  1-Tap Demo
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 max-w-md">
-                <button
-                  type="button"
-                  onClick={() => handleQuickDemoLogin('resident')}
-                  className="p-2.5 rounded-xl border border-purple-200/90 bg-white hover:border-[#6B21A8] hover:bg-purple-50/50 transition-all text-left shadow-2xs flex items-center gap-2.5 group cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-purple-100 group-hover:bg-[#6B21A8] text-[#6B21A8] group-hover:text-white flex items-center justify-center transition-colors flex-shrink-0">
-                    <Home className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-[#1C1326]">Resident</p>
-                    <p className="text-[10px] text-[#6E6280] truncate">Priya (A-1204)</p>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickDemoLogin('admin')}
-                  className="p-2.5 rounded-xl border border-purple-200/90 bg-white hover:border-[#6B21A8] hover:bg-purple-50/50 transition-all text-left shadow-2xs flex items-center gap-2.5 group cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-purple-100 group-hover:bg-[#6B21A8] text-[#6B21A8] group-hover:text-white flex items-center justify-center transition-colors flex-shrink-0">
-                    <Building2 className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-[#1C1326]">Admin</p>
-                    <p className="text-[10px] text-[#6E6280] truncate">Rajesh (C-402)</p>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickDemoLogin('security')}
-                  className="p-2.5 rounded-xl border border-purple-200/90 bg-white hover:border-[#6B21A8] hover:bg-purple-50/50 transition-all text-left shadow-2xs flex items-center gap-2.5 group cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-purple-100 group-hover:bg-[#6B21A8] text-[#6B21A8] group-hover:text-white flex items-center justify-center transition-colors flex-shrink-0">
-                    <Shield className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-[#1C1326]">Security</p>
-                    <p className="text-[10px] text-[#6E6280] truncate">Gate 1 Terminal</p>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickDemoLogin('facility')}
-                  className="p-2.5 rounded-xl border border-purple-200/90 bg-white hover:border-[#6B21A8] hover:bg-purple-50/50 transition-all text-left shadow-2xs flex items-center gap-2.5 group cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-purple-100 group-hover:bg-[#6B21A8] text-[#6B21A8] group-hover:text-white flex items-center justify-center transition-colors flex-shrink-0">
-                    <UserCheck className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-[#1C1326]">Facility</p>
-                    <p className="text-[10px] text-[#6E6280] truncate">Clubhouse Desk</p>
-                  </div>
-                </button>
-              </div>
+              <button
+                onClick={() => scrollToSection('features')}
+                className="px-6 py-3.5 rounded-2xl border border-[#D8C7EE] bg-white hover:bg-purple-50/60 text-[#1C1326] font-semibold text-sm transition-all shadow-2xs active:scale-95 cursor-pointer flex items-center justify-center"
+              >
+                Explore Features
+              </button>
             </div>
           </div>
 
-          {/* Right Column: 100% CLEAR, Crisp 3D Campus Architectural Showcase (7 cols on lg) */}
+          {/* Right Column: 100% CLEAR, Crisp 3D Campus Architectural Showcase (7 cols) */}
           <div className="lg:col-span-7">
             <div className="relative w-full h-[380px] sm:h-[460px] lg:h-[540px] xl:h-[580px] rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(46,16,101,0.08)] border border-[#E9DDF5] bg-[#F2F2EA] group">
               <Image
@@ -264,40 +277,659 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
           </div>
         </div>
 
-        {/* 3. BOTTOM STATS BAR */}
-        <div className="pt-8 lg:pt-10 max-w-xl space-y-3 relative z-10">
-          <p className="text-xs text-[#6E6280] font-medium">
-            Trusted by Modern Communities
+        {/* Bottom Stats Bar */}
+        <div className="pt-12 max-w-4xl border-t border-[#EAE2F2]/70 mt-12">
+          <p className="text-xs font-bold uppercase tracking-wider text-[#6B21A8] mb-4">
+            Live Community Highlights
           </p>
-
-          <div className="grid grid-cols-4 gap-6 text-left">
-            <div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+            <div className="p-4 rounded-2xl bg-white border border-[#EAE2F2] shadow-2xs">
               <p className="text-3xl font-bold text-[#1C1326]">500+</p>
-              <p className="text-[11px] text-[#6E6280]">Happy Families</p>
+              <p className="text-xs text-[#6E6280] font-medium mt-1">Happy Resident Families</p>
             </div>
-
-            <div>
+            <div className="p-4 rounded-2xl bg-white border border-[#EAE2F2] shadow-2xs">
               <p className="text-3xl font-bold text-[#1C1326]">12</p>
-              <p className="text-[11px] text-[#6E6280]">Amenities</p>
+              <p className="text-xs text-[#6E6280] font-medium mt-1">World-Class Amenities</p>
             </div>
-
-            <div>
+            <div className="p-4 rounded-2xl bg-white border border-[#EAE2F2] shadow-2xs">
               <p className="text-3xl font-bold text-[#1C1326]">24/7</p>
-              <p className="text-[11px] text-[#6E6280]">Security</p>
+              <p className="text-xs text-[#6E6280] font-medium mt-1">Guard & Gate Security</p>
             </div>
-
-            <div>
+            <div className="p-4 rounded-2xl bg-white border border-[#EAE2F2] shadow-2xs">
               <p className="text-3xl font-bold text-[#1C1326]">100%</p>
-              <p className="text-[11px] text-[#6E6280]">Community Focus</p>
+              <p className="text-xs text-[#6E6280] font-medium mt-1">Digital & Conflict-Free</p>
             </div>
           </div>
         </div>
-      </main>
+      </section>
 
-      {/* 4. FOOTER */}
-      <footer className="py-6 px-6 sm:px-10 lg:px-16 max-w-[1400px] w-full mx-auto border-t border-slate-200/50 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-2 relative z-10">
-        <p>© 2026 Smart Society Management Platform • Green Valley Residency</p>
-        <p>Connected • Secure • Together</p>
+      {/* =========================================================================
+          SECTION 2: FEATURES (IN-DEPTH PLATFORM CAPABILITIES)
+         ========================================================================= */}
+      <section id="features" className="py-20 bg-white border-y border-[#EAE2F2]/80">
+        <div className="max-w-[1400px] w-full mx-auto px-6 sm:px-10 lg:px-16">
+          {/* Section Header */}
+          <div className="max-w-2xl mx-auto text-center space-y-3 mb-14">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 text-xs font-bold text-[#6B21A8] border border-purple-200 uppercase tracking-wider">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Platform Features</span>
+            </div>
+            <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#1C1326] tracking-tight">
+              Everything Your Community Needs to Run Flawlessly
+            </h2>
+            <p className="text-sm sm:text-base text-[#6E6280] leading-relaxed">
+              Say goodbye to manual paper register books, disorganized WhatsApp groups, and missed announcements.
+            </p>
+          </div>
+
+          {/* 6 Feature Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {/* 1. Smart Visitor Passes */}
+            <div className="p-7 rounded-3xl bg-[#F8F6FC] border border-[#EAE2F2] hover:border-[#6B21A8]/50 hover:shadow-lg transition-all group flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-[#6B21A8] text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                  <QrCode className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-[#1C1326]">Instant QR Visitor Passes</h3>
+                  <p className="text-xs text-[#6E6280] mt-2 leading-relaxed">
+                    Pre-approve guests, delivery drivers, and service staff with 1-tap QR passes shared directly via WhatsApp. Guards scan at the terminal in under 3 seconds.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-6 pt-4 border-t border-[#EAE2F2] flex items-center justify-between text-xs">
+                <span className="font-semibold text-[#6B21A8] flex items-center gap-1">
+                  <Check className="w-3.5 h-3.5" /> 3-Sec Gate Clearance
+                </span>
+                <span className="text-slate-400">Security Gate 1</span>
+              </div>
+            </div>
+
+            {/* 2. Automated Amenity Scheduling */}
+            <div className="p-7 rounded-3xl bg-[#F8F6FC] border border-[#EAE2F2] hover:border-[#6B21A8]/50 hover:shadow-lg transition-all group flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-[#6B21A8] text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                  <CalendarCheck className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-[#1C1326]">Automated Amenity Booking</h3>
+                  <p className="text-xs text-[#6E6280] mt-2 leading-relaxed">
+                    Reserve slots for the Swimming Pool, Badminton Courts, and Banquet Hall in real time. Dynamic conflict detection eliminates double bookings permanently.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-6 pt-4 border-t border-[#EAE2F2] flex items-center justify-between text-xs">
+                <span className="font-semibold text-[#6B21A8] flex items-center gap-1">
+                  <Check className="w-3.5 h-3.5" /> 0 Double Bookings
+                </span>
+                <span className="text-slate-400">12 Amenities</span>
+              </div>
+            </div>
+
+            {/* 3. Priority Circulars & Notices */}
+            <div className="p-7 rounded-3xl bg-[#F8F6FC] border border-[#EAE2F2] hover:border-[#6B21A8]/50 hover:shadow-lg transition-all group flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-[#6B21A8] text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                  <BellRing className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-[#1C1326]">Digital Circulars & Notices</h3>
+                  <p className="text-xs text-[#6E6280] mt-2 leading-relaxed">
+                    Broadcast urgent updates, AGM notices, and maintenance alerts with priority pinning. Committee members can track live read-receipts and resident acknowledgements.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-6 pt-4 border-t border-[#EAE2F2] flex items-center justify-between text-xs">
+                <span className="font-semibold text-[#6B21A8] flex items-center gap-1">
+                  <Check className="w-3.5 h-3.5" /> 98% Read Receipt Rate
+                </span>
+                <span className="text-slate-400">Instant Broadcast</span>
+              </div>
+            </div>
+
+            {/* 4. Events & Moderated Gallery */}
+            <div className="p-7 rounded-3xl bg-[#F8F6FC] border border-[#EAE2F2] hover:border-[#6B21A8]/50 hover:shadow-lg transition-all group flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-[#6B21A8] text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                  <Calendar className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-[#1C1326]">Events & Community Gallery</h3>
+                  <p className="text-xs text-[#6E6280] mt-2 leading-relaxed">
+                    RSVP to festival celebrations, yoga workshops, and sports tournaments. High-resolution community albums keep memories safe with admin photo moderation.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-6 pt-4 border-t border-[#EAE2F2] flex items-center justify-between text-xs">
+                <span className="font-semibold text-[#6B21A8] flex items-center gap-1">
+                  <Check className="w-3.5 h-3.5" /> 1-Tap RSVP Tracking
+                </span>
+                <span className="text-slate-400">Social Hub</span>
+              </div>
+            </div>
+
+            {/* 5. Gate Security Terminal */}
+            <div className="p-7 rounded-3xl bg-[#F8F6FC] border border-[#EAE2F2] hover:border-[#6B21A8]/50 hover:shadow-lg transition-all group flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-[#6B21A8] text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                  <Car className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-[#1C1326]">Rapid Security Terminal</h3>
+                  <p className="text-xs text-[#6E6280] mt-2 leading-relaxed">
+                    Equip guards with a lightning-fast web terminal for license plate entry, walk-in registration, emergency intercom calls, and 1-tap gate lockdown triggers.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-6 pt-4 border-t border-[#EAE2F2] flex items-center justify-between text-xs">
+                <span className="font-semibold text-[#6B21A8] flex items-center gap-1">
+                  <Check className="w-3.5 h-3.5" /> 24/7 Gate Monitored
+                </span>
+                <span className="text-slate-400">Security Gate 1</span>
+              </div>
+            </div>
+
+            {/* 6. Transparent Audit & Finances */}
+            <div className="p-7 rounded-3xl bg-[#F8F6FC] border border-[#EAE2F2] hover:border-[#6B21A8]/50 hover:shadow-lg transition-all group flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-[#6B21A8] text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                  <FileText className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-[#1C1326]">Audit Trails & Governance</h3>
+                  <p className="text-xs text-[#6E6280] mt-2 leading-relaxed">
+                    Full transparency for committee audits. Track maintenance collections, generate downloadable financial statements, and log every administrative decision.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-6 pt-4 border-t border-[#EAE2F2] flex items-center justify-between text-xs">
+                <span className="font-semibold text-[#6B21A8] flex items-center gap-1">
+                  <Check className="w-3.5 h-3.5" /> 100% Auditable Ledger
+                </span>
+                <span className="text-slate-400">Committee Tools</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =========================================================================
+          SECTION 3: AMENITIES (RESORT-STYLE AMENITIES CATALOG)
+         ========================================================================= */}
+      <section id="amenities" className="py-20 max-w-[1400px] w-full mx-auto px-6 sm:px-10 lg:px-16">
+        {/* Section Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
+          <div className="space-y-2 max-w-xl">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-100 text-xs font-bold text-[#6B21A8] border border-purple-200 uppercase tracking-wider">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Resort Living</span>
+            </div>
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#1C1326] tracking-tight">
+              Curated World-Class Amenities
+            </h2>
+            <p className="text-sm text-[#6E6280]">
+              Explore the luxurious spaces available to all Green Valley Residency residents. Check timings, capacity, and book in 1-tap.
+            </p>
+          </div>
+
+          <button
+            onClick={() => handleQuickDemoLogin('resident')}
+            className="px-6 py-3 rounded-full bg-[#6B21A8] hover:bg-[#581C87] text-white text-xs font-semibold shadow-sm transition-all flex items-center gap-2 self-start md:self-auto cursor-pointer"
+          >
+            <span>Book Amenity in Portal</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* Amenities 6-Card Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          {/* 1. Swimming Pool */}
+          <div className="rounded-3xl bg-white border border-[#EAE2F2] overflow-hidden shadow-2xs hover:shadow-lg transition-all group flex flex-col">
+            <div className="relative h-52 w-full overflow-hidden bg-slate-100">
+              <Image
+                src="https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=800&q=80"
+                alt="Olympic-Size Swimming Pool"
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white/90 backdrop-blur text-[11px] font-bold text-[#6B21A8]">
+                Outdoor • Aquatic
+              </div>
+              <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold">
+                Available
+              </div>
+            </div>
+
+            <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+              <div>
+                <h3 className="text-lg font-bold text-[#1C1326]">Swimming Pool</h3>
+                <p className="text-xs text-[#6E6280] mt-1.5 line-clamp-2">
+                  Semi-Olympic 25-meter pool with 4 lap lanes, shallow kids splash deck, and poolside lounge recliners.
+                </p>
+              </div>
+
+              <div className="space-y-2 text-xs text-[#6E6280] border-t border-[#EAE2F2] pt-3">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#6B21A8]" /> 6:00 AM - 10:00 PM</span>
+                  <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-[#6B21A8]" /> 30 Swimmers max</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => handleQuickDemoLogin('resident')}
+                className="w-full py-2.5 rounded-xl bg-purple-50 hover:bg-[#6B21A8] text-[#6B21A8] hover:text-white font-semibold text-xs transition-colors cursor-pointer text-center"
+              >
+                Instant Book Slot
+              </button>
+            </div>
+          </div>
+
+          {/* 2. Gym & Fitness Studio */}
+          <div className="rounded-3xl bg-white border border-[#EAE2F2] overflow-hidden shadow-2xs hover:shadow-lg transition-all group flex flex-col">
+            <div className="relative h-52 w-full overflow-hidden bg-slate-100">
+              <Image
+                src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=80"
+                alt="Gym & Fitness Studio"
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white/90 backdrop-blur text-[11px] font-bold text-[#6B21A8]">
+                Indoor • Fitness
+              </div>
+              <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold">
+                Available
+              </div>
+            </div>
+
+            <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+              <div>
+                <h3 className="text-lg font-bold text-[#1C1326]">Gym & Fitness Studio</h3>
+                <p className="text-xs text-[#6E6280] mt-1.5 line-clamp-2">
+                  Commercial-grade cardio treadmills, Olympic free-weights 2kg-40kg, stretching studio, and central AC.
+                </p>
+              </div>
+
+              <div className="space-y-2 text-xs text-[#6E6280] border-t border-[#EAE2F2] pt-3">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#6B21A8]" /> 6:00 AM - 10:00 PM</span>
+                  <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-[#6B21A8]" /> 30 Members</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => handleQuickDemoLogin('resident')}
+                className="w-full py-2.5 rounded-xl bg-purple-50 hover:bg-[#6B21A8] text-[#6B21A8] hover:text-white font-semibold text-xs transition-colors cursor-pointer text-center"
+              >
+                Instant Book Slot
+              </button>
+            </div>
+          </div>
+
+          {/* 3. Indoor Badminton Court */}
+          <div className="rounded-3xl bg-white border border-[#EAE2F2] overflow-hidden shadow-2xs hover:shadow-lg transition-all group flex flex-col">
+            <div className="relative h-52 w-full overflow-hidden bg-slate-100">
+              <Image
+                src="https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=800&q=80"
+                alt="Indoor Badminton Court"
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white/90 backdrop-blur text-[11px] font-bold text-[#6B21A8]">
+                Indoor • Sports
+              </div>
+              <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold">
+                Available
+              </div>
+            </div>
+
+            <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+              <div>
+                <h3 className="text-lg font-bold text-[#1C1326]">Badminton Court</h3>
+                <p className="text-xs text-[#6E6280] mt-1.5 line-clamp-2">
+                  Two BWF-standard synthetic wooden courts equipped with anti-glare sports lighting and spectator benches.
+                </p>
+              </div>
+
+              <div className="space-y-2 text-xs text-[#6E6280] border-t border-[#EAE2F2] pt-3">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#6B21A8]" /> 6:00 AM - 11:00 PM</span>
+                  <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-[#6B21A8]" /> 16 Players</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => handleQuickDemoLogin('resident')}
+                className="w-full py-2.5 rounded-xl bg-purple-50 hover:bg-[#6B21A8] text-[#6B21A8] hover:text-white font-semibold text-xs transition-colors cursor-pointer text-center"
+              >
+                Instant Book Slot
+              </button>
+            </div>
+          </div>
+
+          {/* 4. Clubhouse Lounge */}
+          <div className="rounded-3xl bg-white border border-[#EAE2F2] overflow-hidden shadow-2xs hover:shadow-lg transition-all group flex flex-col">
+            <div className="relative h-52 w-full overflow-hidden bg-slate-100">
+              <Image
+                src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80"
+                alt="Clubhouse Lounge"
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white/90 backdrop-blur text-[11px] font-bold text-[#6B21A8]">
+                Indoor • Lounge
+              </div>
+              <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold">
+                Available
+              </div>
+            </div>
+
+            <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+              <div>
+                <h3 className="text-lg font-bold text-[#1C1326]">Clubhouse Lounge & Library</h3>
+                <p className="text-xs text-[#6E6280] mt-1.5 line-clamp-2">
+                  Plush multi-tier social lounge with coffee pantry, high-speed Wi-Fi, and a quiet reading library corner.
+                </p>
+              </div>
+
+              <div className="space-y-2 text-xs text-[#6E6280] border-t border-[#EAE2F2] pt-3">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#6B21A8]" /> 8:00 AM - 11:00 PM</span>
+                  <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-[#6B21A8]" /> 100 Guests</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => handleQuickDemoLogin('resident')}
+                className="w-full py-2.5 rounded-xl bg-purple-50 hover:bg-[#6B21A8] text-[#6B21A8] hover:text-white font-semibold text-xs transition-colors cursor-pointer text-center"
+              >
+                Instant Book Slot
+              </button>
+            </div>
+          </div>
+
+          {/* 5. Grand Celebration Banquet Hall */}
+          <div className="rounded-3xl bg-white border border-[#EAE2F2] overflow-hidden shadow-2xs hover:shadow-lg transition-all group flex flex-col">
+            <div className="relative h-52 w-full overflow-hidden bg-slate-100">
+              <Image
+                src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80"
+                alt="Grand Banquet Hall"
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white/90 backdrop-blur text-[11px] font-bold text-[#6B21A8]">
+                Events • Grand Hall
+              </div>
+              <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold">
+                Available
+              </div>
+            </div>
+
+            <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+              <div>
+                <h3 className="text-lg font-bold text-[#1C1326]">Grand Banquet Hall</h3>
+                <p className="text-xs text-[#6E6280] mt-1.5 line-clamp-2">
+                  Pillar-less event hall with central AC, acoustic sound proofing, PA audio system, and catering kitchen.
+                </p>
+              </div>
+
+              <div className="space-y-2 text-xs text-[#6E6280] border-t border-[#EAE2F2] pt-3">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#6B21A8]" /> 9:00 AM - 11:00 PM</span>
+                  <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-[#6B21A8]" /> 200 Guests</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => handleQuickDemoLogin('resident')}
+                className="w-full py-2.5 rounded-xl bg-purple-50 hover:bg-[#6B21A8] text-[#6B21A8] hover:text-white font-semibold text-xs transition-colors cursor-pointer text-center"
+              >
+                Instant Book Slot
+              </button>
+            </div>
+          </div>
+
+          {/* 6. Children's Adventure Play Arena */}
+          <div className="rounded-3xl bg-white border border-[#EAE2F2] overflow-hidden shadow-2xs hover:shadow-lg transition-all group flex flex-col">
+            <div className="relative h-52 w-full overflow-hidden bg-slate-100">
+              <Image
+                src="https://images.unsplash.com/photo-1596464716127-f2a829822391?auto=format&fit=crop&w=800&q=80"
+                alt="Children's Adventure Play Area"
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white/90 backdrop-blur text-[11px] font-bold text-[#6B21A8]">
+                Outdoor • Family
+              </div>
+              <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold">
+                Available
+              </div>
+            </div>
+
+            <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+              <div>
+                <h3 className="text-lg font-bold text-[#1C1326]">Children&apos;s Play Arena</h3>
+                <p className="text-xs text-[#6E6280] mt-1.5 line-clamp-2">
+                  Soft-cushion rubber flooring, swings, spiral slides, jungle climbing frame, and shaded pergolas for parents.
+                </p>
+              </div>
+
+              <div className="space-y-2 text-xs text-[#6E6280] border-t border-[#EAE2F2] pt-3">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#6B21A8]" /> 7:00 AM - 8:30 PM</span>
+                  <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-[#6B21A8]" /> 40 Children</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => handleQuickDemoLogin('resident')}
+                className="w-full py-2.5 rounded-xl bg-purple-50 hover:bg-[#6B21A8] text-[#6B21A8] hover:text-white font-semibold text-xs transition-colors cursor-pointer text-center"
+              >
+                Instant Book Slot
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =========================================================================
+          SECTION 4: DIRECT ACCESS (1-TAP ROLE SIMULATION)
+         ========================================================================= */}
+      <section id="access" className="py-20 bg-gradient-to-b from-white to-[#F8F6FC] border-t border-[#EAE2F2]">
+        <div className="max-w-[1400px] w-full mx-auto px-6 sm:px-10 lg:px-16">
+          {/* Section Header */}
+          <div className="max-w-2xl mx-auto text-center space-y-3 mb-14">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-100 text-xs font-bold text-[#6B21A8] border border-purple-200 uppercase tracking-wider">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>1-Tap Test Drive</span>
+            </div>
+            <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#1C1326] tracking-tight">
+              Test Drive Apnaa From Every Perspective
+            </h2>
+            <p className="text-sm sm:text-base text-[#6E6280] leading-relaxed">
+              No account creation or SMS OTP needed. Click any role below to launch the live platform with real mock data.
+            </p>
+          </div>
+
+          {/* 4 Role Showcase Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* 1. Resident */}
+            <div className="p-7 rounded-3xl bg-white border border-[#EAE2F2] shadow-2xs hover:shadow-xl hover:border-[#6B21A8] transition-all flex flex-col justify-between group">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 rounded-2xl bg-[#6B21A8] text-white flex items-center justify-center shadow-md">
+                    <Home className="w-6 h-6" />
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-purple-100 text-[#6B21A8]">
+                    Resident
+                  </span>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-[#1C1326]">Priya Sharma</h3>
+                  <p className="text-xs text-[#6B21A8] font-semibold">Flat A-1204 • Owner</p>
+                  <p className="text-xs text-[#6E6280] mt-2 leading-relaxed">
+                    Generate instant visitor QR passes, book badminton & pool slots, and RSVP to society festivals.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5 text-xs text-slate-600 bg-[#F8F6FC] p-3 rounded-xl border border-[#EAE2F2]">
+                  <p className="font-semibold text-[#1C1326]">Live Persona State:</p>
+                  <p>• 2 Active Confirmed Bookings</p>
+                  <p>• 1 Expected Guest (Zomato)</p>
+                  <p>• 2 Upcoming Community Events</p>
+                </div>
+              </div>
+
+              <div className="pt-6">
+                <button
+                  type="button"
+                  onClick={() => handleQuickDemoLogin('resident')}
+                  className="w-full py-3 rounded-xl bg-[#6B21A8] hover:bg-[#581C87] text-white font-semibold text-xs shadow-md transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
+                >
+                  <span>Launch as Resident</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* 2. Admin */}
+            <div className="p-7 rounded-3xl bg-white border border-[#EAE2F2] shadow-2xs hover:shadow-xl hover:border-[#6B21A8] transition-all flex flex-col justify-between group">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 rounded-2xl bg-[#2E1065] text-white flex items-center justify-center shadow-md">
+                    <Building2 className="w-6 h-6" />
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-purple-100 text-[#2E1065]">
+                    Committee
+                  </span>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-[#1C1326]">Rajesh Nair</h3>
+                  <p className="text-xs text-[#2E1065] font-semibold">Flat C-402 • Secretary</p>
+                  <p className="text-xs text-[#6E6280] mt-2 leading-relaxed">
+                    Manage 180 resident units, broadcast priority circulars, moderate photo albums, and audit collections.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5 text-xs text-slate-600 bg-[#F8F6FC] p-3 rounded-xl border border-[#EAE2F2]">
+                  <p className="font-semibold text-[#1C1326]">Live Persona State:</p>
+                  <p>• 180 Flats Under Management</p>
+                  <p>• 100% Monthly Dues Collection</p>
+                  <p>• 2 Pending Photos to Moderate</p>
+                </div>
+              </div>
+
+              <div className="pt-6">
+                <button
+                  type="button"
+                  onClick={() => handleQuickDemoLogin('admin')}
+                  className="w-full py-3 rounded-xl bg-[#2E1065] hover:bg-[#1E0B45] text-white font-semibold text-xs shadow-md transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
+                >
+                  <span>Launch as Admin</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* 3. Security */}
+            <div className="p-7 rounded-3xl bg-white border border-[#EAE2F2] shadow-2xs hover:shadow-xl hover:border-[#6B21A8] transition-all flex flex-col justify-between group">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center shadow-md">
+                    <Shield className="w-6 h-6" />
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-800">
+                    Security
+                  </span>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-[#1C1326]">Vikram Singh</h3>
+                  <p className="text-xs text-slate-800 font-semibold">Gate 1 • Head Guard</p>
+                  <p className="text-xs text-[#6E6280] mt-2 leading-relaxed">
+                    Scan visitor QR passes, log vehicle license plates, verify walk-in deliveries, and trigger intercoms.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5 text-xs text-slate-600 bg-[#F8F6FC] p-3 rounded-xl border border-[#EAE2F2]">
+                  <p className="font-semibold text-[#1C1326]">Live Persona State:</p>
+                  <p>• Gate 1 Terminal Online</p>
+                  <p>• 14 Visitors Checked In Today</p>
+                  <p>• 0 Active Security Alerts</p>
+                </div>
+              </div>
+
+              <div className="pt-6">
+                <button
+                  type="button"
+                  onClick={() => handleQuickDemoLogin('security')}
+                  className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs shadow-md transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
+                >
+                  <span>Launch Gate Terminal</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* 4. Facility */}
+            <div className="p-7 rounded-3xl bg-white border border-[#EAE2F2] shadow-2xs hover:shadow-xl hover:border-[#6B21A8] transition-all flex flex-col justify-between group">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 rounded-2xl bg-[#6B21A8] text-white flex items-center justify-center shadow-md">
+                    <UserCheck className="w-6 h-6" />
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-purple-100 text-[#6B21A8]">
+                    Facility
+                  </span>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-[#1C1326]">Anand Verma</h3>
+                  <p className="text-xs text-[#6B21A8] font-semibold">Clubhouse • Manager</p>
+                  <p className="text-xs text-[#6E6280] mt-2 leading-relaxed">
+                    Oversee amenity hygiene, inspect party hall bookings, track sports equipment, and manage work orders.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5 text-xs text-slate-600 bg-[#F8F6FC] p-3 rounded-xl border border-[#EAE2F2]">
+                  <p className="font-semibold text-[#1C1326]">Live Persona State:</p>
+                  <p>• 6 Amenities Ready for Slots</p>
+                  <p>• Next Booking in 45 Minutes</p>
+                  <p>• Equipment Sanitation Confirmed</p>
+                </div>
+              </div>
+
+              <div className="pt-6">
+                <button
+                  type="button"
+                  onClick={() => handleQuickDemoLogin('facility')}
+                  className="w-full py-3 rounded-xl bg-[#6B21A8] hover:bg-[#581C87] text-white font-semibold text-xs shadow-md transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
+                >
+                  <span>Launch Facility Desk</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. FOOTER */}
+      <footer className="py-10 px-6 sm:px-10 lg:px-16 max-w-[1400px] w-full mx-auto border-t border-[#EAE2F2] flex flex-col sm:flex-row items-center justify-between text-xs text-[#6E6280] gap-4">
+        <div className="flex items-center gap-3">
+          <svg viewBox="0 0 36 36" fill="none" className="w-6 h-6 flex-shrink-0" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="18" cy="18" r="17" fill="#6B21A8" />
+            <path d="M18 7C18 7 10 11.5 10 19C10 23 13.5 26 18 26C22.5 26 26 23 26 19C26 11.5 18 7 18 7Z" fill="#EDE9FE"/>
+          </svg>
+          <p>© 2026 Smart Society Management Platform • Green Valley Residency</p>
+        </div>
+        <div className="flex items-center gap-6">
+          <button onClick={() => scrollToSection('overview')} className="hover:text-[#6B21A8] transition-colors cursor-pointer">Overview</button>
+          <button onClick={() => scrollToSection('features')} className="hover:text-[#6B21A8] transition-colors cursor-pointer">Features</button>
+          <button onClick={() => scrollToSection('amenities')} className="hover:text-[#6B21A8] transition-colors cursor-pointer">Amenities</button>
+          <button onClick={() => scrollToSection('access')} className="hover:text-[#6B21A8] transition-colors cursor-pointer">Direct Access</button>
+        </div>
       </footer>
     </div>
   );
