@@ -33,7 +33,16 @@ interface LandingLoginPageProps {
 }
 
 export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
-  const { loginWithPassword, requestOtp, verifyOtp, addToast } = useSociety();
+  const {
+    loginWithPassword,
+    requestOtp,
+    verifyOtp,
+    addToast,
+    society,
+    amenities,
+    dbConnected,
+    publicOverview,
+  } = useSociety();
   const [activeSection, setActiveSection] = useState<'overview' | 'features' | 'amenities' | 'access'>('overview');
   const [loginOpen, setLoginOpen] = useState(false);
   const [loginMode, setLoginMode] = useState<'password' | 'otp'>('password');
@@ -323,8 +332,8 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
 
               {/* Floating Campus Badge */}
               <div className="absolute top-4 left-4 sm:top-5 sm:left-5 px-3.5 py-1.5 rounded-full bg-white/95 backdrop-blur-md border border-[#EDE9FE] shadow-sm flex items-center gap-2 text-xs font-semibold text-[#2E1065]">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Green Valley Residency • 3D Campus View</span>
+                <span className={`w-2.5 h-2.5 rounded-full ${dbConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+                <span>{society.name} • {dbConnected ? 'Live MySQL Connected' : '3D Campus View'}</span>
               </div>
 
               {/* Floating Amenities Highlights Badge */}
@@ -337,16 +346,22 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
 
         {/* Bottom Stats Bar */}
         <div className="pt-12 max-w-4xl border-t border-[#EAE2F2]/70 mt-12">
-          <p className="text-xs font-bold uppercase tracking-wider text-[#6B21A8] mb-4">
-            Live Community Highlights
+          <p className="text-xs font-bold uppercase tracking-wider text-[#6B21A8] mb-4 flex items-center gap-2">
+            <span>Live Community Highlights</span>
+            {dbConnected && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-bold text-emerald-700 normal-case">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Dynamic MySQL Feed
+              </span>
+            )}
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
             <div className="p-4 rounded-2xl bg-white border border-[#EAE2F2] shadow-2xs">
-              <p className="text-3xl font-bold text-[#1C1326]">500+</p>
+              <p className="text-3xl font-bold text-[#1C1326]">{society.totalHouseholds || 248}+</p>
               <p className="text-xs text-[#6E6280] font-medium mt-1">Happy Resident Families</p>
             </div>
             <div className="p-4 rounded-2xl bg-white border border-[#EAE2F2] shadow-2xs">
-              <p className="text-3xl font-bold text-[#1C1326]">12</p>
+              <p className="text-3xl font-bold text-[#1C1326]">{amenities.length || publicOverview?.stats.totalAmenities || 9}</p>
               <p className="text-xs text-[#6E6280] font-medium mt-1">World-Class Amenities</p>
             </div>
             <div className="p-4 rounded-2xl bg-white border border-[#EAE2F2] shadow-2xs">
@@ -355,7 +370,7 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
             </div>
             <div className="p-4 rounded-2xl bg-white border border-[#EAE2F2] shadow-2xs">
               <p className="text-3xl font-bold text-[#1C1326]">100%</p>
-              <p className="text-xs text-[#6E6280] font-medium mt-1">Digital & Conflict-Free</p>
+              <p className="text-xs text-[#6E6280] font-medium mt-1">Dynamic & Conflict-Free</p>
             </div>
           </div>
         </div>
@@ -539,253 +554,64 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
           </button>
         </div>
 
-        {/* Amenities 6-Card Grid */}
+        {/* Amenities Dynamic Grid from MySQL */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {/* 1. Swimming Pool */}
-          <div className="rounded-3xl bg-white border border-[#EAE2F2] overflow-hidden shadow-2xs hover:shadow-lg transition-all group flex flex-col">
-            <div className="relative h-52 w-full overflow-hidden bg-slate-100">
-              <Image
-                src="https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=800&q=80"
-                alt="Olympic-Size Swimming Pool"
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white/90 backdrop-blur text-[11px] font-bold text-[#6B21A8]">
-                Outdoor • Aquatic
-              </div>
-              <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold">
-                Available
-              </div>
-            </div>
-
-            <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
-              <div>
-                <h3 className="text-lg font-bold text-[#1C1326]">Swimming Pool</h3>
-                <p className="text-xs text-[#6E6280] mt-1.5 line-clamp-2">
-                  Semi-Olympic 25-meter pool with 4 lap lanes, shallow kids splash deck, and poolside lounge recliners.
-                </p>
-              </div>
-
-              <div className="space-y-2 text-xs text-[#6E6280] border-t border-[#EAE2F2] pt-3">
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#6B21A8]" /> 6:00 AM - 10:00 PM</span>
-                  <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-[#6B21A8]" /> 30 Swimmers max</span>
+          {(amenities.length > 0 ? amenities.slice(0, 6) : []).map((amenity) => (
+            <div
+              key={amenity.id}
+              className="rounded-3xl bg-white border border-[#EAE2F2] overflow-hidden shadow-2xs hover:shadow-lg transition-all group flex flex-col"
+            >
+              <div className="relative h-52 w-full overflow-hidden bg-slate-100">
+                <Image
+                  src={amenity.coverImage}
+                  alt={amenity.name}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white/90 backdrop-blur text-[11px] font-bold text-[#6B21A8]">
+                  {amenity.category} • {amenity.location}
+                </div>
+                <div
+                  className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-white text-[10px] font-bold capitalize ${
+                    amenity.status === 'available'
+                      ? 'bg-emerald-500'
+                      : amenity.status === 'maintenance'
+                      ? 'bg-amber-500'
+                      : 'bg-rose-500'
+                  }`}
+                >
+                  {amenity.status}
                 </div>
               </div>
 
-              <button
-                onClick={() => handleQuickDemoLogin('resident')}
-                className="w-full py-2.5 rounded-xl bg-purple-50 hover:bg-[#6B21A8] text-[#6B21A8] hover:text-white font-semibold text-xs transition-colors cursor-pointer text-center"
-              >
-                Instant Book Slot
-              </button>
-            </div>
-          </div>
-
-          {/* 2. Gym & Fitness Studio */}
-          <div className="rounded-3xl bg-white border border-[#EAE2F2] overflow-hidden shadow-2xs hover:shadow-lg transition-all group flex flex-col">
-            <div className="relative h-52 w-full overflow-hidden bg-slate-100">
-              <Image
-                src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=80"
-                alt="Gym & Fitness Studio"
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white/90 backdrop-blur text-[11px] font-bold text-[#6B21A8]">
-                Indoor • Fitness
-              </div>
-              <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold">
-                Available
-              </div>
-            </div>
-
-            <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
-              <div>
-                <h3 className="text-lg font-bold text-[#1C1326]">Gym & Fitness Studio</h3>
-                <p className="text-xs text-[#6E6280] mt-1.5 line-clamp-2">
-                  Commercial-grade cardio treadmills, Olympic free-weights 2kg-40kg, stretching studio, and central AC.
-                </p>
-              </div>
-
-              <div className="space-y-2 text-xs text-[#6E6280] border-t border-[#EAE2F2] pt-3">
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#6B21A8]" /> 6:00 AM - 10:00 PM</span>
-                  <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-[#6B21A8]" /> 30 Members</span>
+              <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+                <div>
+                  <h3 className="text-lg font-bold text-[#1C1326]">{amenity.name}</h3>
+                  <p className="text-xs text-[#6E6280] mt-1.5 line-clamp-2">
+                    {amenity.description}
+                  </p>
                 </div>
-              </div>
 
-              <button
-                onClick={() => handleQuickDemoLogin('resident')}
-                className="w-full py-2.5 rounded-xl bg-purple-50 hover:bg-[#6B21A8] text-[#6B21A8] hover:text-white font-semibold text-xs transition-colors cursor-pointer text-center"
-              >
-                Instant Book Slot
-              </button>
-            </div>
-          </div>
-
-          {/* 3. Indoor Badminton Court */}
-          <div className="rounded-3xl bg-white border border-[#EAE2F2] overflow-hidden shadow-2xs hover:shadow-lg transition-all group flex flex-col">
-            <div className="relative h-52 w-full overflow-hidden bg-slate-100">
-              <Image
-                src="https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=800&q=80"
-                alt="Indoor Badminton Court"
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white/90 backdrop-blur text-[11px] font-bold text-[#6B21A8]">
-                Indoor • Sports
-              </div>
-              <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold">
-                Available
-              </div>
-            </div>
-
-            <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
-              <div>
-                <h3 className="text-lg font-bold text-[#1C1326]">Badminton Court</h3>
-                <p className="text-xs text-[#6E6280] mt-1.5 line-clamp-2">
-                  Two BWF-standard synthetic wooden courts equipped with anti-glare sports lighting and spectator benches.
-                </p>
-              </div>
-
-              <div className="space-y-2 text-xs text-[#6E6280] border-t border-[#EAE2F2] pt-3">
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#6B21A8]" /> 6:00 AM - 11:00 PM</span>
-                  <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-[#6B21A8]" /> 16 Players</span>
+                <div className="space-y-2 text-xs text-[#6E6280] border-t border-[#EAE2F2] pt-3">
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-[#6B21A8]" /> {amenity.operatingHours}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <Users className="w-3.5 h-3.5 text-[#6B21A8]" /> {amenity.capacity} Max Capacity
+                    </span>
+                  </div>
                 </div>
-              </div>
 
-              <button
-                onClick={() => handleQuickDemoLogin('resident')}
-                className="w-full py-2.5 rounded-xl bg-purple-50 hover:bg-[#6B21A8] text-[#6B21A8] hover:text-white font-semibold text-xs transition-colors cursor-pointer text-center"
-              >
-                Instant Book Slot
-              </button>
-            </div>
-          </div>
-
-          {/* 4. Clubhouse Lounge */}
-          <div className="rounded-3xl bg-white border border-[#EAE2F2] overflow-hidden shadow-2xs hover:shadow-lg transition-all group flex flex-col">
-            <div className="relative h-52 w-full overflow-hidden bg-slate-100">
-              <Image
-                src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80"
-                alt="Clubhouse Lounge"
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white/90 backdrop-blur text-[11px] font-bold text-[#6B21A8]">
-                Indoor • Lounge
-              </div>
-              <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold">
-                Available
+                <button
+                  onClick={() => handleQuickDemoLogin('resident')}
+                  className="w-full py-2.5 rounded-xl bg-purple-50 hover:bg-[#6B21A8] text-[#6B21A8] hover:text-white font-semibold text-xs transition-colors cursor-pointer text-center"
+                >
+                  {amenity.status === 'available' ? 'Instant Book Slot' : 'View Schedule in Portal'}
+                </button>
               </div>
             </div>
-
-            <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
-              <div>
-                <h3 className="text-lg font-bold text-[#1C1326]">Clubhouse Lounge & Library</h3>
-                <p className="text-xs text-[#6E6280] mt-1.5 line-clamp-2">
-                  Plush multi-tier social lounge with coffee pantry, high-speed Wi-Fi, and a quiet reading library corner.
-                </p>
-              </div>
-
-              <div className="space-y-2 text-xs text-[#6E6280] border-t border-[#EAE2F2] pt-3">
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#6B21A8]" /> 8:00 AM - 11:00 PM</span>
-                  <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-[#6B21A8]" /> 100 Guests</span>
-                </div>
-              </div>
-
-              <button
-                onClick={() => handleQuickDemoLogin('resident')}
-                className="w-full py-2.5 rounded-xl bg-purple-50 hover:bg-[#6B21A8] text-[#6B21A8] hover:text-white font-semibold text-xs transition-colors cursor-pointer text-center"
-              >
-                Instant Book Slot
-              </button>
-            </div>
-          </div>
-
-          {/* 5. Grand Celebration Banquet Hall */}
-          <div className="rounded-3xl bg-white border border-[#EAE2F2] overflow-hidden shadow-2xs hover:shadow-lg transition-all group flex flex-col">
-            <div className="relative h-52 w-full overflow-hidden bg-slate-100">
-              <Image
-                src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80"
-                alt="Grand Banquet Hall"
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white/90 backdrop-blur text-[11px] font-bold text-[#6B21A8]">
-                Events • Grand Hall
-              </div>
-              <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold">
-                Available
-              </div>
-            </div>
-
-            <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
-              <div>
-                <h3 className="text-lg font-bold text-[#1C1326]">Grand Banquet Hall</h3>
-                <p className="text-xs text-[#6E6280] mt-1.5 line-clamp-2">
-                  Pillar-less event hall with central AC, acoustic sound proofing, PA audio system, and catering kitchen.
-                </p>
-              </div>
-
-              <div className="space-y-2 text-xs text-[#6E6280] border-t border-[#EAE2F2] pt-3">
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#6B21A8]" /> 9:00 AM - 11:00 PM</span>
-                  <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-[#6B21A8]" /> 200 Guests</span>
-                </div>
-              </div>
-
-              <button
-                onClick={() => handleQuickDemoLogin('resident')}
-                className="w-full py-2.5 rounded-xl bg-purple-50 hover:bg-[#6B21A8] text-[#6B21A8] hover:text-white font-semibold text-xs transition-colors cursor-pointer text-center"
-              >
-                Instant Book Slot
-              </button>
-            </div>
-          </div>
-
-          {/* 6. Children's Adventure Play Arena */}
-          <div className="rounded-3xl bg-white border border-[#EAE2F2] overflow-hidden shadow-2xs hover:shadow-lg transition-all group flex flex-col">
-            <div className="relative h-52 w-full overflow-hidden bg-slate-100">
-              <Image
-                src="https://images.unsplash.com/photo-1596464716127-f2a829822391?auto=format&fit=crop&w=800&q=80"
-                alt="Children's Adventure Play Area"
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white/90 backdrop-blur text-[11px] font-bold text-[#6B21A8]">
-                Outdoor • Family
-              </div>
-              <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold">
-                Available
-              </div>
-            </div>
-
-            <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
-              <div>
-                <h3 className="text-lg font-bold text-[#1C1326]">Children&apos;s Play Arena</h3>
-                <p className="text-xs text-[#6E6280] mt-1.5 line-clamp-2">
-                  Soft-cushion rubber flooring, swings, spiral slides, jungle climbing frame, and shaded pergolas for parents.
-                </p>
-              </div>
-
-              <div className="space-y-2 text-xs text-[#6E6280] border-t border-[#EAE2F2] pt-3">
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#6B21A8]" /> 7:00 AM - 8:30 PM</span>
-                  <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-[#6B21A8]" /> 40 Children</span>
-                </div>
-              </div>
-
-              <button
-                onClick={() => handleQuickDemoLogin('resident')}
-                className="w-full py-2.5 rounded-xl bg-purple-50 hover:bg-[#6B21A8] text-[#6B21A8] hover:text-white font-semibold text-xs transition-colors cursor-pointer text-center"
-              >
-                Instant Book Slot
-              </button>
-            </div>
-          </div>
+          ))}
         </div>
       </section>
 
@@ -804,7 +630,7 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
               Test Drive Apnaa From Every Perspective
             </h2>
             <p className="text-sm sm:text-base text-[#6E6280] leading-relaxed">
-              No account creation or SMS OTP needed. Click any role below to launch the live platform with real mock data.
+              No account creation or SMS OTP needed. Click any role below to launch the live platform backed by real-time MySQL data.
             </p>
           </div>
 
@@ -823,18 +649,22 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-bold text-[#1C1326]">Priya Sharma</h3>
-                  <p className="text-xs text-[#6B21A8] font-semibold">Flat A-1204 • Owner</p>
+                  <h3 className="text-lg font-bold text-[#1C1326]">
+                    {publicOverview?.personas.resident.name || 'Priya Sharma'}
+                  </h3>
+                  <p className="text-xs text-[#6B21A8] font-semibold">
+                    Flat {publicOverview?.personas.resident.unit || 'A-1204'} • {publicOverview?.personas.resident.membershipType || 'Owner'}
+                  </p>
                   <p className="text-xs text-[#6E6280] mt-2 leading-relaxed">
                     Generate instant visitor QR passes, book badminton & pool slots, and RSVP to society festivals.
                   </p>
                 </div>
 
                 <div className="space-y-1.5 text-xs text-slate-600 bg-[#F8F6FC] p-3 rounded-xl border border-[#EAE2F2]">
-                  <p className="font-semibold text-[#1C1326]">Live Persona State:</p>
-                  <p>• 2 Active Confirmed Bookings</p>
-                  <p>• 1 Expected Guest (Zomato)</p>
-                  <p>• 2 Upcoming Community Events</p>
+                  <p className="font-semibold text-[#1C1326]">Live MySQL State:</p>
+                  <p>• {publicOverview?.stats.confirmedBookings ?? 2} Active Confirmed Bookings</p>
+                  <p>• {publicOverview?.stats.expectedVisitors ?? 2} Expected / Approved Guests</p>
+                  <p>• {publicOverview?.stats.upcomingEvents ?? 4} Upcoming Community Events</p>
                 </div>
               </div>
 
@@ -863,18 +693,22 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-bold text-[#1C1326]">Rajesh Nair</h3>
-                  <p className="text-xs text-[#2E1065] font-semibold">Flat C-402 • Secretary</p>
+                  <h3 className="text-lg font-bold text-[#1C1326]">
+                    {publicOverview?.personas.admin.name || 'Rajesh Nair'}
+                  </h3>
+                  <p className="text-xs text-[#2E1065] font-semibold">
+                    Flat {publicOverview?.personas.admin.unit || 'C-402'} • {publicOverview?.personas.admin.membershipType || 'Secretary'}
+                  </p>
                   <p className="text-xs text-[#6E6280] mt-2 leading-relaxed">
-                    Manage 180 resident units, broadcast priority circulars, moderate photo albums, and audit collections.
+                    Manage {society.totalUnits || 180} resident units, broadcast priority circulars, moderate photo albums, and audit collections.
                   </p>
                 </div>
 
                 <div className="space-y-1.5 text-xs text-slate-600 bg-[#F8F6FC] p-3 rounded-xl border border-[#EAE2F2]">
-                  <p className="font-semibold text-[#1C1326]">Live Persona State:</p>
-                  <p>• 180 Flats Under Management</p>
-                  <p>• 100% Monthly Dues Collection</p>
-                  <p>• 2 Pending Photos to Moderate</p>
+                  <p className="font-semibold text-[#1C1326]">Live MySQL State:</p>
+                  <p>• {society.totalUnits || 180} Flats ({publicOverview?.stats.activeResidents ?? society.activeResidents} Active Accounts)</p>
+                  <p>• {publicOverview?.stats.pendingVisitors ?? society.pendingApprovals} Pending Visitor Approvals</p>
+                  <p>• {publicOverview?.stats.pendingMedia ?? 2} Pending Photos to Moderate</p>
                 </div>
               </div>
 
@@ -903,18 +737,22 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-bold text-[#1C1326]">Vikram Singh</h3>
-                  <p className="text-xs text-slate-800 font-semibold">Gate 1 • Head Guard</p>
+                  <h3 className="text-lg font-bold text-[#1C1326]">
+                    {publicOverview?.personas.security.name || 'Vikram Singh'}
+                  </h3>
+                  <p className="text-xs text-slate-800 font-semibold">
+                    {publicOverview?.personas.security.unit || 'Gate 1'} • {publicOverview?.personas.security.membershipType || 'Head Guard'}
+                  </p>
                   <p className="text-xs text-[#6E6280] mt-2 leading-relaxed">
                     Scan visitor QR passes, log vehicle license plates, verify walk-in deliveries, and trigger intercoms.
                   </p>
                 </div>
 
                 <div className="space-y-1.5 text-xs text-slate-600 bg-[#F8F6FC] p-3 rounded-xl border border-[#EAE2F2]">
-                  <p className="font-semibold text-[#1C1326]">Live Persona State:</p>
+                  <p className="font-semibold text-[#1C1326]">Live MySQL State:</p>
                   <p>• Gate 1 Terminal Online</p>
-                  <p>• 14 Visitors Checked In Today</p>
-                  <p>• 0 Active Security Alerts</p>
+                  <p>• {publicOverview?.stats.checkedInToday ?? 3} Visitor Entries Logged</p>
+                  <p>• {publicOverview?.stats.pendingVisitors ?? 1} Walk-in Awaiting Resident OK</p>
                 </div>
               </div>
 
@@ -943,18 +781,22 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-bold text-[#1C1326]">Anand Verma</h3>
-                  <p className="text-xs text-[#6B21A8] font-semibold">Clubhouse • Manager</p>
+                  <h3 className="text-lg font-bold text-[#1C1326]">
+                    {publicOverview?.personas.facility.name || 'Anand Verma'}
+                  </h3>
+                  <p className="text-xs text-[#6B21A8] font-semibold">
+                    {publicOverview?.personas.facility.unit || 'Clubhouse'} • {publicOverview?.personas.facility.membershipType || 'Manager'}
+                  </p>
                   <p className="text-xs text-[#6E6280] mt-2 leading-relaxed">
                     Oversee amenity hygiene, inspect party hall bookings, track sports equipment, and manage work orders.
                   </p>
                 </div>
 
                 <div className="space-y-1.5 text-xs text-slate-600 bg-[#F8F6FC] p-3 rounded-xl border border-[#EAE2F2]">
-                  <p className="font-semibold text-[#1C1326]">Live Persona State:</p>
-                  <p>• 6 Amenities Ready for Slots</p>
-                  <p>• Next Booking in 45 Minutes</p>
-                  <p>• Equipment Sanitation Confirmed</p>
+                  <p className="font-semibold text-[#1C1326]">Live MySQL State:</p>
+                  <p>• {publicOverview?.stats.availableAmenities ?? 8} Amenities Open for Slots</p>
+                  <p>• {publicOverview?.stats.todaysBookings ?? 3} Active Bookings Today</p>
+                  <p>• {society.activeClosures} Facility Under Maintenance</p>
                 </div>
               </div>
 

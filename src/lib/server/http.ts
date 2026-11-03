@@ -1,6 +1,7 @@
+import crypto from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { ZodError, type ZodType } from 'zod';
-import { allowedOrigins, ConfigError, isProduction } from './config';
+import { allowedOrigins, ConfigError, getApiKey, isProduction } from './config';
 
 export class ApiError extends Error {
   constructor(
@@ -51,6 +52,7 @@ export function apiError(status: number, code: string, message: string, fields?:
 
 /**
  * Wraps a route handler with:
+ *  - API key verification (X-API-Key / Authorization: Bearer)
  *  - CSRF origin checks for mutating requests
  *  - consistent JSON errors (no stack traces or SQL details leak to clients)
  *  - credential-free responses
@@ -58,12 +60,37 @@ export function apiError(status: number, code: string, message: string, fields?:
 export function route<C = unknown>(handler: RouteHandler<C>): RouteHandler<C> {
   return async (request, context) => {
     try {
+      assertApiKey(request);
       assertSameOrigin(request);
       return await handler(request, context);
     } catch (error) {
       return errorResponse(error);
     }
   };
+}
+
+function assertApiKey(request: NextRequest) {
+  const configuredKey = getApiKey();
+  if (!configuredKey) return;
+
+  // Health endpoint can be inspected without a key unless one is explicitly passed
+  const isHealthEndpoint = request.nextUrl.pathname.endsWith('/health');
+  const headerKey =
+    request.headers.get('x-api-key')?.trim() ||
+    (request.headers.get('authorization')?.startsWith('Bearer ')
+      ? request.headers.get('authorization')?.slice(7).trim()
+      : undefined);
+
+  if (!headerKey) {
+    if (isHealthEndpoint) return;
+    throw new ApiError(401, 'MISSING_API_KEY', 'API key is required to access the backend.');
+  }
+
+  const expectedBuf = Buffer.from(configuredKey, 'utf8');
+  const actualBuf = Buffer.from(headerKey, 'utf8');
+  if (expectedBuf.length !== actualBuf.length || !crypto.timingSafeEqual(expectedBuf, actualBuf)) {
+    throw new ApiError(401, 'INVALID_API_KEY', 'Invalid API key provided.');
+  }
 }
 
 function errorResponse(error: unknown): Response {

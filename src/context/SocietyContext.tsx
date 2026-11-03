@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { SocietyApi, type ApiResult } from '@/lib/api';
+import { SocietyApi, type ApiResult, type PublicOverviewData } from '@/lib/api';
 import {
   User,
   UserRole,
@@ -54,6 +54,9 @@ interface SocietyContextType {
 
   // Society
   society: SocietyInfo;
+  dbConnected: boolean;
+  publicOverview: PublicOverviewData | null;
+  refreshData: () => Promise<void>;
   
   // Visitors
   visitors: Visitor[];
@@ -154,6 +157,8 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
   const [currentRole, setRoleState] = useState<UserRole>('resident');
   const [authReady, setAuthReady] = useState(!API_MODE);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [dbConnected, setDbConnected] = useState(!API_MODE);
+  const [publicOverview, setPublicOverview] = useState<PublicOverviewData | null>(null);
   const [users, setUsers] = useState<Record<string, User>>(INITIAL_USERS);
   const [society, setSociety] = useState<SocietyInfo>(seed(MOCK_SOCIETY, MOCK_SOCIETY));
   const [visitors, setVisitors] = useState<Visitor[]>(seed(INITIAL_VISITORS, []));
@@ -192,24 +197,44 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
   const hydrate = async (role: UserRole = currentRole) => {
     if (!API_MODE) return;
 
-    const [me, visitorRes, amenityRes, bookingRes, noticeRes, eventRes, memberRes, albumRes, notificationRes, societyRes] =
-      await Promise.all([
-        SocietyApi.auth.getMe(),
-        SocietyApi.visitors.list(),
-        SocietyApi.amenities.list(),
-        SocietyApi.bookings.list(),
-        SocietyApi.notices.list(),
-        SocietyApi.events.list(),
-        SocietyApi.directory.list(),
-        SocietyApi.gallery.albums(),
-        SocietyApi.notifications.list(),
-        SocietyApi.society.get(),
-      ]);
+    const [
+      overviewRes,
+      me,
+      visitorRes,
+      amenityRes,
+      bookingRes,
+      noticeRes,
+      eventRes,
+      memberRes,
+      albumRes,
+      notificationRes,
+      societyRes,
+    ] = await Promise.all([
+      SocietyApi.public.overview(),
+      SocietyApi.auth.getMe(),
+      SocietyApi.visitors.list(),
+      SocietyApi.amenities.list(),
+      SocietyApi.bookings.list(),
+      SocietyApi.notices.list(),
+      SocietyApi.events.list(),
+      SocietyApi.directory.list(),
+      SocietyApi.gallery.albums(),
+      SocietyApi.notifications.list(),
+      SocietyApi.society.get(),
+    ]);
+
+    if (overviewRes.data) {
+      setDbConnected(true);
+      setPublicOverview(overviewRes.data);
+      setSociety(overviewRes.data.society);
+      setAmenities(overviewRes.data.amenities);
+    }
 
     if (me.error?.code === 'UNAUTHENTICATED') return;
 
     let effectiveRole = role;
     if (me.data) {
+      setDbConnected(true);
       effectiveRole = me.data.role;
       setUsers((prev) => ({ ...prev, [me.data!.role]: me.data! }));
       setRoleState(me.data.role);
@@ -242,6 +267,10 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const refreshData = async () => {
+    await hydrate(currentRole);
+  };
+
   /** Fire an API mutation, then reconcile with the server (or revert on error). */
   const apiSync = (request: Promise<ApiResult<unknown>>, role: UserRole = currentRole) => {
     if (!API_MODE) return;
@@ -257,15 +286,24 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
       });
   };
 
-  // Restore an existing HTTP-only session on page load.
+  // Restore an existing HTTP-only session and load public MySQL overview on page load.
   useEffect(() => {
     if (!API_MODE) return;
     let active = true;
 
     (async () => {
       try {
-        const session = await SocietyApi.auth.session();
+        const [overviewRes, session] = await Promise.all([
+          SocietyApi.public.overview(),
+          SocietyApi.auth.session(),
+        ]);
         if (!active) return;
+        if (overviewRes.data) {
+          setDbConnected(true);
+          setPublicOverview(overviewRes.data);
+          setSociety(overviewRes.data.society);
+          setAmenities(overviewRes.data.amenities);
+        }
         if (session.data) {
           setRoleState(session.data.role);
           setUsers((prev) => ({ ...prev, [session.data!.role]: session.data! }));
@@ -282,6 +320,34 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Keep MySQL data dynamically synchronized in real-time across tabs and role views.
+  useEffect(() => {
+    if (!API_MODE) return;
+
+    const refresh = () => {
+      if (isAuthenticated) {
+        void hydrate(currentRole);
+      } else {
+        void SocietyApi.public.overview().then((res) => {
+          if (res.data) {
+            setDbConnected(true);
+            setPublicOverview(res.data);
+            setSociety(res.data.society);
+            setAmenities(res.data.amenities);
+          }
+        });
+      }
+    };
+
+    const interval = window.setInterval(refresh, 10000);
+    window.addEventListener('focus', refresh);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener('focus', refresh);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, currentRole]);
 
   const logAudit = (action: string, details: string) => {
     const newLog: AuditLog = {
@@ -473,6 +539,7 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
         vehicleNumber: newVisitor.vehicleNumber,
         unit: newVisitor.unit,
         notes: newVisitor.notes,
+        passCode: newVisitor.passCode,
       })
     );
 
@@ -486,6 +553,10 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
     );
 
     if (!visitor) {
+      if (API_MODE) {
+        apiSync(SocietyApi.visitors.checkIn(trimmed, gate));
+        return { success: true, message: `Verifying pass ${trimmed} against MySQL database...` };
+      }
       return { success: false, message: 'Pass not found or invalid barcode/QR.' };
     }
 
@@ -623,6 +694,7 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
         timeSlot: data.timeSlot,
         guestCount: data.guestCount,
         notes: data.notes,
+        bookingReference: newBooking.bookingReference,
       })
     );
 
@@ -647,6 +719,10 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
     const booking = bookings.find((b) => b.bookingReference.toUpperCase() === trimmed);
 
     if (!booking) {
+      if (API_MODE) {
+        apiSync(SocietyApi.bookings.checkIn(trimmed));
+        return { success: true, message: `Verifying booking ${trimmed} against MySQL database...` };
+      }
       return { success: false, message: 'Reservation reference not found.' };
     }
 
@@ -1043,6 +1119,9 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
         verifyOtp,
         logout,
         society,
+        dbConnected,
+        publicOverview,
+        refreshData,
         visitors,
         approveVisitor,
         denyVisitor,

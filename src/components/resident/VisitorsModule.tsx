@@ -17,7 +17,7 @@ import {
 import { QRCodeSVG } from 'qrcode.react';
 
 export function VisitorsModule() {
-  const { visitors, currentUser, approveVisitor, denyVisitor, createVisitor, addToast } = useSociety();
+  const { visitors, currentUser, currentRole, approveVisitor, denyVisitor, createVisitor, addToast } = useSociety();
   const [activeTab, setActiveTab] = useState<'expected' | 'pending' | 'completed' | 'denied' | 'all'>('expected');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedVisitorForPass, setSelectedVisitorForPass] = useState<Visitor | null>(null);
@@ -38,8 +38,8 @@ export function VisitorsModule() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Filter visitors
-  const myVisitors = visitors.filter((v) => v.unit === currentUser.unit);
+  // Filter visitors (Admin sees all society visitors from MySQL; Resident sees their own unit)
+  const myVisitors = currentRole === 'admin' ? visitors : visitors.filter((v) => v.unit === currentUser.unit);
 
   const filteredVisitors = myVisitors.filter((v) => {
     // Tab filter

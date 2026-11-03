@@ -104,7 +104,7 @@ export const POST = route(async (request) => {
   }
 
   const id = newId('vis');
-  const passCode = await uniquePassCode();
+  const passCode = await uniquePassCode(input.passCode);
   const status: Visitor['status'] = user.role === 'security' ? 'pending' : 'expected';
   const createdAt = new Date();
 

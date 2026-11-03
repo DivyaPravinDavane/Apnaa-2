@@ -20,13 +20,13 @@ interface MyBookingsModuleProps {
 }
 
 export function MyBookingsModule({ onNavigateToAmenities }: MyBookingsModuleProps) {
-  const { bookings, currentUser, cancelBooking } = useSociety();
+  const { bookings, currentUser, currentRole, cancelBooking } = useSociety();
   const [activeTab, setActiveTab] = useState<'upcoming' | 'completed' | 'cancelled' | 'all'>('upcoming');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBookingForPass, setSelectedBookingForPass] = useState<Booking | null>(null);
   const [bookingToCancel, setBookingToCancel] = useState<Booking | null>(null);
 
-  const myBookings = bookings.filter((b) => b.userId === currentUser.id);
+  const myBookings = currentRole === 'admin' ? bookings : bookings.filter((b) => b.userId === currentUser.id);
 
   const filteredBookings = myBookings.filter((b) => {
     if (activeTab === 'upcoming' && (b.status === 'cancelled' || b.status === 'completed')) return false;

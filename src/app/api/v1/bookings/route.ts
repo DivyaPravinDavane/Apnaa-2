@@ -76,7 +76,7 @@ export const POST = route(async (request) => {
   }
 
   const id = newId('bk');
-  const bookingReference = await uniqueBookingReference();
+  const bookingReference = await uniqueBookingReference(input.bookingReference);
   const qrToken = `SOCIETY|${bookingReference}|${amenity.id}|${input.date}`;
 
   try {

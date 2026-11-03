@@ -10,6 +10,8 @@ import {
   LogOut, 
   Settings, 
   Menu,
+  Database,
+  RefreshCw,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -21,8 +23,16 @@ interface HeaderProps {
 }
 
 export function Header({ onToggleSidebar, onOpenNotifications, onOpenSearch, onLogout }: HeaderProps) {
-  const { currentUser, currentRole, unreadNotificationsCount, setRole } = useSociety();
+  const { currentUser, currentRole, unreadNotificationsCount, setRole, dbConnected, refreshData, addToast } = useSociety();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+
+  const handleManualSync = async () => {
+    setSyncing(true);
+    await refreshData();
+    setSyncing(false);
+    addToast('MySQL Synchronized', 'Latest records fetched from the database.', 'info');
+  };
 
   const formattedDate = new Date().toLocaleDateString('en-IN', {
     weekday: 'short',
@@ -58,8 +68,18 @@ export function Header({ onToggleSidebar, onOpenNotifications, onOpenSearch, onL
 
       {/* Right: Date, Weather, Notifications, Profile */}
       <div className="flex items-center gap-3 sm:gap-5">
-        {/* Date & Weather widget */}
+        {/* Date & Weather widget + Live MySQL Status */}
         <div className="hidden md:flex items-center gap-3 text-xs text-[#6E6280] border-r border-[#EAE2F2] pr-4">
+          <button
+            type="button"
+            onClick={() => void handleManualSync()}
+            title="Click to sync latest records from MySQL"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-semibold text-[11px] transition-colors cursor-pointer"
+          >
+            <Database className="w-3.5 h-3.5 text-emerald-600" />
+            <span>{dbConnected ? 'MySQL Live' : 'Local Mode'}</span>
+            <RefreshCw className={`w-3 h-3 text-emerald-600 ${syncing ? 'animate-spin' : ''}`} />
+          </button>
           <span>{formattedDate}</span>
           <div className="flex items-center gap-1.5 font-medium text-[#1C1326] bg-[#F8F6FC] px-2 py-1 rounded-md">
             <CloudSun className="w-4 h-4 text-amber-500" />

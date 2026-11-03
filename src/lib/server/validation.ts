@@ -59,6 +59,7 @@ export const visitorCreateSchema = z.object({
   vehicleNumber: z.string().trim().max(32).optional().default(''),
   unit: z.string().trim().max(32).optional(),
   notes: z.string().trim().max(1000).optional().default(''),
+  passCode: z.string().trim().regex(/^V-\d{4,8}$/).optional(),
 });
 
 export const visitorDenySchema = z.object({
@@ -79,6 +80,7 @@ export const bookingCreateSchema = z.object({
   timeSlot: z.string().trim().min(1).max(32),
   guestCount: z.coerce.number().int().min(1).max(20).default(1),
   notes: z.string().trim().max(1000).optional().default(''),
+  bookingReference: z.string().trim().regex(/^BK-\d{4,8}$/).optional(),
 });
 
 export const noticeCreateSchema = z.object({

@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint",
+    "dev": "node node_modules/next/dist/bin/next dev --turbopack",
+    "build": "node node_modules/next/dist/bin/next build",
+    "start": "node node_modules/next/dist/bin/next start",
+    "lint": "node node_modules/eslint/bin/eslint.js",
     "db:setup": "node scripts/db-setup.mjs",
     "db:seed": "node scripts/seed.mjs",
     "db:check": "node -e \"const m=require('mysql2/promise');m.createConnection({host:process.env.DB_HOST||'127.0.0.1',port:+(process.env.DB_PORT||3306),user:process.env.DB_USER||'root',password:process.env.DB_PASSWORD||'',database:process.env.DB_NAME||'apnaa_society'}).then(async c=>{const [r]=await c.query('SELECT 1 AS ok');console.log('MySQL OK',r);await c.end()}).catch(e=>{console.error('MySQL check failed:',e.message);process.exit(1)})\""

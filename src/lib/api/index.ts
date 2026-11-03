@@ -9,12 +9,39 @@ import {
   NotificationItem,
   SecurityLog,
   SocietyEvent,
+  SocietyInfo,
   User,
   Visitor,
 } from '@/types';
 
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1').replace(/\/$/, '');
-const DATA_SOURCE = process.env.NEXT_PUBLIC_DATA_SOURCE || 'mock';
+const DATA_SOURCE = process.env.NEXT_PUBLIC_DATA_SOURCE || 'api';
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY || '';
+
+export interface PublicOverviewData {
+  society: SocietyInfo;
+  amenities: Amenity[];
+  stats: {
+    totalHouseholds: number;
+    totalUnits: number;
+    totalAmenities: number;
+    availableAmenities: number;
+    activeResidents: number;
+    confirmedBookings: number;
+    todaysBookings: number;
+    expectedVisitors: number;
+    pendingVisitors: number;
+    checkedInToday: number;
+    upcomingEvents: number;
+    pendingMedia: number;
+  };
+  personas: {
+    resident: { name: string; unit: string; membershipType: string };
+    admin: { name: string; unit: string; membershipType: string };
+    security: { name: string; unit: string; membershipType: string };
+    facility: { name: string; unit: string; membershipType: string };
+  };
+}
 
 export interface ApiResponse<T> {
   data: T;
@@ -47,6 +74,7 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        ...(API_KEY ? { 'X-API-Key': API_KEY } : {}),
         ...options.headers,
       },
       ...options,
@@ -288,5 +316,9 @@ export const SocietyApi = {
     get: () => apiFetch<import('@/types').SocietyInfo>('/society'),
   },
 
-  health: () => apiFetch<{ status: string; database: string }>('/health'),
+  public: {
+    overview: () => apiFetch<PublicOverviewData>('/public/overview'),
+  },
+
+  health: () => apiFetch<{ status: string; database: string; apiKeyConfigured?: boolean }>('/health'),
 };

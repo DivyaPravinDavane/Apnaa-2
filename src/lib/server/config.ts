@@ -38,6 +38,11 @@ export function getDefaultSocietyId() {
   );
 }
 
+export function getApiKey(): string | null {
+  const key = (process.env.API_KEY || process.env.NEXT_PUBLIC_API_KEY || '').trim();
+  return key.length > 0 ? key : null;
+}
+
 export function isProduction() {
   return process.env.NODE_ENV === 'production';
 }
