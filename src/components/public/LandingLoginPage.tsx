@@ -19,13 +19,12 @@ import {
   BellRing,
   Car,
   FileText,
-  CheckCircle2,
-  Clock,
-  MapPin,
-  Users,
   Check,
-  ChevronRight,
-  Flame,
+  X,
+  Smartphone,
+  KeyRound,
+  Clock,
+  Users,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -34,12 +33,65 @@ interface LandingLoginPageProps {
 }
 
 export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
-  const { setRole } = useSociety();
+  const { loginWithPassword, requestOtp, verifyOtp, addToast } = useSociety();
   const [activeSection, setActiveSection] = useState<'overview' | 'features' | 'amenities' | 'access'>('overview');
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [loginMode, setLoginMode] = useState<'password' | 'otp'>('password');
+  const [loginValue, setLoginValue] = useState('');
+  const [password, setPassword] = useState('');
+  const [mobile, setMobile] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [devOtp, setDevOtp] = useState<string | undefined>();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
 
   const handleQuickDemoLogin = (role: UserRole) => {
-    setRole(role);
     onLoginSuccess(role);
+  };
+
+  const handlePasswordLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setBusy(true);
+    const result = await loginWithPassword(loginValue, password);
+    setBusy(false);
+    if (!result.success) {
+      setError(result.message || 'Unable to sign in.');
+      return;
+    }
+    setLoginOpen(false);
+    setPassword('');
+  };
+
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setBusy(true);
+    const result = await requestOtp(mobile);
+    setBusy(false);
+    if (!result.success) {
+      setError(result.message || 'Unable to send the code.');
+      return;
+    }
+    setOtpSent(true);
+    setDevOtp(result.devOtp);
+    addToast('Code Sent', result.message || 'Enter the 6-digit code to continue.', 'info');
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setBusy(true);
+    const result = await verifyOtp(mobile, otp);
+    setBusy(false);
+    if (!result.success) {
+      setError(result.message || 'Invalid or expired code.');
+      return;
+    }
+    setLoginOpen(false);
+    setOtp('');
+    setOtpSent(false);
   };
 
   const scrollToSection = (sectionId: 'overview' | 'features' | 'amenities' | 'access') => {
@@ -148,11 +200,17 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
             </button>
           </div>
 
-          {/* Right CTA Button */}
-          <div>
+          {/* Right CTA Buttons */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setLoginOpen(true)}
+              className="px-4 py-2.5 rounded-full border border-[#6B21A8] text-[#6B21A8] hover:bg-purple-50 text-xs font-semibold transition-all active:scale-95 cursor-pointer"
+            >
+              Sign In
+            </button>
             <button
               onClick={() => handleQuickDemoLogin('resident')}
-              className="px-6 py-2.5 rounded-full bg-[#6B21A8] hover:bg-[#581C87] text-white text-xs font-semibold transition-all shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer"
+              className="px-5 py-2.5 rounded-full bg-[#6B21A8] hover:bg-[#581C87] text-white text-xs font-semibold transition-all shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer"
             >
               <span>Enter Portal</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -914,6 +972,182 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
           </div>
         </div>
       </section>
+
+      {/* Sign In Modal */}
+      {loginOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
+            <div className="px-6 py-5 bg-[#2E1065] text-white flex items-start justify-between">
+              <div>
+                <p className="text-[10px] uppercase tracking-wider font-bold text-purple-300">Secure Resident Portal</p>
+                <h3 className="text-lg font-bold mt-1">Sign in to Apnaa</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setLoginOpen(false)}
+                className="p-1.5 rounded-full text-purple-200 hover:text-white hover:bg-white/10"
+                aria-label="Close sign in"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-slate-100 text-xs font-semibold">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLoginMode('password');
+                    setError('');
+                  }}
+                  className={`py-2 rounded-lg transition-colors ${
+                    loginMode === 'password' ? 'bg-white text-[#6B21A8] shadow-sm' : 'text-slate-500'
+                  }`}
+                >
+                  Password
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLoginMode('otp');
+                    setError('');
+                  }}
+                  className={`py-2 rounded-lg transition-colors ${
+                    loginMode === 'otp' ? 'bg-white text-[#6B21A8] shadow-sm' : 'text-slate-500'
+                  }`}
+                >
+                  Mobile OTP
+                </button>
+              </div>
+
+              {error && (
+                <p className="text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-100 rounded-xl px-3 py-2">
+                  {error}
+                </p>
+              )}
+
+              {loginMode === 'password' ? (
+                <form onSubmit={handlePasswordLogin} className="space-y-3">
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">
+                      Email or phone
+                    </label>
+                    <div className="relative">
+                      <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        required
+                        autoComplete="username"
+                        value={loginValue}
+                        onChange={(e) => setLoginValue(e.target.value)}
+                        placeholder="priya.sharma@example.com"
+                        className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="password"
+                        required
+                        autoComplete="current-password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••••••"
+                        className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={busy}
+                    className="w-full py-2.5 rounded-xl bg-[#6B21A8] hover:bg-[#581C87] disabled:opacity-60 text-white text-xs font-semibold shadow-sm"
+                  >
+                    {busy ? 'Signing in…' : 'Sign In Securely'}
+                  </button>
+                  <p className="text-[10px] text-slate-500 text-center">
+                    Demo: <span className="font-mono">priya.sharma@example.com</span> / <span className="font-mono">Apnaa@12345</span>
+                  </p>
+                </form>
+              ) : (
+                <form onSubmit={otpSent ? handleVerifyOtp : handleSendOtp} className="space-y-3">
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">
+                      Registered mobile
+                    </label>
+                    <div className="relative">
+                      <Smartphone className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="tel"
+                        required
+                        value={mobile}
+                        onChange={(e) => setMobile(e.target.value)}
+                        placeholder="+91 98765 43210"
+                        className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                      />
+                    </div>
+                  </div>
+
+                  {otpSent && (
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">
+                        6-digit code
+                      </label>
+                      <div className="relative">
+                        <KeyRound className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          required
+                          inputMode="numeric"
+                          maxLength={6}
+                          value={otp}
+                          onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                          placeholder="000000"
+                          className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs tracking-[0.4em] focus:outline-none focus:border-[#6B21A8]"
+                        />
+                      </div>
+                      {devOtp && (
+                        <p className="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-2.5 py-1.5 mt-2">
+                          Development code: <strong className="font-mono">{devOtp}</strong>
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={busy}
+                    className="w-full py-2.5 rounded-xl bg-[#6B21A8] hover:bg-[#581C87] disabled:opacity-60 text-white text-xs font-semibold shadow-sm"
+                  >
+                    {busy ? 'Please wait…' : otpSent ? 'Verify & Sign In' : 'Send One-Time Code'}
+                  </button>
+                  {otpSent && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOtpSent(false);
+                        setOtp('');
+                        setDevOtp(undefined);
+                      }}
+                      className="w-full text-[11px] font-semibold text-[#6B21A8] hover:underline"
+                    >
+                      Use a different number
+                    </button>
+                  )}
+                </form>
+              )}
+
+              <p className="text-[10px] text-slate-400 text-center leading-relaxed">
+                Protected by HTTP-only session cookies, rate limiting, and role-based access control.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 5. FOOTER */}
       <footer className="py-10 px-6 sm:px-10 lg:px-16 max-w-[1400px] w-full mx-auto border-t border-[#EAE2F2] flex flex-col sm:flex-row items-center justify-between text-xs text-[#6E6280] gap-4">

@@ -39,7 +39,8 @@ export function Community3DVisual() {
 
       container.appendChild(renderer.domElement);
     } catch {
-      setHasWebGL(false);
+      // Defer so the fallback state is set outside the effect's synchronous body.
+      queueMicrotask(() => setHasWebGL(false));
       return;
     }
 
@@ -174,7 +175,7 @@ export function Community3DVisual() {
       [-6, 0, -5],
     ];
 
-    treePositions.forEach(([x, y, z]) => {
+    treePositions.forEach(([x, , z]) => {
       const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.15, 0.8), treeTrunkMat);
       trunk.position.set(x, 0.4, z);
       trunk.castShadow = true;
@@ -211,7 +212,7 @@ export function Community3DVisual() {
     window.addEventListener('resize', handleResize);
 
     // Animation Loop
-    let clock = new THREE.Clock();
+    const clock = new THREE.Clock();
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);

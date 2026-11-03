@@ -9,7 +9,6 @@ import {
   BellRing,
   TrendingUp,
   RefreshCw,
-  Plus,
   ArrowUpRight,
   UserPlus,
   Calendar,
@@ -37,33 +36,70 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
   const {
     visitors,
     bookings,
-    notices,
-    events,
+    amenities,
+    members,
+    society,
     auditLogs,
     resetDemoData,
-    addToast
   } = useSociety();
 
-  const [dateRange, setDateRange] = useState('October 2026');
+  const today = new Date().toISOString().slice(0, 10);
+  const [dateRange] = useState(
+    new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
+  );
 
-  // Seed chart data
-  const bookingActivityData = [
-    { day: 'Mon', bookings: 14 },
-    { day: 'Tue', bookings: 18 },
-    { day: 'Wed', bookings: 12 },
-    { day: 'Thu', bookings: 22 },
-    { day: 'Fri', bookings: 28 },
-    { day: 'Sat', bookings: 42 },
-    { day: 'Sun', bookings: 48 },
-  ];
+  const totalResidents = society.totalHouseholds || members.length;
+  const todaysBookings = bookings.filter((b) => b.date === today && b.status !== 'cancelled');
+  const pendingApprovals = visitors.filter((v) => v.status === 'pending').length;
 
-  const amenityUsageData = [
-    { name: 'Pool', value: 32, color: '#6B21A8' },
-    { name: 'Gym', value: 24, color: '#9333EA' },
-    { name: 'Clubhouse', value: 18, color: '#240B3B' },
-    { name: 'Sports', value: 14, color: '#C084FC' },
-    { name: 'Others', value: 12, color: '#7E22CE' },
-  ];
+  // Last 7 days of reservation activity, derived from persisted bookings.
+  const bookingActivityData = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (6 - index));
+    const key = date.toISOString().slice(0, 10);
+    return {
+      day: date.toLocaleDateString('en-IN', { weekday: 'short' }),
+      bookings: bookings.filter((b) => b.date === key && b.status !== 'cancelled').length,
+    };
+  });
+  const peakDay = bookingActivityData.reduce(
+    (best, entry) => (entry.bookings > best.bookings ? entry : best),
+    bookingActivityData[0]
+  );
+
+  // Amenity utilisation split by amenity name (top four, remainder grouped).
+  const usageCounts = new Map<string, number>();
+  bookings
+    .filter((b) => b.status !== 'cancelled')
+    .forEach((b) => usageCounts.set(b.amenityName, (usageCounts.get(b.amenityName) || 0) + 1));
+  const usageTotal = Array.from(usageCounts.values()).reduce((sum, value) => sum + value, 0);
+  const usagePalette = ['#6B21A8', '#9333EA', '#240B3B', '#C084FC', '#7E22CE'];
+  const sortedUsage = Array.from(usageCounts.entries()).sort((a, b) => b[1] - a[1]);
+  const amenityUsageData =
+    usageTotal === 0
+      ? amenities.slice(0, 5).map((amenity, index) => ({
+          name: amenity.name,
+          value: 0,
+          color: usagePalette[index % usagePalette.length],
+        }))
+      : [
+          ...sortedUsage.slice(0, 4).map(([name, count], index) => ({
+            name,
+            value: Math.round((count / usageTotal) * 100),
+            color: usagePalette[index % usagePalette.length],
+          })),
+          ...(sortedUsage.length > 4
+            ? [
+                {
+                  name: 'Others',
+                  value: Math.round(
+                    (sortedUsage.slice(4).reduce((sum, [, count]) => sum + count, 0) / usageTotal) * 100
+                  ),
+                  color: usagePalette[4],
+                },
+              ]
+            : []),
+        ];
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-12">
@@ -79,7 +115,7 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
             </span>
           </div>
           <p className="text-xs sm:text-sm text-[#6E6280] mt-1">
-            Green Valley Residency Co-operative Housing Society • Operations Console
+            {society.name} • Operations Console
           </p>
         </div>
 
@@ -88,9 +124,9 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
             {dateRange}
           </span>
           <button
-            onClick={() => addToast('Refreshed', 'Operations metrics re-indexed with live state.', 'info')}
+            onClick={resetDemoData}
             className="p-2 rounded-xl border border-[#EAE2F2] bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors"
-            title="Refresh statistics"
+            title="Refresh statistics from the database"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -106,10 +142,10 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
               <Users className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-3xl font-bold text-slate-900 mt-3">248</p>
+          <p className="text-3xl font-bold text-slate-900 mt-3">{totalResidents}</p>
           <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1 mt-1">
             <TrendingUp className="w-3.5 h-3.5" />
-            <span>100% active households</span>
+            <span>{society.activeResidents} active portal accounts</span>
           </p>
         </div>
 
@@ -134,7 +170,7 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
             </div>
           </div>
           <p className="text-3xl font-bold text-amber-600 mt-3">
-            {visitors.filter((v) => v.status === 'pending').length}
+            {pendingApprovals || society.pendingApprovals}
           </p>
           <p className="text-xs text-slate-500 mt-1">Awaiting resident confirmation</p>
         </div>
@@ -147,10 +183,10 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
             </div>
           </div>
           <p className="text-3xl font-bold text-slate-900 mt-3">
-            {bookings.filter((b) => b.status === 'confirmed').length}
+            {todaysBookings.length}
           </p>
           <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1 mt-1">
-            <span>Slots active across 12 facilities</span>
+            <span>Slots active across {amenities.length} facilities</span>
           </p>
         </div>
       </div>
@@ -165,7 +201,7 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
               <p className="text-xs text-slate-500">Daily reservation counts over the last 7 days</p>
             </div>
             <span className="text-xs font-semibold text-[#6B21A8] bg-purple-50 px-2.5 py-1 rounded-full">
-              Peak: Weekends
+              {usageTotal === 0 && peakDay.bookings === 0 ? 'Awaiting bookings' : `Peak: ${peakDay.day}`}
             </span>
           </div>
 
@@ -228,14 +264,20 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
           </div>
 
           {/* Legend */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-2 border-t border-slate-100 text-xs">
-            {amenityUsageData.map((item) => (
-              <div key={item.name} className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                <span className="text-slate-600 truncate">{item.name} ({item.value}%)</span>
-              </div>
-            ))}
-          </div>
+          {usageTotal === 0 ? (
+            <p className="text-xs text-slate-500 pt-2 border-t border-slate-100">
+              No amenity reservations have been recorded yet.
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-2 border-t border-slate-100 text-xs">
+              {amenityUsageData.map((item) => (
+                <div key={item.name} className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                  <span className="text-slate-600 truncate">{item.name} ({item.value}%)</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

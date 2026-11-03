@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useSociety } from '@/context/SocietyContext';
-import { Amenity, AmenityCategory } from '@/types';
+import { SocietyApi } from '@/lib/api';
+import { Amenity } from '@/types';
 import {
   Search,
   Users,
@@ -10,19 +11,49 @@ import {
   MapPin,
   CalendarCheck,
   CheckCircle2,
-  AlertCircle,
-  X,
   ChevronLeft,
-  ChevronRight,
-  Shield,
-  FileText,
   Sparkles,
-  QrCode,
   ArrowRight
 } from 'lucide-react';
 import Image from 'next/image';
 import confetti from 'canvas-confetti';
 import { QRCodeSVG } from 'qrcode.react';
+
+function parseTimeToMinutes(value: string): number | null {
+  const match = value.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return null;
+  let hours = Number(match[1]) % 12;
+  if (match[3].toUpperCase() === 'PM') hours += 12;
+  return hours * 60 + Number(match[2]);
+}
+
+function formatMinutes(minutes: number): string {
+  const hours24 = Math.floor(minutes / 60) % 24;
+  const mins = minutes % 60;
+  const suffix = hours24 >= 12 ? 'PM' : 'AM';
+  const hours12 = hours24 % 12 || 12;
+  return `${hours12}:${String(mins).padStart(2, '0')} ${suffix}`;
+}
+
+function buildSlots(operatingHours: string, slotDurationMinutes: number): string[] {
+  const [startRaw, endRaw] = operatingHours.split('-').map((part) => part.trim());
+  const start = parseTimeToMinutes(startRaw);
+  const end = parseTimeToMinutes(endRaw);
+  if (start === null || end === null || end <= start) return [];
+
+  const duration = slotDurationMinutes > 0 ? slotDurationMinutes : 60;
+  const slots: string[] = [];
+  for (let cursor = start; cursor + duration <= end && slots.length < 48; cursor += duration) {
+    slots.push(`${formatMinutes(cursor)} - ${formatMinutes(cursor + duration)}`);
+  }
+  return slots;
+}
+
+function addDays(date: string, days: number): string {
+  const parsed = new Date(`${date}T00:00:00Z`);
+  parsed.setUTCDate(parsed.getUTCDate() + Math.max(0, days));
+  return parsed.toISOString().slice(0, 10);
+}
 
 export function AmenitiesModule() {
   const { amenities, bookings, currentUser, createBooking } = useSociety();
@@ -56,22 +87,68 @@ export function AmenitiesModule() {
     return true;
   });
 
-  // Time slots generation for current amenity
-  const timeSlots = [
-    '6:00 AM - 7:00 AM',
-    '7:00 AM - 8:00 AM',
-    '8:00 AM - 9:00 AM',
-    '9:00 AM - 10:00 AM',
-    '10:00 AM - 11:00 AM',
-    '4:00 PM - 5:00 PM',
-    '5:00 PM - 6:00 PM',
-    '6:00 PM - 7:00 PM',
-    '7:00 PM - 8:00 PM',
-    '8:00 PM - 9:00 PM',
-  ];
+  // Slot availability is fetched from the API so residents cannot pick a slot
+  // another resident already holds.
+  const [remoteSlots, setRemoteSlots] = useState<Record<string, boolean> | null>(null);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+
+  const timeSlots = useMemo(
+    () =>
+      selectedAmenity
+        ? buildSlots(selectedAmenity.operatingHours, selectedAmenity.slotDurationMinutes)
+        : [],
+    [selectedAmenity]
+  );
+
+  const today = new Date().toISOString().split('T')[0];
+  const maxDate = selectedAmenity
+    ? addDays(today, selectedAmenity.bookingHorizonDays)
+    : today;
+
+  useEffect(() => {
+    if (!selectedAmenity || !SocietyApi.isApiMode()) {
+      queueMicrotask(() => {
+        setRemoteSlots(null);
+        setSlotsLoading(false);
+      });
+      return;
+    }
+
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+      setSlotsLoading(true);
+      setRemoteSlots(null);
+    });
+
+    SocietyApi.amenities
+      .getAvailability(selectedAmenity.id, selectedDate)
+      .then((result) => {
+        if (!active) return;
+        if (result.data) {
+          setRemoteSlots(
+            Object.fromEntries(
+              result.data.slots.map((slot) => [
+                `${slot.startTime} - ${slot.endTime}`,
+                slot.isAvailable,
+              ])
+            )
+          );
+        }
+        setSlotsLoading(false);
+      })
+      .catch(() => {
+        if (active) setSlotsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [selectedAmenity, selectedDate]);
 
   // Helper to check if a slot is booked
   const isSlotBooked = (amenityId: string, date: string, slot: string) => {
+    if (remoteSlots) return !remoteSlots[slot];
     return bookings.some(
       (b) =>
         b.amenityId === amenityId &&
@@ -79,6 +156,15 @@ export function AmenitiesModule() {
         b.timeSlot === slot &&
         b.status !== 'cancelled'
     );
+  };
+
+  const handleSelectAmenity = (amenity: Amenity) => {
+    const min = new Date().toISOString().split('T')[0];
+    const max = addDays(min, amenity.bookingHorizonDays);
+    setSelectedAmenity(amenity);
+    setSelectedDate(selectedDate < min || selectedDate > max ? min : selectedDate);
+    setSelectedTimeSlot('');
+    setConfirmedBookingRef(null);
   };
 
   const handleConfirmReservation = () => {
@@ -288,6 +374,8 @@ export function AmenitiesModule() {
                     <input
                       type="date"
                       value={selectedDate}
+                      min={today}
+                      max={maxDate}
                       onChange={(e) => {
                         setSelectedDate(e.target.value);
                         setSelectedTimeSlot('');
@@ -298,7 +386,17 @@ export function AmenitiesModule() {
 
                   {/* Slot pills */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 pt-2">
-                    {timeSlots.map((slot) => {
+                    {slotsLoading && (
+                      <p className="col-span-full text-xs text-slate-500">
+                        Checking live availability…
+                      </p>
+                    )}
+                    {!slotsLoading && timeSlots.length === 0 && (
+                      <p className="col-span-full text-xs text-slate-500">
+                        No bookable slots are configured for this amenity.
+                      </p>
+                    )}
+                    {!slotsLoading && timeSlots.map((slot) => {
                       const booked = isSlotBooked(selectedAmenity.id, selectedDate, slot);
                       const isSelected = selectedTimeSlot === slot;
 
@@ -524,10 +622,7 @@ export function AmenitiesModule() {
                   </div>
 
                   <button
-                    onClick={() => {
-                      setSelectedAmenity(amenity);
-                      setConfirmedBookingRef(null);
-                    }}
+                    onClick={() => handleSelectAmenity(amenity)}
                     className="w-full py-2.5 rounded-xl bg-[#F8F6FC] hover:bg-[#6B21A8] hover:text-white text-[#6B21A8] font-semibold text-xs transition-all flex items-center justify-center gap-2 shadow-sm"
                   >
                     <span>View Details & Book</span>

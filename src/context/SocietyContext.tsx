@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { SocietyApi, type ApiResult } from '@/lib/api';
 import {
   User,
   UserRole,
@@ -16,6 +17,7 @@ import {
   FacilityCheckIn,
   AuditLog,
   RSVPStatus,
+  SocietyInfo,
 } from '@/types';
 import {
   INITIAL_USERS,
@@ -43,6 +45,15 @@ interface SocietyContextType {
   currentRole: UserRole;
   setRole: (role: UserRole) => void;
   currentUser: User;
+  authReady: boolean;
+  isAuthenticated: boolean;
+  loginWithPassword: (login: string, password: string) => Promise<{ success: boolean; message?: string }>;
+  requestOtp: (mobile: string) => Promise<{ success: boolean; message?: string; devOtp?: string }>;
+  verifyOtp: (mobile: string, otp: string) => Promise<{ success: boolean; message?: string }>;
+  logout: () => Promise<void>;
+
+  // Society
+  society: SocietyInfo;
   
   // Visitors
   visitors: Visitor[];
@@ -58,6 +69,7 @@ interface SocietyContextType {
   createBooking: (bookingData: Omit<Booking, 'id' | 'bookingReference' | 'status' | 'qrToken' | 'createdAt'>) => { success: boolean; message: string; booking?: Booking };
   cancelBooking: (id: string) => void;
   checkInFacilityBooking: (bookingRef: string) => { success: boolean; message: string; checkIn?: FacilityCheckIn };
+  updateAmenity: (id: string, patch: Partial<Amenity>) => Promise<{ success: boolean; message: string }>;
   
   // Notices
   notices: Notice[];
@@ -73,6 +85,20 @@ interface SocietyContextType {
   // Members
   members: Member[];
   updateUserProfile: (profileData: Partial<User>) => void;
+  createResident: (data: {
+    name: string;
+    email: string;
+    phone: string;
+    unit: string;
+    wing: string;
+    floor: string;
+    role: 'resident' | 'admin' | 'security' | 'facility';
+    membershipType: 'Owner' | 'Tenant' | 'Family Member';
+    password?: string;
+  }) => Promise<{ success: boolean; message: string; member?: Member }>;
+  updateResident: (id: string, patch: Record<string, unknown>) => Promise<{ success: boolean; message: string }>;
+  updateResidentAccess: (id: string, isActive: boolean) => Promise<{ success: boolean; message: string }>;
+  removeResident: (id: string) => Promise<{ success: boolean; message: string }>;
   
   // Gallery
   albums: Album[];
@@ -101,20 +127,46 @@ interface SocietyContextType {
 
 const SocietyContext = createContext<SocietyContextType | undefined>(undefined);
 
+/** When the API is the source of truth, start empty instead of showing seed data. */
+const API_MODE = SocietyApi.isApiMode();
+const seed = <T,>(value: T, empty: T): T => (API_MODE ? empty : value);
+
+const MOCK_SOCIETY: SocietyInfo = {
+  id: 'soc_green_valley_01',
+  name: 'Green Valley Residency',
+  address: 'Green Valley Road, Powai, Mumbai 400076',
+  totalHouseholds: 248,
+  totalUnits: 180,
+  activeResidents: INITIAL_MEMBERS.length,
+  pendingApprovals: INITIAL_VISITORS.filter((v) => v.status === 'pending').length,
+  activeClosures: INITIAL_AMENITIES.filter((a) => a.status !== 'available').length,
+  nextMaintenanceDate: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+  nextMaintenanceNote: 'Quarterly fire safety audit & lift servicing',
+};
+
+let toastSequence = 0;
+function nextToastId(): string {
+  toastSequence += 1;
+  return `toast_${toastSequence}`;
+}
+
 export function SocietyProvider({ children }: { children: React.ReactNode }) {
   const [currentRole, setRoleState] = useState<UserRole>('resident');
+  const [authReady, setAuthReady] = useState(!API_MODE);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [users, setUsers] = useState<Record<string, User>>(INITIAL_USERS);
-  const [visitors, setVisitors] = useState<Visitor[]>(INITIAL_VISITORS);
-  const [amenities, setAmenities] = useState<Amenity[]>(INITIAL_AMENITIES);
-  const [bookings, setBookings] = useState<Booking[]>(INITIAL_BOOKINGS);
-  const [notices, setNotices] = useState<Notice[]>(INITIAL_NOTICES);
-  const [events, setEvents] = useState<SocietyEvent[]>(INITIAL_EVENTS);
-  const [members, setMembers] = useState<Member[]>(INITIAL_MEMBERS);
-  const [albums, setAlbums] = useState<Album[]>(INITIAL_ALBUMS);
-  const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
-  const [securityLogs, setSecurityLogs] = useState<SecurityLog[]>(INITIAL_SECURITY_LOGS);
-  const [facilityCheckIns, setFacilityCheckIns] = useState<FacilityCheckIn[]>(INITIAL_FACILITY_CHECKINS);
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(INITIAL_AUDIT_LOGS);
+  const [society, setSociety] = useState<SocietyInfo>(seed(MOCK_SOCIETY, MOCK_SOCIETY));
+  const [visitors, setVisitors] = useState<Visitor[]>(seed(INITIAL_VISITORS, []));
+  const [amenities, setAmenities] = useState<Amenity[]>(seed(INITIAL_AMENITIES, []));
+  const [bookings, setBookings] = useState<Booking[]>(seed(INITIAL_BOOKINGS, []));
+  const [notices, setNotices] = useState<Notice[]>(seed(INITIAL_NOTICES, []));
+  const [events, setEvents] = useState<SocietyEvent[]>(seed(INITIAL_EVENTS, []));
+  const [members, setMembers] = useState<Member[]>(seed(INITIAL_MEMBERS, []));
+  const [albums, setAlbums] = useState<Album[]>(seed(INITIAL_ALBUMS, []));
+  const [notifications, setNotifications] = useState<NotificationItem[]>(seed(INITIAL_NOTIFICATIONS, []));
+  const [securityLogs, setSecurityLogs] = useState<SecurityLog[]>(seed(INITIAL_SECURITY_LOGS, []));
+  const [facilityCheckIns, setFacilityCheckIns] = useState<FacilityCheckIn[]>(seed(INITIAL_FACILITY_CHECKINS, []));
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(seed(INITIAL_AUDIT_LOGS, []));
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   const currentUser = useMemo(() => {
@@ -122,7 +174,7 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
   }, [currentRole, users]);
 
   const addToast = (title: string, message?: string, type: ToastMessage['type'] = 'success') => {
-    const id = `toast_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const id = nextToastId();
     setToasts((prev) => [...prev, { id, title, message, type }]);
     setTimeout(() => {
       removeToast(id);
@@ -132,6 +184,104 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
   const removeToast = (id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
+
+  /**
+   * Pull the authoritative state from MySQL. Role-scoped endpoints mean each
+   * user only ever receives data the server allows them to see.
+   */
+  const hydrate = async (role: UserRole = currentRole) => {
+    if (!API_MODE) return;
+
+    const [me, visitorRes, amenityRes, bookingRes, noticeRes, eventRes, memberRes, albumRes, notificationRes, societyRes] =
+      await Promise.all([
+        SocietyApi.auth.getMe(),
+        SocietyApi.visitors.list(),
+        SocietyApi.amenities.list(),
+        SocietyApi.bookings.list(),
+        SocietyApi.notices.list(),
+        SocietyApi.events.list(),
+        SocietyApi.directory.list(),
+        SocietyApi.gallery.albums(),
+        SocietyApi.notifications.list(),
+        SocietyApi.society.get(),
+      ]);
+
+    if (me.error?.code === 'UNAUTHENTICATED') return;
+
+    let effectiveRole = role;
+    if (me.data) {
+      effectiveRole = me.data.role;
+      setUsers((prev) => ({ ...prev, [me.data!.role]: me.data! }));
+      setRoleState(me.data.role);
+    }
+
+    if (visitorRes.data) setVisitors(visitorRes.data);
+    if (amenityRes.data) setAmenities(amenityRes.data);
+    if (bookingRes.data) setBookings(bookingRes.data);
+    if (noticeRes.data) setNotices(noticeRes.data);
+    if (eventRes.data) setEvents(eventRes.data);
+    if (memberRes.data) setMembers(memberRes.data);
+    if (albumRes.data) setAlbums(albumRes.data);
+    if (notificationRes.data) setNotifications(notificationRes.data);
+    if (societyRes.data) setSociety(societyRes.data);
+
+    if (effectiveRole === 'admin') {
+      const residents = await SocietyApi.admin.residents.list();
+      if (residents.data) setMembers(residents.data);
+      const audit = await SocietyApi.audit.list();
+      if (audit.data) setAuditLogs(audit.data);
+    }
+
+    if (effectiveRole === 'admin' || effectiveRole === 'security') {
+      const logs = await SocietyApi.security.logs();
+      if (logs.data) setSecurityLogs(logs.data);
+    }
+    if (effectiveRole === 'facility' || effectiveRole === 'admin' || effectiveRole === 'security') {
+      const checkIns = await SocietyApi.facility.checkIns();
+      if (checkIns.data) setFacilityCheckIns(checkIns.data);
+    }
+  };
+
+  /** Fire an API mutation, then reconcile with the server (or revert on error). */
+  const apiSync = (request: Promise<ApiResult<unknown>>, role: UserRole = currentRole) => {
+    if (!API_MODE) return;
+    void request
+      .then(async (result) => {
+        if (result.error) {
+          addToast('Action Failed', result.error.message, 'error');
+        }
+        await hydrate(role);
+      })
+      .catch(() => {
+        addToast('Action Failed', 'The server could not be reached. Please try again.', 'error');
+      });
+  };
+
+  // Restore an existing HTTP-only session on page load.
+  useEffect(() => {
+    if (!API_MODE) return;
+    let active = true;
+
+    (async () => {
+      try {
+        const session = await SocietyApi.auth.session();
+        if (!active) return;
+        if (session.data) {
+          setRoleState(session.data.role);
+          setUsers((prev) => ({ ...prev, [session.data!.role]: session.data! }));
+          setIsAuthenticated(true);
+          await hydrate(session.data.role);
+        }
+      } finally {
+        if (active) setAuthReady(true);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const logAudit = (action: string, details: string) => {
     const newLog: AuditLog = {
@@ -144,9 +294,85 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
     setAuditLogs((prev) => [newLog, ...prev]);
   };
 
+  const applySessionUser = async (user: User) => {
+    setUsers((prev) => ({ ...prev, [user.role]: user }));
+    setRoleState(user.role);
+    setIsAuthenticated(true);
+    await hydrate(user.role);
+  };
+
+  const loginWithPassword = async (login: string, password: string) => {
+    if (!API_MODE) {
+      setIsAuthenticated(true);
+      return { success: true };
+    }
+    const result = await SocietyApi.auth.loginWithPassword(login, password);
+    if (result.error || !result.data) {
+      return { success: false, message: result.error?.message || 'Unable to sign in.' };
+    }
+    await applySessionUser(result.data);
+    addToast('Welcome Back', `Signed in as ${result.data.name}.`);
+    return { success: true };
+  };
+
+  const requestOtp = async (mobile: string) => {
+    if (!API_MODE) {
+      return { success: true, devOtp: '123456' };
+    }
+    const result = await SocietyApi.auth.requestOtp(mobile);
+    if (result.error || !result.data) {
+      return { success: false, message: result.error?.message || 'Unable to send the code.' };
+    }
+    return {
+      success: true,
+      devOtp: result.data.devOtp,
+      message: 'If the number belongs to a resident, a 6-digit code has been sent.',
+    };
+  };
+
+  const verifyOtp = async (mobile: string, otp: string) => {
+    if (!API_MODE) {
+      setIsAuthenticated(true);
+      return { success: true };
+    }
+    const result = await SocietyApi.auth.verifyOtp(mobile, otp);
+    if (result.error || !result.data) {
+      return { success: false, message: result.error?.message || 'Invalid or expired code.' };
+    }
+    await applySessionUser(result.data);
+    addToast('Welcome Back', `Signed in as ${result.data.name}.`);
+    return { success: true };
+  };
+
+  const logout = async () => {
+    if (API_MODE) {
+      await SocietyApi.auth.logout();
+    }
+    setIsAuthenticated(false);
+    setRoleState('resident');
+    addToast('Signed Out', 'Your secure session has ended.', 'info');
+  };
+
   const setRole = (role: UserRole) => {
     setRoleState(role);
-    addToast('Demonstration Role Changed', `Now viewing as ${role.toUpperCase()}: ${users[role].name}`, 'info');
+    addToast('Demonstration Role Changed', `Now viewing as ${role.toUpperCase()}: ${users[role]?.name || role}`, 'info');
+
+    if (!API_MODE) {
+      setIsAuthenticated(true);
+      return;
+    }
+    void (async () => {
+      const result = await SocietyApi.auth.demoLogin(role);
+      if (result.error) {
+        addToast('Sign-in Failed', result.error.message, 'error');
+        return;
+      }
+      if (result.data) {
+        setUsers((prev) => ({ ...prev, [result.data!.role]: result.data! }));
+      }
+      setIsAuthenticated(true);
+      await hydrate(role);
+    })();
   };
 
   // Visitor actions
@@ -167,6 +393,7 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
     const visitorName = visitor ? visitor.name : 'Visitor';
     logAudit('Visitor Approved', `Approved gate pass for ${visitorName}`);
     addToast('Visitor Approved', `${visitorName} has been approved for entry. Pass ${visitor?.passCode || ''} is now active.`);
+    apiSync(SocietyApi.visitors.approve(id));
   };
 
   const denyVisitor = (id: string, reason?: string) => {
@@ -186,6 +413,7 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
     const visitorName = visitor ? visitor.name : 'Visitor';
     logAudit('Visitor Denied', `Declined access for ${visitorName}${reason ? ` (${reason})` : ''}`);
     addToast('Visitor Request Denied', `Entry request for ${visitorName} was declined.`, 'warning');
+    apiSync(SocietyApi.visitors.deny(id, reason));
   };
 
   const createVisitor = (data: Partial<Visitor>): Visitor => {
@@ -232,6 +460,22 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
       addToast('Visitor Pass Created', `Digital entry pass generated: ${passCode}`);
     }
 
+    apiSync(
+      SocietyApi.visitors.create({
+        name: newVisitor.name,
+        phone: newVisitor.phone,
+        visitDate: newVisitor.visitDate,
+        arrivalTime: newVisitor.arrivalTime,
+        departureTime: newVisitor.departureTime,
+        purpose: newVisitor.purpose,
+        visitorCount: newVisitor.visitorCount,
+        vehicleType: newVisitor.vehicleType,
+        vehicleNumber: newVisitor.vehicleNumber,
+        unit: newVisitor.unit,
+        notes: newVisitor.notes,
+      })
+    );
+
     return newVisitor;
   };
 
@@ -276,6 +520,7 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
     setSecurityLogs((prev) => [newLog, ...prev]);
     logAudit('Pass Verified & Check-in', `Recorded entry for ${visitor.name} (${visitor.passCode}) at ${gate}`);
     addToast('Visitor Checked In', `Entry approved for ${visitor.name} -> ${visitor.unit}`);
+    apiSync(SocietyApi.visitors.checkIn(visitor.passCode, gate));
 
     return { success: true, message: `Entry authorized for ${visitor.name}`, visitor };
   };
@@ -309,6 +554,7 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
     setSecurityLogs((prev) => [newLog, ...prev]);
     logAudit('Visitor Checked Out', `Recorded exit for ${visitor.name} (${visitor.passCode})`);
     addToast('Visitor Checked Out', `Exit recorded for ${visitor.name}`);
+    apiSync(SocietyApi.visitors.checkOut(visitor.id));
 
     return { success: true, message: `Exit logged for ${visitor.name}`, visitor };
   };
@@ -370,6 +616,15 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
 
     logAudit('Amenity Booked', `Booked ${newBooking.amenityName} on ${newBooking.date} (${newBooking.bookingReference})`);
     addToast('Booking Confirmed!', `Reservation ${bookingReference} for ${newBooking.amenityName} successfully confirmed.`);
+    apiSync(
+      SocietyApi.bookings.create({
+        amenityId: data.amenityId,
+        date: data.date,
+        timeSlot: data.timeSlot,
+        guestCount: data.guestCount,
+        notes: data.notes,
+      })
+    );
 
     return { success: true, message: 'Booking confirmed successfully', booking: newBooking };
   };
@@ -384,6 +639,7 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
 
     logAudit('Booking Cancelled', `Cancelled reservation ${booking.bookingReference} for ${booking.amenityName}`);
     addToast('Booking Cancelled', `Reservation ${booking.bookingReference} has been cancelled and slot released.`);
+    apiSync(SocietyApi.bookings.cancel(id));
   };
 
   const checkInFacilityBooking = (bookingRef: string) => {
@@ -421,8 +677,34 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
     setFacilityCheckIns((prev) => [checkIn, ...prev]);
     logAudit('Facility Check-In', `Verified reservation ${booking.bookingReference} for ${booking.userName}`);
     addToast('Check-In Verified', `Attendance recorded for ${booking.userName} at ${booking.amenityName}`);
+    apiSync(SocietyApi.bookings.checkIn(booking.bookingReference));
 
     return { success: true, message: `Check-in recorded for ${booking.userName}`, checkIn };
+  };
+
+  const updateAmenity = async (
+    id: string,
+    patch: Partial<Amenity>
+  ): Promise<{ success: boolean; message: string }> => {
+    const amenity = amenities.find((a) => a.id === id);
+    if (!amenity) return { success: false, message: 'Amenity not found.' };
+
+    const previous = amenities;
+    setAmenities((prev) => prev.map((a) => (a.id === id ? { ...a, ...patch } : a)));
+    addToast('Amenity Updated', `${amenity.name} configuration has been saved.`);
+    logAudit('Amenity Updated', `Updated ${amenity.name} (${Object.keys(patch).join(', ')})`);
+
+    if (!API_MODE) return { success: true, message: 'Saved.' };
+
+    const result = await SocietyApi.amenities.update(id, patch as Record<string, unknown>);
+    if (result.error || !result.data) {
+      setAmenities(previous);
+      addToast('Update Failed', result.error?.message || 'Could not save the amenity.', 'error');
+      return { success: false, message: result.error?.message || 'Could not save the amenity.' };
+    }
+    setAmenities((prev) => prev.map((a) => (a.id === id ? result.data! : a)));
+    await hydrate();
+    return { success: true, message: 'Saved.' };
   };
 
   // Notices
@@ -430,6 +712,7 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
     setNotices((prev) =>
       prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
     );
+    if (API_MODE) void SocietyApi.notices.markRead(id);
   };
 
   const acknowledgeNotice = (id: string) => {
@@ -448,6 +731,7 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
     );
     logAudit('Notice Acknowledged', `Resident acknowledged circular ${id}`);
     addToast('Notice Acknowledged', 'Your acknowledgement has been recorded by the management committee.');
+    apiSync(SocietyApi.notices.acknowledge(id));
   };
 
   const createNotice = (data: Omit<Notice, 'id' | 'isRead' | 'isAcknowledged' | 'acknowledgedCount' | 'totalResidentsCount'>): Notice => {
@@ -457,11 +741,24 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
       isRead: false,
       isAcknowledged: false,
       acknowledgedCount: 0,
-      totalResidentsCount: 248,
+      totalResidentsCount: society.totalHouseholds || society.activeResidents || 0,
     };
     setNotices((prev) => [newNotice, ...prev]);
     logAudit('Notice Published', `Published notice: "${newNotice.title}" (${newNotice.priority})`);
     addToast('Notice Published', `"${newNotice.title}" has been broadcast to all residents.`);
+    apiSync(
+      SocietyApi.notices.create({
+        title: newNotice.title,
+        body: newNotice.body,
+        category: newNotice.category,
+        priority: newNotice.priority,
+        publishDate: newNotice.publishDate,
+        expiryDate: newNotice.expiryDate,
+        attachmentName: newNotice.attachmentName,
+        attachmentSize: newNotice.attachmentSize,
+        requiresAcknowledgement: newNotice.requiresAcknowledgement,
+      })
+    );
     return newNotice;
   };
 
@@ -488,6 +785,7 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
     const eventTitle = evt ? evt.title : 'Event';
     logAudit('Event RSVP', `Updated RSVP for "${eventTitle}" to ${status.toUpperCase()}`);
     addToast('RSVP Updated', `Your response for "${eventTitle}" has been set to ${status.replace('_', ' ').toUpperCase()}.`);
+    apiSync(SocietyApi.events.updateRsvp(id, status));
   };
 
   const createEvent = (data: Omit<SocietyEvent, 'id' | 'attendeesCount' | 'rsvpStatus'>): SocietyEvent => {
@@ -500,6 +798,20 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
     setEvents((prev) => [newEvent, ...prev]);
     logAudit('Event Created', `Created event: "${newEvent.title}" on ${newEvent.date}`);
     addToast('Event Published', `"${newEvent.title}" is now visible to all residents.`);
+    apiSync(
+      SocietyApi.events.create({
+        title: newEvent.title,
+        description: newEvent.description,
+        category: newEvent.category,
+        date: newEvent.date,
+        time: newEvent.time,
+        venue: newEvent.venue,
+        capacity: newEvent.capacity,
+        coverImage: newEvent.coverImage,
+        organizer: newEvent.organizer,
+        deadline: newEvent.deadline,
+      })
+    );
     return newEvent;
   };
 
@@ -513,6 +825,116 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
       },
     }));
     addToast('Profile Updated', 'Your profile information and preferences have been updated.');
+    apiSync(SocietyApi.auth.updateProfile(data));
+  };
+
+  // Resident administration (admin only)
+  const createResident: SocietyContextType['createResident'] = async (data) => {
+    if (!API_MODE) {
+      const member: Member = {
+        id: `mem_${Date.now()}`,
+        name: data.name,
+        unit: data.unit,
+        wing: data.wing,
+        floor: data.floor,
+        role:
+          data.role === 'admin'
+            ? 'Committee Secretary'
+            : `Resident (${data.membershipType})`,
+        roleKey: data.role,
+        membershipType: data.membershipType,
+        isActive: true,
+        avatar: '',
+        bio: `Resident of Flat ${data.unit}`,
+        interests: [],
+        email: data.email,
+        phone: data.phone,
+        isPhonePublic: false,
+        isEmailPublic: false,
+      };
+      setMembers((prev) => [member, ...prev]);
+      addToast('Resident Onboarded', `${member.name} assigned to Flat ${member.unit}.`);
+      return { success: true, message: 'Resident created.', member };
+    }
+
+    const result = await SocietyApi.admin.residents.create(data as unknown as Record<string, unknown>);
+    if (result.error || !result.data) {
+      const message = result.error?.message || 'Could not onboard the resident.';
+      addToast('Onboarding Failed', message, 'error');
+      return { success: false, message };
+    }
+    setMembers((prev) => [result.data!, ...prev.filter((m) => m.id !== result.data!.id)]);
+    await hydrate();
+    const temp = result.data.temporaryPassword;
+    addToast(
+      'Resident Onboarded',
+      temp
+        ? `${result.data.name} added. Temporary password: ${temp}`
+        : `${result.data.name} can now sign in with the password you set.`
+    );
+    return { success: true, message: 'Resident created.', member: result.data };
+  };
+
+  const updateResident: SocietyContextType['updateResident'] = async (id, patch) => {
+    if (!API_MODE) {
+      setMembers((prev) =>
+        prev.map((m) =>
+          m.id === id
+            ? {
+                ...m,
+                ...(patch.name ? { name: String(patch.name) } : {}),
+                ...(patch.unit ? { unit: String(patch.unit) } : {}),
+                ...(patch.isActive !== undefined ? { isActive: Boolean(patch.isActive) } : {}),
+              }
+            : m
+        )
+      );
+      addToast('Resident Updated', 'Household record saved.');
+      return { success: true, message: 'Saved.' };
+    }
+
+    const result = await SocietyApi.admin.residents.update(id, patch);
+    if (result.error || !result.data) {
+      const message = result.error?.message || 'Could not update the resident.';
+      addToast('Update Failed', message, 'error');
+      return { success: false, message };
+    }
+    setMembers((prev) => prev.map((m) => (m.id === id ? result.data! : m)));
+    await hydrate();
+    addToast('Resident Updated', `${result.data.name}'s record has been saved.`);
+    return { success: true, message: 'Saved.' };
+  };
+
+  const updateResidentAccess: SocietyContextType['updateResidentAccess'] = async (id, isActive) => {
+    setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, isActive } : m)));
+    const result = await updateResident(id, { isActive });
+    if (!result.success) {
+      setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, isActive: !isActive } : m)));
+      return result;
+    }
+    addToast(
+      isActive ? 'Portal Access Restored' : 'Portal Access Suspended',
+      isActive ? 'The resident can sign in again.' : 'Active sessions were revoked immediately.'
+    );
+    return result;
+  };
+
+  const removeResident: SocietyContextType['removeResident'] = async (id) => {
+    if (!API_MODE) {
+      setMembers((prev) => prev.filter((m) => m.id !== id));
+      addToast('Resident Removed', 'Household record removed from the directory.');
+      return { success: true, message: 'Removed.' };
+    }
+    const result = await SocietyApi.admin.residents.remove(id);
+    if (result.error) {
+      const message = result.error.message || 'Could not remove the resident.';
+      addToast('Removal Failed', message, 'error');
+      return { success: false, message };
+    }
+    setMembers((prev) => prev.filter((m) => m.id !== id));
+    await hydrate();
+    addToast('Resident Removed', 'Household record removed from the directory.');
+    return { success: true, message: 'Removed.' };
   };
 
   // Gallery
@@ -532,6 +954,7 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
     );
     logAudit('Media Moderation', `${action === 'approved' ? 'Approved' : 'Rejected'} media item ${mediaId}`);
     addToast(`Media ${action === 'approved' ? 'Approved' : 'Rejected'}`, `Content has been ${action}.`);
+    apiSync(SocietyApi.gallery.moderate(albumId, mediaId, action));
   };
 
   const uploadMedia = (albumId: string, title: string, url: string) => {
@@ -562,6 +985,7 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
     } else {
       addToast('Photo Submitted', 'Your photo has been sent to the society administrator for review.');
     }
+    apiSync(SocietyApi.gallery.upload(albumId, title, url));
   };
 
   // Notifications
@@ -573,15 +997,24 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
     );
+    if (API_MODE) void SocietyApi.notifications.markRead(id);
   };
 
   const markAllNotificationsRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
     addToast('Notifications Cleared', 'All notifications marked as read.');
+    if (API_MODE) void SocietyApi.notifications.markAllRead();
   };
 
   // Reset
   const resetDemoData = () => {
+    if (API_MODE) {
+      void hydrate(currentRole).then(() =>
+        addToast('Reloaded From Database', 'Fresh data has been loaded from MySQL.', 'info')
+      );
+      return;
+    }
+
     setVisitors(INITIAL_VISITORS);
     setAmenities(INITIAL_AMENITIES);
     setBookings(INITIAL_BOOKINGS);
@@ -593,6 +1026,7 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
     setSecurityLogs(INITIAL_SECURITY_LOGS);
     setFacilityCheckIns(INITIAL_FACILITY_CHECKINS);
     setAuditLogs(INITIAL_AUDIT_LOGS);
+    setSociety(MOCK_SOCIETY);
     addToast('Demo State Reset', 'Restored all seed data and state to original demonstration defaults.', 'info');
   };
 
@@ -602,6 +1036,13 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
         currentRole,
         setRole,
         currentUser,
+        authReady,
+        isAuthenticated,
+        loginWithPassword,
+        requestOtp,
+        verifyOtp,
+        logout,
+        society,
         visitors,
         approveVisitor,
         denyVisitor,
@@ -613,6 +1054,7 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
         createBooking,
         cancelBooking,
         checkInFacilityBooking,
+        updateAmenity,
         notices,
         markNoticeRead,
         acknowledgeNotice,
@@ -622,6 +1064,10 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
         createEvent,
         members,
         updateUserProfile,
+        createResident,
+        updateResident,
+        updateResidentAccess,
+        removeResident,
         albums,
         moderateMedia,
         uploadMedia,

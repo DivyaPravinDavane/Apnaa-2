@@ -3,11 +3,11 @@
 import React, { useState } from 'react';
 import { useSociety } from '@/context/SocietyContext';
 import { Member } from '@/types';
-import { Users, Search, ShieldCheck, Mail, Phone, Lock, X, MapPin } from 'lucide-react';
+import { Search, Mail, Phone, Lock, X } from 'lucide-react';
 import Image from 'next/image';
 
 export function MembersModule() {
-  const { members, currentUser } = useSociety();
+  const { members } = useSociety();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedWing, setSelectedWing] = useState('All');
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);

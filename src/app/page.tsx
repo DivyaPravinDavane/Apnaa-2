@@ -37,26 +37,21 @@ import { FacilityDashboard } from '@/components/facility/FacilityDashboard';
 import { LandingLoginPage } from '@/components/public/LandingLoginPage';
 
 function MainAppShell() {
-  const { currentRole, setRole } = useSociety();
-  // Starts on Landing & Login Page by default
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { currentRole, setRole, isAuthenticated, authReady, logout } = useSociety();
   const [currentTab, setCurrentTab] = useState<string>('resident_home');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [notificationDrawerOpen, setNotificationDrawerOpen] = useState(false);
 
-  // Sync tab when role switches from the DemoRoleSwitcher
-  useEffect(() => {
-    if (currentRole === 'resident' && !currentTab.startsWith('resident_')) {
-      setCurrentTab('resident_home');
-    } else if (currentRole === 'admin' && !currentTab.startsWith('admin_')) {
-      setCurrentTab('admin_dashboard');
-    } else if (currentRole === 'security' && !currentTab.startsWith('security_')) {
-      setCurrentTab('security_gate');
-    } else if (currentRole === 'facility' && !currentTab.startsWith('facility_')) {
-      setCurrentTab('facility_dashboard');
-    }
-  }, [currentRole, currentTab]);
+  // Derive the visible tab so switching roles never leaves a stale screen.
+  const defaultTab: Record<UserRole, string> = {
+    resident: 'resident_home',
+    admin: 'admin_dashboard',
+    security: 'security_gate',
+    facility: 'facility_dashboard',
+  };
+  const rolePrefix = `${currentRole}_`;
+  const activeTab = currentTab.startsWith(rolePrefix) ? currentTab : defaultTab[currentRole];
 
   // Global Cmd+K / Ctrl+K keyboard shortcut listener for search
   useEffect(() => {
@@ -70,22 +65,24 @@ function MainAppShell() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  if (!authReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F8F6FC]">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div className="w-10 h-10 rounded-full border-4 border-purple-200 border-t-[#6B21A8] animate-spin" />
+          <p className="text-xs font-semibold text-[#6E6280]">Verifying secure session…</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="relative min-h-screen">
-        <LandingLoginPage
-          onLoginSuccess={(role) => {
-            setIsAuthenticated(true);
-            setRole(role);
-          }}
-        />
+        <LandingLoginPage onLoginSuccess={(role) => setRole(role)} />
         {/* Floating Demo Role Switcher also available on landing */}
         <DemoRoleSwitcher
-          onSelectRole={(role) => {
-            setIsAuthenticated(true);
-            setRole(role);
-          }}
-          onOpenLanding={() => setIsAuthenticated(false)}
+          onOpenLanding={() => void logout()}
         />
         <ToastContainer />
       </div>
@@ -94,7 +91,7 @@ function MainAppShell() {
 
   // Render active tab in portal
   const renderActiveTabContent = () => {
-    switch (currentTab) {
+    switch (activeTab) {
       // Resident
       case 'resident_home':
         return <ResidentDashboard onNavigate={(tab) => setCurrentTab(tab)} />;
@@ -166,7 +163,7 @@ function MainAppShell() {
     <div className="min-h-screen bg-[#F7F8F6] flex flex-col">
       {/* Sidebar for Desktop & Mobile Slide-over */}
       <Sidebar
-        currentTab={currentTab}
+        currentTab={activeTab}
         onSelectTab={(tab) => setCurrentTab(tab)}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -179,7 +176,7 @@ function MainAppShell() {
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
           onOpenNotifications={() => setNotificationDrawerOpen(true)}
           onOpenSearch={() => setSearchOpen(true)}
-          onLogout={() => setIsAuthenticated(false)}
+          onLogout={() => void logout()}
         />
 
         {/* Page Content Body */}
@@ -189,14 +186,14 @@ function MainAppShell() {
 
         {/* Mobile Bottom Navigation for Residents */}
         <MobileBottomNav
-          currentTab={currentTab}
+          currentTab={activeTab}
           onSelectTab={(tab) => setCurrentTab(tab)}
           onOpenMenu={() => setSidebarOpen(true)}
         />
       </div>
 
       {/* Global Interactive Elements */}
-      <DemoRoleSwitcher onOpenLanding={() => setIsAuthenticated(false)} />
+      <DemoRoleSwitcher onOpenLanding={() => void logout()} />
       <ToastContainer />
       <GlobalSearchModal
         isOpen={searchOpen}

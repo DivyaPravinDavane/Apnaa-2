@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useSociety } from '@/context/SocietyContext';
-import { FileText, Search, Download, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Search, Download } from 'lucide-react';
 
 export function AdminAuditReports() {
   const { auditLogs, addToast } = useSociety();

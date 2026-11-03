@@ -14,7 +14,7 @@ export function ToastContainer() {
         {toasts.map((toast) => {
           let icon = <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />;
           let borderColor = 'border-emerald-200';
-          let bgColor = 'bg-white';
+          const bgColor = 'bg-white';
 
           if (toast.type === 'error') {
             icon = <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0" />;

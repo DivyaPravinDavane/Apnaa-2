@@ -2,22 +2,19 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSociety } from '@/context/SocietyContext';
-import { Album, MediaItem } from '@/types';
+import { Album } from '@/types';
 import {
   Image as ImageIcon,
   Search,
   Upload,
   X,
   ChevronLeft,
-  ChevronRight,
-  Sparkles,
-  Calendar,
-  CheckCircle2
+  ChevronRight
 } from 'lucide-react';
 import Image from 'next/image';
 
 export function GalleryModule() {
-  const { albums, uploadMedia, currentUser, addToast } = useSociety();
+  const { albums, uploadMedia, addToast } = useSociety();
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeAlbum, setActiveAlbum] = useState<Album | null>(null);

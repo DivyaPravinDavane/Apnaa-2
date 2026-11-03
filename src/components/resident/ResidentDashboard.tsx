@@ -16,8 +16,7 @@ import {
   QrCode,
   AlertTriangle,
   Clock,
-  MapPin,
-  ArrowRight
+  MapPin
 } from 'lucide-react';
 import Image from 'next/image';
 import { QRCodeSVG } from 'qrcode.react';
@@ -30,8 +29,6 @@ interface ResidentDashboardProps {
 
 export function ResidentDashboard({
   onNavigate,
-  onOpenBookingModal,
-  onOpenVisitorModal,
 }: ResidentDashboardProps) {
   const {
     currentUser,
@@ -42,10 +39,8 @@ export function ResidentDashboard({
     notices,
     events,
     albums,
-    markNoticeRead,
     acknowledgeNotice,
     updateEventRSVP,
-    unreadNotificationsCount,
   } = useSociety();
 
   const [activeQrPass, setActiveQrPass] = useState<{

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useSociety } from '@/context/SocietyContext';
-import { Check, X, Image as ImageIcon, ShieldCheck } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import Image from 'next/image';
 
 export function AdminGalleryModeration() {

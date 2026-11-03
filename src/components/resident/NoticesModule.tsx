@@ -11,19 +11,28 @@ import {
   Download,
   CheckCircle2,
   X,
-  Filter,
-  Check,
+  Plus,
   Clock,
   ArrowRight
 } from 'lucide-react';
 
 export function NoticesModule() {
-  const { notices, markNoticeRead, acknowledgeNotice } = useSociety();
+  const { notices, society, currentRole, createNotice, markNoticeRead, acknowledgeNotice } = useSociety();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedPriority, setSelectedPriority] = useState('All');
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [activeNoticeDetail, setActiveNoticeDetail] = useState<Notice | null>(null);
+  const [isComposeOpen, setIsComposeOpen] = useState(false);
+  const [composeDraft, setComposeDraft] = useState({
+    title: '',
+    body: '',
+    category: 'General Rules' as Notice['category'],
+    priority: 'normal' as Notice['priority'],
+    publishDate: new Date().toISOString().slice(0, 10),
+    expiryDate: '',
+    requiresAcknowledgement: false,
+  });
 
   const categories = ['All', 'Water Shutdown', 'AGM Notification', 'General Rules', 'Events'];
   const priorities = ['All', 'urgent', 'high', 'normal'];
@@ -72,13 +81,25 @@ export function NoticesModule() {
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-12">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1C1326]">
-          Notices & Circulars
-        </h1>
-        <p className="text-xs sm:text-sm text-[#6E6280] mt-1">
-          Stay updated with official committee broadcasts, maintenance schedules, and AGM circulars.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1C1326]">
+            Notices & Circulars
+          </h1>
+          <p className="text-xs sm:text-sm text-[#6E6280] mt-1">
+            Stay updated with official committee broadcasts, maintenance schedules, and AGM circulars.
+          </p>
+        </div>
+
+        {currentRole === 'admin' && (
+          <button
+            onClick={() => setIsComposeOpen(true)}
+            className="self-start sm:self-auto flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#6B21A8] text-white font-semibold text-xs hover:bg-[#581C87] transition-colors shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Publish Notice
+          </button>
+        )}
       </div>
 
       {/* Urgent Notice Banner if any */}
@@ -309,7 +330,7 @@ export function NoticesModule() {
                 {activeNoticeDetail.requiresAcknowledgement && (
                   <span>
                     <strong>{activeNoticeDetail.acknowledgedCount || 0}</strong> of{' '}
-                    {activeNoticeDetail.totalResidentsCount || 248} households acknowledged
+                    {activeNoticeDetail.totalResidentsCount || society.totalHouseholds || 0} households acknowledged
                   </span>
                 )}
               </div>
@@ -334,6 +355,178 @@ export function NoticesModule() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Compose Notice Modal (admin) */}
+      {isComposeOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl border border-slate-200 p-6 sm:p-8 space-y-5">
+            <div className="flex justify-between items-start pb-3 border-b border-slate-100">
+              <div>
+                <h3 className="font-bold text-base text-slate-900">Publish a Society Notice</h3>
+                <p className="text-xs text-slate-500 mt-1">Broadcast to all {society.totalHouseholds || 'resident'} households.</p>
+              </div>
+              <button
+                onClick={() => setIsComposeOpen(false)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (composeDraft.title.trim().length < 4 || composeDraft.body.trim().length < 10) {
+                  return;
+                }
+                createNotice({
+                  title: composeDraft.title.trim(),
+                  body: composeDraft.body.trim(),
+                  category: composeDraft.category,
+                  priority: composeDraft.priority,
+                  publishDate: composeDraft.publishDate,
+                  expiryDate: composeDraft.expiryDate || undefined,
+                  author: 'Management Committee',
+                  requiresAcknowledgement: composeDraft.requiresAcknowledgement,
+                });
+                setIsComposeOpen(false);
+                setComposeDraft({
+                  title: '',
+                  body: '',
+                  category: 'General Rules',
+                  priority: 'normal',
+                  publishDate: new Date().toISOString().slice(0, 10),
+                  expiryDate: '',
+                  requiresAcknowledgement: false,
+                });
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Title *
+                </label>
+                <input
+                  required
+                  minLength={4}
+                  value={composeDraft.title}
+                  onChange={(e) => setComposeDraft({ ...composeDraft, title: e.target.value })}
+                  placeholder="e.g. Water supply maintenance on Saturday"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Message *
+                </label>
+                <textarea
+                  required
+                  minLength={10}
+                  rows={5}
+                  value={composeDraft.body}
+                  onChange={(e) => setComposeDraft({ ...composeDraft, body: e.target.value })}
+                  placeholder="Provide complete details, timings, and instructions for residents…"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs leading-relaxed focus:outline-none focus:border-[#6B21A8]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Category
+                  </label>
+                  <select
+                    value={composeDraft.category}
+                    onChange={(e) =>
+                      setComposeDraft({ ...composeDraft, category: e.target.value as Notice['category'] })
+                    }
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:border-[#6B21A8]"
+                  >
+                    {['Water Shutdown', 'Maintenance', 'Security Alert', 'AGM Notification', 'General Rules', 'Events'].map(
+                      (category) => (
+                        <option key={category} value={category}>
+                          {category}
+                        </option>
+                      )
+                    )}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Priority
+                  </label>
+                  <select
+                    value={composeDraft.priority}
+                    onChange={(e) =>
+                      setComposeDraft({ ...composeDraft, priority: e.target.value as Notice['priority'] })
+                    }
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:border-[#6B21A8]"
+                  >
+                    <option value="normal">Normal</option>
+                    <option value="high">Important</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Publish date
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={composeDraft.publishDate}
+                    onChange={(e) => setComposeDraft({ ...composeDraft, publishDate: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Expiry date (optional)
+                  </label>
+                  <input
+                    type="date"
+                    value={composeDraft.expiryDate}
+                    onChange={(e) => setComposeDraft({ ...composeDraft, expiryDate: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                  />
+                </div>
+              </div>
+
+              <label className="flex items-center gap-2 text-xs text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={composeDraft.requiresAcknowledgement}
+                  onChange={(e) =>
+                    setComposeDraft({ ...composeDraft, requiresAcknowledgement: e.target.checked })
+                  }
+                  className="rounded border-slate-300 text-[#6B21A8]"
+                />
+                Require residents to acknowledge receipt
+              </label>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsComposeOpen(false)}
+                  className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 rounded-xl bg-[#6B21A8] hover:bg-[#581C87] text-white text-xs font-semibold shadow-sm"
+                >
+                  Publish Notice
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

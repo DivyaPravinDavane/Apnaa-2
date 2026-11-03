@@ -151,6 +151,10 @@ export interface Member {
   wing: string;
   floor: string;
   role: string;
+  roleKey?: UserRole;
+  membershipType?: 'Owner' | 'Tenant' | 'Family Member';
+  isActive?: boolean;
+  temporaryPassword?: string;
   avatar: string;
   bio: string;
   interests: string[];
@@ -219,4 +223,17 @@ export interface AuditLog {
   actor: string;
   timestamp: string;
   details: string;
+}
+
+export interface SocietyInfo {
+  id: string;
+  name: string;
+  address: string;
+  totalHouseholds: number;
+  totalUnits: number;
+  activeResidents: number;
+  pendingApprovals: number;
+  activeClosures: number;
+  nextMaintenanceDate?: string;
+  nextMaintenanceNote?: string;
 }

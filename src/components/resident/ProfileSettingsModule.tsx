@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useSociety } from '@/context/SocietyContext';
-import { User, Shield, Lock, Bell, CheckCircle2, UserCheck, Sparkles } from 'lucide-react';
+import { Lock, Bell } from 'lucide-react';
 import Image from 'next/image';
 
 export function ProfileSettingsModule() {
@@ -17,7 +17,6 @@ export function ProfileSettingsModule() {
 
   const [notifVisitor, setNotifVisitor] = useState(true);
   const [notifBookings, setNotifBookings] = useState(true);
-  const [notifCirculars, setNotifCirculars] = useState(true);
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();

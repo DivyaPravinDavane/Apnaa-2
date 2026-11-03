@@ -2,51 +2,125 @@
 
 import React, { useState } from 'react';
 import { useSociety } from '@/context/SocietyContext';
-import { SocietyEvent, RSVPStatus } from '@/types';
+import { SocietyEvent } from '@/types';
 import {
   Calendar,
-  Clock,
   MapPin,
   Users,
   Search,
-  CheckCircle2,
   X,
-  Share2,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Plus,
 } from 'lucide-react';
 import Image from 'next/image';
 
+const FALLBACK_COVER =
+  'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=800&q=80';
+
+type CreateDraft = {
+  title: string;
+  description: string;
+  category: string;
+  date: string;
+  time: string;
+  venue: string;
+  capacity: number;
+  coverImage: string;
+  organizer: string;
+  deadline: string;
+};
+
+const emptyDraft: CreateDraft = {
+  title: '',
+  description: '',
+  category: 'Festival',
+  date: new Date().toISOString().slice(0, 10),
+  time: '',
+  venue: '',
+  capacity: 50,
+  coverImage: '',
+  organizer: 'Management Committee',
+  deadline: '',
+};
+
 export function EventsModule() {
-  const { events, updateEventRSVP } = useSociety();
+  const { events, currentRole, updateEventRSVP, createEvent, addToast } = useSociety();
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
   const [viewMode, setViewMode] = useState<'cards' | 'calendar'>('cards');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedEvent, setSelectedEvent] = useState<SocietyEvent | null>(null);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [createDraft, setCreateDraft] = useState<CreateDraft>(emptyDraft);
 
-  const filteredEvents = events.filter((e) => {
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      return (
-        e.title.toLowerCase().includes(q) ||
-        e.description.toLowerCase().includes(q) ||
-        e.venue.toLowerCase().includes(q) ||
-        e.category.toLowerCase().includes(q)
-      );
-    }
-    return true;
+  const today = new Date().toISOString().slice(0, 10);
+  const upcomingEvents = events.filter((e) => e.date >= today);
+  const pastEvents = events.filter((e) => e.date < today);
+  const sourceEvents = activeTab === 'upcoming' ? upcomingEvents : pastEvents;
+
+  const filteredEvents = sourceEvents.filter((e) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      e.title.toLowerCase().includes(q) ||
+      e.description.toLowerCase().includes(q) ||
+      e.venue.toLowerCase().includes(q) ||
+      e.category.toLowerCase().includes(q)
+    );
   });
+
+  const handleCreate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (
+      createDraft.title.trim().length < 4 ||
+      createDraft.description.trim().length < 10 ||
+      !createDraft.time.trim() ||
+      createDraft.venue.trim().length < 2
+    ) {
+      addToast('Validation Error', 'Complete the title, description, time, and venue.', 'error');
+      return;
+    }
+
+    createEvent({
+      title: createDraft.title.trim(),
+      description: createDraft.description.trim(),
+      category: createDraft.category,
+      date: createDraft.date,
+      time: createDraft.time.trim(),
+      venue: createDraft.venue.trim(),
+      capacity: Number(createDraft.capacity),
+      coverImage: createDraft.coverImage.trim(),
+      organizer: createDraft.organizer.trim() || 'Management Committee',
+      deadline: createDraft.deadline || createDraft.date,
+    });
+
+    setIsCreateOpen(false);
+    setCreateDraft(emptyDraft);
+    setActiveTab('upcoming');
+  };
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-12">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1C1326]">
-          Events & Community
-        </h1>
-        <p className="text-xs sm:text-sm text-[#6E6280] mt-1">
-          Join community celebrations, sports competitions, and cultural workshops at Green Valley Residency.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1C1326]">
+            Events &amp; Community
+          </h1>
+          <p className="text-xs sm:text-sm text-[#6E6280] mt-1">
+            Join community celebrations, sports competitions, and cultural workshops at Green Valley Residency.
+          </p>
+        </div>
+
+        {currentRole === 'admin' && (
+          <button
+            onClick={() => setIsCreateOpen(true)}
+            className="self-start sm:self-auto flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#6B21A8] text-white font-semibold text-xs hover:bg-[#581C87] transition-colors shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Create Event
+          </button>
+        )}
       </div>
 
       {/* Controls: Tabs & View Mode */}
@@ -61,7 +135,7 @@ export function EventsModule() {
                   : 'text-slate-600 hover:bg-slate-50'
               }`}
             >
-              Upcoming ({events.length})
+              Upcoming ({upcomingEvents.length})
             </button>
             <button
               onClick={() => setActiveTab('past')}
@@ -71,7 +145,7 @@ export function EventsModule() {
                   : 'text-slate-600 hover:bg-slate-50'
               }`}
             >
-              Past Events (8)
+              Past Events ({pastEvents.length})
             </button>
           </div>
 
@@ -109,112 +183,133 @@ export function EventsModule() {
       </div>
 
       {/* Events Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {filteredEvents.map((evt) => (
-          <div
-            key={evt.id}
-            className="bg-white rounded-3xl border border-[#EAE2F2] overflow-hidden hover:shadow-md hover:border-purple-300 transition-all flex flex-col group"
-          >
-            {/* Image Header */}
-            <div className="relative h-52 w-full overflow-hidden">
-              <Image
-                src={evt.coverImage}
-                alt={evt.title}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute top-3.5 left-3.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider bg-white/95 backdrop-blur px-2.5 py-1 rounded-full text-purple-900 shadow-sm">
-                  {evt.category}
-                </span>
-              </div>
-              <div className="absolute bottom-3.5 right-3.5 bg-black/60 backdrop-blur text-white text-[11px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 text-purple-300" />
-                <span>{evt.attendeesCount} Attending</span>
-              </div>
-            </div>
-
-            {/* Event Body */}
-            <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-              <div className="space-y-2">
-                <h3 className="font-bold text-lg text-[#1C1326] group-hover:text-[#6B21A8] transition-colors leading-snug">
-                  {evt.title}
-                </h3>
-                <p className="text-xs text-[#6E6280] line-clamp-2 leading-relaxed">
-                  {evt.description}
-                </p>
-
-                <div className="space-y-1 text-xs text-[#6E6280] pt-2">
-                  <p className="flex items-center gap-2">
-                    <Calendar className="w-3.5 h-3.5 text-[#6B21A8]" />
-                    <span>{evt.date} • {evt.time}</span>
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <MapPin className="w-3.5 h-3.5 text-[#6B21A8]" />
-                    <span>{evt.venue}</span>
-                  </p>
+      {filteredEvents.length === 0 ? (
+        <div className="bg-white rounded-3xl border border-[#EAE2F2] p-10 text-center space-y-2">
+          <Sparkles className="w-8 h-8 text-purple-300 mx-auto" />
+          <p className="text-sm font-semibold text-slate-700">
+            {searchQuery ? 'No events match your search.' : `No ${activeTab} events yet.`}
+          </p>
+          <p className="text-xs text-slate-500">
+            {activeTab === 'past'
+              ? 'Past events will appear here once they have concluded.'
+              : currentRole === 'admin'
+              ? 'Publish the first community event using the Create Event button.'
+              : 'The committee has not scheduled any upcoming events yet.'}
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {filteredEvents.map((evt) => (
+            <div
+              key={evt.id}
+              className="bg-white rounded-3xl border border-[#EAE2F2] overflow-hidden hover:shadow-md hover:border-purple-300 transition-all flex flex-col group"
+            >
+              {/* Image Header */}
+              <div className="relative h-52 w-full overflow-hidden">
+                <Image
+                  src={evt.coverImage || FALLBACK_COVER}
+                  alt={evt.title}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute top-3.5 left-3.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-white/95 backdrop-blur px-2.5 py-1 rounded-full text-purple-900 shadow-sm">
+                    {evt.category}
+                  </span>
+                </div>
+                <div className="absolute bottom-3.5 right-3.5 bg-black/60 backdrop-blur text-white text-[11px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-purple-300" />
+                  <span>{evt.attendeesCount} Attending</span>
                 </div>
               </div>
 
-              {/* RSVP Actions Bar */}
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                <span className="text-[11px] text-slate-500">
-                  RSVP Deadline: <span className="font-medium text-slate-700">{evt.deadline}</span>
-                </span>
+              {/* Event Body */}
+              <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                <div className="space-y-2">
+                  <h3 className="font-bold text-lg text-[#1C1326] group-hover:text-[#6B21A8] transition-colors leading-snug">
+                    {evt.title}
+                  </h3>
+                  <p className="text-xs text-[#6E6280] line-clamp-2 leading-relaxed">
+                    {evt.description}
+                  </p>
 
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() =>
-                      updateEventRSVP(
-                        evt.id,
-                        evt.rsvpStatus === 'attending' ? 'none' : 'attending'
-                      )
-                    }
-                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                      evt.rsvpStatus === 'attending'
-                        ? 'bg-[#6B21A8] text-white shadow-sm'
-                        : 'bg-purple-50 text-[#6B21A8] hover:bg-purple-100'
-                    }`}
-                  >
-                    {evt.rsvpStatus === 'attending' ? '✓ Attending' : 'Attending'}
-                  </button>
+                  <div className="space-y-1 text-xs text-[#6E6280] pt-2">
+                    <p className="flex items-center gap-2">
+                      <Calendar className="w-3.5 h-3.5 text-[#6B21A8]" />
+                      <span>{evt.date} • {evt.time}</span>
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <MapPin className="w-3.5 h-3.5 text-[#6B21A8]" />
+                      <span>{evt.venue}</span>
+                    </p>
+                  </div>
+                </div>
 
-                  <button
-                    onClick={() =>
-                      updateEventRSVP(
-                        evt.id,
-                        evt.rsvpStatus === 'tentative' ? 'none' : 'tentative'
-                      )
-                    }
-                    className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                      evt.rsvpStatus === 'tentative'
-                        ? 'bg-amber-600 text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                  >
-                    Maybe
-                  </button>
+                {/* RSVP Actions Bar */}
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                  <span className="text-[11px] text-slate-500">
+                    RSVP Deadline: <span className="font-medium text-slate-700">{evt.deadline}</span>
+                  </span>
 
-                  <button
-                    onClick={() => setSelectedEvent(evt)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-50"
-                    title="View details"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() =>
+                        updateEventRSVP(
+                          evt.id,
+                          evt.rsvpStatus === 'attending' ? 'none' : 'attending'
+                        )
+                      }
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                        evt.rsvpStatus === 'attending'
+                          ? 'bg-[#6B21A8] text-white shadow-sm'
+                          : 'bg-purple-50 text-[#6B21A8] hover:bg-purple-100'
+                      }`}
+                    >
+                      {evt.rsvpStatus === 'attending' ? '✓ Attending' : 'Attending'}
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        updateEventRSVP(
+                          evt.id,
+                          evt.rsvpStatus === 'tentative' ? 'none' : 'tentative'
+                        )
+                      }
+                      className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                        evt.rsvpStatus === 'tentative'
+                          ? 'bg-amber-600 text-white'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      Maybe
+                    </button>
+
+                    <button
+                      onClick={() => setSelectedEvent(evt)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+                      title="View details"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Event Details Modal */}
       {selectedEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden space-y-4 p-6">
             <div className="relative h-48 rounded-2xl overflow-hidden">
-              <Image src={selectedEvent.coverImage} alt={selectedEvent.title} fill className="object-cover" />
+              <Image
+                src={selectedEvent.coverImage || FALLBACK_COVER}
+                alt={selectedEvent.title}
+                fill
+                className="object-cover"
+              />
               <button
                 onClick={() => setSelectedEvent(null)}
                 className="absolute top-3 right-3 p-1.5 rounded-full bg-black/60 text-white hover:bg-black/80"
@@ -233,7 +328,7 @@ export function EventsModule() {
 
             <div className="p-3.5 bg-[#F8F6FC] rounded-2xl text-xs space-y-1.5 text-slate-700">
               <p className="flex justify-between">
-                <span>Date & Time:</span>
+                <span>Date &amp; Time:</span>
                 <span className="font-semibold">{selectedEvent.date} ({selectedEvent.time})</span>
               </p>
               <p className="flex justify-between">
@@ -258,6 +353,189 @@ export function EventsModule() {
             >
               Close
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Create Event Modal (admin) */}
+      {isCreateOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl border border-slate-200 p-6 sm:p-8 space-y-5">
+            <div className="flex justify-between items-start pb-3 border-b border-slate-100">
+              <div>
+                <h3 className="font-bold text-base text-slate-900">Publish a Community Event</h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  The event is saved to MySQL and visible to every resident immediately.
+                </p>
+              </div>
+              <button
+                onClick={() => setIsCreateOpen(false)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreate} className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Event Title *
+                </label>
+                <input
+                  required
+                  minLength={4}
+                  value={createDraft.title}
+                  onChange={(e) => setCreateDraft({ ...createDraft, title: e.target.value })}
+                  placeholder="e.g. Republic Day Flag Hoisting"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Description *
+                </label>
+                <textarea
+                  required
+                  minLength={10}
+                  rows={4}
+                  value={createDraft.description}
+                  onChange={(e) => setCreateDraft({ ...createDraft, description: e.target.value })}
+                  placeholder="Describe the event, activities, and what residents should bring…"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs leading-relaxed focus:outline-none focus:border-[#6B21A8]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Category
+                  </label>
+                  <select
+                    value={createDraft.category}
+                    onChange={(e) => setCreateDraft({ ...createDraft, category: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:border-[#6B21A8]"
+                  >
+                    {['Festival', 'Wellness', 'Kids & Family', 'Sports', 'Cultural', 'Community'].map(
+                      (category) => (
+                        <option key={category} value={category}>
+                          {category}
+                        </option>
+                      )
+                    )}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Capacity
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={10000}
+                    required
+                    value={createDraft.capacity}
+                    onChange={(e) => setCreateDraft({ ...createDraft, capacity: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Event date *
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={createDraft.date}
+                    onChange={(e) => setCreateDraft({ ...createDraft, date: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Time *
+                  </label>
+                  <input
+                    required
+                    value={createDraft.time}
+                    onChange={(e) => setCreateDraft({ ...createDraft, time: e.target.value })}
+                    placeholder="e.g. 6:00 PM - 9:00 PM"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Venue *
+                  </label>
+                  <input
+                    required
+                    minLength={2}
+                    value={createDraft.venue}
+                    onChange={(e) => setCreateDraft({ ...createDraft, venue: e.target.value })}
+                    placeholder="e.g. Clubhouse Banquet Hall"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    RSVP deadline
+                  </label>
+                  <input
+                    type="date"
+                    value={createDraft.deadline}
+                    onChange={(e) => setCreateDraft({ ...createDraft, deadline: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Organizer
+                  </label>
+                  <input
+                    value={createDraft.organizer}
+                    onChange={(e) => setCreateDraft({ ...createDraft, organizer: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Cover image URL
+                  </label>
+                  <input
+                    type="url"
+                    value={createDraft.coverImage}
+                    onChange={(e) => setCreateDraft({ ...createDraft, coverImage: e.target.value })}
+                    placeholder="https://… (optional)"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateOpen(false)}
+                  className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 rounded-xl bg-[#6B21A8] hover:bg-[#581C87] text-white text-xs font-semibold shadow-sm"
+                >
+                  Publish Event
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

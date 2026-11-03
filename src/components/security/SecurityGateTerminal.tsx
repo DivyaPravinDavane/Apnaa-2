@@ -2,23 +2,16 @@
 
 import React, { useState } from 'react';
 import { useSociety } from '@/context/SocietyContext';
-import { Visitor, SecurityLog } from '@/types';
+import { Visitor } from '@/types';
 import {
   Shield,
   QrCode,
   UserPlus,
   Search,
-  Clock,
   CheckCircle2,
-  AlertTriangle,
   XCircle,
-  Car,
-  Phone,
-  Building,
-  Check,
   X,
   LogOut,
-  RefreshCw,
   Camera
 } from 'lucide-react';
 
@@ -49,7 +42,7 @@ export function SecurityGateTerminal() {
   const [walkinVehicle, setWalkinVehicle] = useState('');
 
   // Scanning simulation
-  const [isSimulatingScan, setIsSimulatingScan] = useState(false);
+  const [, setIsSimulatingScan] = useState(false);
 
   // Stats
   const expectedCount = visitors.filter((v) => v.status === 'expected' || v.status === 'approved').length;

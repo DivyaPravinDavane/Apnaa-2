@@ -111,43 +111,166 @@ The platform provides dedicated, art-directed experiences tailored for 4 distinc
 - **Charts**: Recharts
 - **QR Codes**: `qrcode.react`
 - **Micro-interactions**: `canvas-confetti`
+- **Database**: MySQL 8.0+ with `mysql2/promise`
+- **Auth**: bcrypt password hashes + `jose` JWT in an HTTP-only cookie backed by revocable `sessions` rows
+- **Validation**: Zod schemas on every write endpoint
 
 ---
 
 ## 🚀 Getting Started
 
-### 1. Install Dependencies
+### 1. Install dependencies
+
 ```bash
 npm install
 ```
 
-### 2. Run the Development Server
+### 2. Start MySQL
+
+With Homebrew (fastest when a bottle is available for your macOS version):
+
+```bash
+brew install mysql
+brew services start mysql
+```
+
+If Homebrew has no prebuilt bottle for your machine (older macOS versions
+build MySQL and LLVM from source, which needs many GB and hours), use the
+official prebuilt archive instead:
+
+```bash
+curl -LO https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.31-macos12-x86_64.tar.gz
+tar xzf mysql-8.0.31-macos12-x86_64.tar.gz
+./mysql-8.0.31-macos12-x86_64/bin/mysqld --initialize-insecure \
+  --basedir="$PWD/mysql-8.0.31-macos12-x86_64" --datadir="$PWD/data"
+./mysql-8.0.31-macos12-x86_64/bin/mysqld \
+  --basedir="$PWD/mysql-8.0.31-macos12-x86_64" --datadir="$PWD/data" --daemonize
+```
+
+The app expects MySQL on `127.0.0.1:3306` (see `.env.local`).
+
+### 3. Create `.env.local`
+
+```bash
+cp .env.example .env.local
+```
+
+Set at minimum:
+
+```env
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=apnaa_society
+JWT_SECRET=<at least 32 random characters>
+NEXT_PUBLIC_DATA_SOURCE=api
+```
+
+Generate a strong secret with `openssl rand -base64 48`.
+
+### 4. Create the schema and seed demo data
+
+```bash
+npm run db:setup   # creates the database, applies db/schema.sql, seeds demo data
+npm run db:check   # verifies the connection and database
+```
+
+`db:setup` drops and recreates every table. Never run it against a database
+that holds real data.
+
+### 5. Run the app
+
 ```bash
 npm run dev
 ```
+
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### 3. Production Build
+### Demo credentials
+
+Every seeded account uses the password **`Apnaa@12345`**:
+
+| Role | Email | Phone |
+| --- | --- | --- |
+| Resident | `priya.sharma@example.com` | `+91 98765 43210` |
+| Committee admin | `secretary@greenvalley.org` | `+91 98200 11223` |
+| Security guard | `security.gate1@greenvalley.org` | `+91 98111 22334` |
+| Facility manager | `facility@greenvalley.org` | `+91 98999 55667` |
+
+Use the password form, the mobile OTP form (development builds return the code
+in the API response), or the floating demo role switcher.
+
+### Production build
+
 ```bash
 npm run build
 npm start
 ```
 
+Set `ALLOW_DEMO_LOGIN=false` in production. The demo role switcher and
+`POST /api/v1/auth/demo` will then return `403`.
+
 ---
 
-## 🔄 PHP REST API Integration Guide
+## 🗄️ MySQL Backend
 
-The frontend features a typed API client in `src/lib/api/index.ts`:
+The frontend talks to secured Next.js route handlers in `src/app/api/v1`.
+There is no separate PHP/Express service. Set `NEXT_PUBLIC_DATA_SOURCE=api`
+to read and write MySQL; set it to `mock` to return to the original in-memory
+demo without a database.
 
-1. Copy `.env.example` to `.env.local`:
-   ```env
-   NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
-   NEXT_PUBLIC_DATA_SOURCE=api
-   ```
-2. The PHP backend should implement endpoints corresponding to:
-   - `POST /api/v1/auth/otp/verify`
-   - `GET /api/v1/visitors`, `POST /api/v1/visitors/{id}/approve`
-   - `GET /api/v1/amenities`, `POST /api/v1/bookings`
-   - `GET /api/v1/notices`, `POST /api/v1/notices/{id}/acknowledge`
-   - `PUT /api/v1/events/{id}/rsvp`
-   - `POST /api/v1/passes/{token}/check-in`
+### Structure
+
+```text
+db/schema.sql              Authoritative schema (drops/recreates tables)
+scripts/db-setup.mjs       Creates database + applies schema + seeds
+scripts/seed.mjs           Idempotent demo seed data
+src/lib/server/            DB pool, auth, RBAC, validation, audit, rate limits
+src/app/api/v1/            REST endpoints consumed by src/lib/api
+```
+
+### Least-privilege production user
+
+The seed script needs DDL rights, so it runs as an admin user. The app itself
+should run as a dedicated user with only DML rights:
+
+```sql
+CREATE USER 'apnaa_app'@'localhost' IDENTIFIED BY 'replace-with-a-long-random-password';
+GRANT SELECT, INSERT, UPDATE, DELETE ON apnaa_society.* TO 'apnaa_app'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+Then point `DB_USER` / `DB_PASSWORD` at that account.
+
+### Security model
+
+- **Passwords** are hashed with bcrypt (cost 12); plaintext is never stored.
+- **Sessions** use a signed JWT in an `HttpOnly`, `SameSite=Lax` cookie. Every
+  request also checks a revocable row in `sessions`, so suspension and logout
+  take effect immediately.
+- **RBAC** is enforced server-side on every endpoint. Residents only receive
+  their own visitors and bookings; admins, security, and facility staff receive
+  only the data their role needs.
+- **Validation** uses Zod with strict length/format limits. All SQL is
+  parameterised.
+- **Rate limits** are stored in MySQL and applied to login, OTP, and write
+  endpoints.
+- **CSRF**: state-changing requests reject cross-origin `Origin` headers.
+- **Audit logs** record sensitive actions (approvals, bookings, resident
+  changes, moderation, check-ins).
+- **Directory privacy**: phone and email are masked server-side unless the
+  resident opted in, is viewing their own record, or is an admin.
+- **Headers**: CSP, HSTS, `X-Frame-Options`, `X-Content-Type-Options`, and
+  `Referrer-Policy` are set in `next.config.ts`.
+
+### Useful commands
+
+```bash
+npm run db:setup   # reset schema + seed (destructive)
+npm run db:seed    # seed an empty schema
+npm run db:check   # connection smoke test
+npm run lint
+npm run build
+```
+

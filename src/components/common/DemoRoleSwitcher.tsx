@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useSociety } from '@/context/SocietyContext';
 import { UserRole } from '@/types';
-import { Shield, Home, Building2, UserCheck, RefreshCw, ChevronUp, ChevronDown, Sparkles } from 'lucide-react';
+import { Shield, Home, Building2, UserCheck, RefreshCw, ChevronUp, ChevronDown, Sparkles, type LucideIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface DemoRoleSwitcherProps {
@@ -15,7 +15,7 @@ export function DemoRoleSwitcher({ onOpenLanding, onSelectRole }: DemoRoleSwitch
   const { currentRole, setRole, currentUser, resetDemoData } = useSociety();
   const [isOpen, setIsOpen] = useState(false);
 
-  const roles: { role: UserRole; title: string; subtitle: string; icon: any; color: string }[] = [
+  const roles: { role: UserRole; title: string; subtitle: string; icon: LucideIcon; color: string }[] = [
     {
       role: 'resident',
       title: 'Resident',

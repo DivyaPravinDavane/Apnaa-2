@@ -8,16 +8,11 @@ import {
   Search,
   Plus,
   QrCode,
-  Calendar,
   Clock,
   Car,
-  Check,
   X,
   Copy,
-  Printer,
-  ChevronRight,
-  ShieldCheck,
-  AlertCircle
+  ShieldCheck
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 

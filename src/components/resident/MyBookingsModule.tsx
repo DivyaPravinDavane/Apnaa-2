@@ -7,13 +7,10 @@ import {
   BookmarkCheck,
   Search,
   Calendar,
-  Clock,
   Users,
   QrCode,
   X,
-  AlertTriangle,
-  ChevronRight,
-  ArrowRight
+  AlertTriangle
 } from 'lucide-react';
 import Image from 'next/image';
 import { QRCodeSVG } from 'qrcode.react';

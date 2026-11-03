@@ -3,23 +3,14 @@
 import React, { useState } from 'react';
 import { useSociety } from '@/context/SocietyContext';
 import {
-  Layers,
-  Calendar,
   CheckCircle2,
-  AlertTriangle,
-  Search,
-  Clock,
-  Users,
-  Building,
-  QrCode,
-  X,
-  Sliders
 } from 'lucide-react';
 
 export function FacilityDashboard() {
   const {
     bookings,
     amenities,
+    society,
     facilityCheckIns,
     checkInFacilityBooking,
     currentUser,
@@ -29,10 +20,21 @@ export function FacilityDashboard() {
   const [bookingRefInput, setBookingRefInput] = useState('');
   const [filterAmenity, setFilterAmenity] = useState('All');
 
-  const filteredBookings = bookings.filter((b) => {
+  const today = new Date().toISOString().slice(0, 10);
+  const activeClosures = amenities.filter((a) => a.status !== 'available');
+  const todaysBookings = bookings.filter((b) => b.date === today && b.status !== 'cancelled');
+
+  const filteredBookings = todaysBookings.filter((b) => {
     if (filterAmenity !== 'All' && b.amenityName !== filterAmenity) return false;
     return true;
   });
+
+  const nextMaintenance = society.nextMaintenanceDate
+    ? new Date(`${society.nextMaintenanceDate}T00:00:00`).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+      })
+    : 'None scheduled';
 
   const handleVerifyCheckIn = (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,11 +89,15 @@ export function FacilityDashboard() {
         <div className="p-4 rounded-2xl bg-white border border-[#EAE2F2] shadow-sm">
           <p className="text-xs text-slate-500 font-semibold uppercase">Total Facilities</p>
           <p className="text-2xl font-bold text-slate-900 mt-1">{amenities.length}</p>
-          <p className="text-[11px] text-purple-700 font-medium mt-0.5">All operating normally</p>
+          <p className="text-[11px] text-purple-700 font-medium mt-0.5">
+            {activeClosures.length
+              ? `${activeClosures.length} under maintenance`
+              : 'All operating normally'}
+          </p>
         </div>
         <div className="p-4 rounded-2xl bg-white border border-[#EAE2F2] shadow-sm">
           <p className="text-xs text-slate-500 font-semibold uppercase">Today&apos;s Bookings</p>
-          <p className="text-2xl font-bold text-[#6B21A8] mt-1">{bookings.length}</p>
+          <p className="text-2xl font-bold text-[#6B21A8] mt-1">{todaysBookings.length}</p>
           <p className="text-[11px] text-slate-400 mt-0.5">Across swimming, gym & courts</p>
         </div>
         <div className="p-4 rounded-2xl bg-white border border-[#EAE2F2] shadow-sm">
@@ -101,8 +107,11 @@ export function FacilityDashboard() {
         </div>
         <div className="p-4 rounded-2xl bg-white border border-[#EAE2F2] shadow-sm">
           <p className="text-xs text-slate-500 font-semibold uppercase">Active Closures</p>
-          <p className="text-2xl font-bold text-slate-700 mt-1">0</p>
-          <p className="text-[11px] text-slate-400 mt-0.5">Next maintenance: 28 Oct</p>
+          <p className="text-2xl font-bold text-slate-700 mt-1">{activeClosures.length}</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">
+            Next maintenance: {nextMaintenance}
+            {society.nextMaintenanceNote ? ` · ${society.nextMaintenanceNote}` : ''}
+          </p>
         </div>
       </div>
 
@@ -111,8 +120,7 @@ export function FacilityDashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h3 className="font-bold text-base text-slate-900">Today&apos;s Facility Reservations</h3>
-            <p className="text-xs text-slate-500">Live roster of residents with confirmed slot passes</p>
-          </div>
+            <p className="text-xs text-slate-500">Live roster of residents with confirmed slot passes</p>          </div>
 
           <select
             value={filterAmenity}
