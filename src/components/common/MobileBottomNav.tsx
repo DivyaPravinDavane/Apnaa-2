@@ -102,18 +102,19 @@ export function MobileBottomNav({
           else if (item.action === 'menu') onOpenMenu();
           else onSelectTab(item.id);
         }}
-        className={`flex-1 flex flex-col items-center justify-center py-1 transition-colors ${isActive ? 'text-[#6B3FA0]' : 'text-slate-600 hover:text-[#6B3FA0]'
-          }`}
+        className={`flex-1 flex flex-col items-center justify-center py-1 transition-colors ${
+          isActive ? 'text-[#0D5C63]' : 'text-slate-600 hover:text-[#0D5C63]'
+        }`}
       >
         <div className="relative">
           <Icon className={`w-[21px] h-[21px] ${isActive ? 'stroke-[2.3]' : 'stroke-[1.75]'}`} />
           {item.badge ? (
-            <span className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] px-1 rounded-full bg-[#6B3FA0] text-white text-[9px] font-bold flex items-center justify-center shadow-2xs">
+            <span className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] px-1 rounded-full bg-[#0D5C63] text-white text-[9px] font-bold flex items-center justify-center shadow-2xs">
               {item.badge}
             </span>
           ) : null}
         </div>
-        <span className={`text-[10px] mt-0.5 ${isActive ? 'font-bold text-[#6B3FA0]' : 'font-medium'}`}>
+        <span className={`text-[10px] mt-0.5 ${isActive ? 'font-bold text-[#0D5C63]' : 'font-medium'}`}>
           {item.label}
         </span>
       </button>
@@ -121,7 +122,7 @@ export function MobileBottomNav({
   };
 
   return (
-    <div className="relative z-30 bg-white border-t border-slate-200/80 px-2 pt-1.5 pb-2 shadow-[0_-4px_16px_rgba(28,19,38,0.06)]">
+    <div className="relative z-30 bg-white border-t border-slate-200/80 px-2 pt-1.5 pb-2 shadow-[0_-4px_16px_rgba(7,59,62,0.08)]">
       <div className="flex items-end">
         {left.map(renderItem)}
 
@@ -130,7 +131,7 @@ export function MobileBottomNav({
           <button
             onClick={onOpenSearch}
             aria-label="Search"
-            className="-mt-6 w-12 h-12 rounded-full bg-white border border-slate-200/90 shadow-[0_4px_14px_rgba(0,0,0,0.12)] flex items-center justify-center text-slate-600 hover:text-[#6B3FA0] active:scale-95 transition-all"
+            className="-mt-6 w-12 h-12 rounded-full bg-white border border-slate-200/90 shadow-[0_4px_14px_rgba(7,59,62,0.16)] flex items-center justify-center text-slate-600 hover:text-[#0D5C63] active:scale-95 transition-all"
           >
             <Search className="w-5 h-5" />
           </button>

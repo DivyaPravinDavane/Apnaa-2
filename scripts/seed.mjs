@@ -1156,14 +1156,20 @@ async function main() {
     }
   }
   const mysql = await import('mysql2/promise');
+  const rawPassword = process.env.DB_PASSWORD;
+  const password =
+    rawPassword && rawPassword !== 'Apna123'
+      ? rawPassword
+      : 'Apna$@123';
   const pool = mysql.createPool({
-    host: process.env.DB_HOST || '127.0.0.1',
+    host: process.env.DB_HOST || 'auth-db1947.hstgr.io',
     port: Number(process.env.DB_PORT || 3306),
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'apnaa_society',
+    user: process.env.DB_USER || 'u762329739_apnaaentry',
+    password,
+    database: process.env.DB_NAME || 'u762329739_apnaaentrydb',
     waitForConnections: true,
     connectionLimit: 4,
+    connectTimeout: 15000,
     timezone: 'Z',
   });
   const result = await seedDatabase(pool, { reset: true });

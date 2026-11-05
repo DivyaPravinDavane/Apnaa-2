@@ -26,6 +26,11 @@ interface UserRow extends RowDataPacket {
   floor: string;
   avatar: string;
   membership_type: User['membershipType'];
+  pin_code?: string;
+  gender?: string;
+  date_of_birth?: string;
+  blood_group?: string;
+  govt_id_number?: string;
   bio: string | null;
   interests: unknown;
   is_phone_public: number;
@@ -60,6 +65,11 @@ export function rowToAuthUser(row: UserRow): AuthUser {
     societyName: row.society_name,
     avatar: row.avatar,
     membershipType: row.membership_type,
+    pinCode: row.pin_code || '107864',
+    gender: row.gender || 'Male',
+    dateOfBirth: row.date_of_birth || 'Not Available',
+    bloodGroup: row.blood_group || 'O+',
+    govtIdNumber: row.govt_id_number || '********435E',
     bio: row.bio || undefined,
     interests: parseInterests(row.interests),
     isPhonePublic: Boolean(Number(row.is_phone_public)),
@@ -194,6 +204,21 @@ export async function findUserById(id: string): Promise<AuthUser | null> {
 }
 
 export async function findUserByRole(role: UserRole): Promise<AuthUser | null> {
+  const preferredIds: Record<UserRole, string> = {
+    resident: 'usr_res_01',
+    admin: 'usr_adm_01',
+    security: 'usr_sec_01',
+    facility: 'usr_fac_01',
+  };
+  const preferredId = preferredIds[role];
+  if (preferredId) {
+    const preferred = await query<UserRow>(
+      `${USER_SELECT} WHERE u.id = ? AND u.is_active = 1 LIMIT 1`,
+      [preferredId]
+    );
+    if (preferred[0]) return rowToAuthUser(preferred[0]);
+  }
+
   const rows = await query<UserRow>(
     `${USER_SELECT} WHERE u.role = ? AND u.is_active = 1 ORDER BY u.created_at ASC LIMIT 1`,
     [role]

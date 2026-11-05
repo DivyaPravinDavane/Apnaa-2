@@ -3,10 +3,10 @@ import type { Pool, PoolConnection, ResultSetHeader, RowDataPacket } from 'mysql
 import { getDbConfig } from './config';
 
 let pool: Pool | null = null;
-let remotePool: Pool | null = null;
 
 /**
- * Primary MySQL pool (Local MySQL 127.0.0.1:3306).
+ * Primary MySQL pool connected directly to the remote Hostinger phpMyAdmin
+ * database (`auth-db1947.hstgr.io:3306` / `u762329739_apnaaentrydb`).
  */
 export function getPool(): Pool {
   if (pool) return pool;
@@ -20,12 +20,13 @@ export function getPool(): Pool {
   pool = mysql.createPool({
     ...getDbConfig(),
     waitForConnections: true,
-    connectionLimit: 10,
-    maxIdle: 10,
+    connectionLimit: 6,
+    maxIdle: 6,
     idleTimeout: 60_000,
+    connectTimeout: 15_000,
     queueLimit: 0,
     enableKeepAlive: true,
-    keepAliveInitialDelay: 0,
+    keepAliveInitialDelay: 10_000,
     charset: 'utf8mb4',
     timezone: 'Z',
     dateStrings: true,
@@ -37,42 +38,7 @@ export function getPool(): Pool {
   return pool;
 }
 
-/**
- * Optional Remote Hostinger MySQL pool (`auth-db1947.hstgr.io` / `82.25.121.3`).
- * Every write (`execute`) automatically mirrors to this remote pool if configured.
- */
-function getRemotePool(): Pool | null {
-  const host = process.env.REMOTE_DB_HOST;
-  const user = process.env.REMOTE_DB_USER;
-  if (!host || !user) return null;
-
-  if (remotePool) return remotePool;
-
-  const globalRef = globalThis as typeof globalThis & { __apnaaRemoteMysqlPool?: Pool };
-  if (globalRef.__apnaaRemoteMysqlPool) {
-    remotePool = globalRef.__apnaaRemoteMysqlPool;
-    return remotePool;
-  }
-
-  remotePool = mysql.createPool({
-    host,
-    port: Number(process.env.REMOTE_DB_PORT || 3306),
-    user,
-    password: process.env.REMOTE_DB_PASSWORD || '',
-    database: process.env.REMOTE_DB_NAME || 'u762329739_apnaaentrydb',
-    waitForConnections: true,
-    connectionLimit: 4,
-    connectTimeout: 4000,
-    charset: 'utf8mb4',
-    timezone: 'Z',
-    dateStrings: true,
-  });
-
-  globalRef.__apnaaRemoteMysqlPool = remotePool;
-  return remotePool;
-}
-
-/** Run a parameterised query and return typed rows. */
+/** Run a parameterised query and return typed rows from the remote MySQL database. */
 export async function query<T extends RowDataPacket = RowDataPacket>(
   sql: string,
   params: unknown[] = []
@@ -82,27 +48,16 @@ export async function query<T extends RowDataPacket = RowDataPacket>(
 }
 
 /**
- * Run a parameterised statement on the primary MySQL database AND mirror the
- * exact statement to the remote Hostinger MySQL database (`auth-db1947.hstgr.io`).
+ * Run a parameterised write statement directly on the remote Hostinger MySQL database
+ * (`auth-db1947.hstgr.io` / `u762329739_apnaaentrydb`).
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function execute(sql: string, params: any[] = []): Promise<ResultSetHeader> {
   const [result] = await getPool().execute<ResultSetHeader>(sql, params);
-
-  const remote = getRemotePool();
-  if (remote) {
-    void remote.execute(sql, params).catch(() => {
-      // Ignore if Hostinger Remote MySQL firewall hasn't whitelisted current IP yet
-    });
-  }
-
-  // Also auto-update db/apnaentry_society_full.sql and db/Apna_society.sql with the latest live rows
-  void import('./live-sql-export').then((m) => m.exportLiveDatabaseToSqlFiles()).catch(() => undefined);
-
   return result;
 }
 
-/** Run several statements atomically. */
+/** Run several statements atomically on the remote MySQL database. */
 export async function withTransaction<T>(fn: (conn: PoolConnection) => Promise<T>): Promise<T> {
   const conn = await getPool().getConnection();
   try {

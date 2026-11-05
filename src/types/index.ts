@@ -12,6 +12,11 @@ export interface User {
   societyName: string;
   avatar: string;
   membershipType: 'Owner' | 'Tenant' | 'Family Member';
+  pinCode?: string;
+  gender?: string;
+  dateOfBirth?: string;
+  bloodGroup?: string;
+  govtIdNumber?: string;
   bio?: string;
   interests?: string[];
   isPhonePublic?: boolean;

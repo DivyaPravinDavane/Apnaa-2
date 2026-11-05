@@ -9,9 +9,7 @@ import {
   ChevronsDown,
   RefreshCw,
   Shield,
-  Database,
 } from 'lucide-react';
-import Link from 'next/link';
 
 interface HeaderProps {
   onToggleSidebar?: () => void;
@@ -61,14 +59,6 @@ export function Header({ onToggleSidebar, onNavigate, onLogout }: HeaderProps) {
         </button>
 
         <div className="relative flex-shrink-0 flex items-center gap-1.5">
-          <Link
-            href="/database"
-            className="px-2.5 py-1 rounded-full bg-emerald-400/20 hover:bg-emerald-400/30 border border-emerald-300/40 text-[10px] font-bold uppercase tracking-wider text-emerald-100 flex items-center gap-1 transition-colors"
-            title="Open Live MySQL Database Inspector"
-          >
-            <Database className="w-3 h-3 text-emerald-300" />
-            <span>Live DB</span>
-          </Link>
           <button
             type="button"
             onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}

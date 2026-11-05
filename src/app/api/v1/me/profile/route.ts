@@ -29,6 +29,22 @@ export const PATCH = route(async (request) => {
     sets.push('bio = ?');
     params.push(data.bio);
   }
+  if (data.gender !== undefined) {
+    sets.push('gender = ?');
+    params.push(data.gender);
+  }
+  if (data.dateOfBirth !== undefined) {
+    sets.push('date_of_birth = ?');
+    params.push(data.dateOfBirth);
+  }
+  if (data.bloodGroup !== undefined) {
+    sets.push('blood_group = ?');
+    params.push(data.bloodGroup);
+  }
+  if (data.govtIdNumber !== undefined) {
+    sets.push('govt_id_number = ?');
+    params.push(data.govtIdNumber);
+  }
   if (data.interests !== undefined) {
     sets.push('interests = ?');
     params.push(JSON.stringify(data.interests));

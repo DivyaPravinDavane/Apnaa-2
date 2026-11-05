@@ -1,7 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSociety } from '@/context/SocietyContext';
+import {
+  SocietyApi,
+  type UnitBillRecord,
+  type GateUpdateRecord,
+  type ServiceRequestRecord,
+} from '@/lib/api';
 import {
   DoorOpen,
   Building,
@@ -45,13 +51,42 @@ export function ResidentDashboard({ onNavigate }: ResidentDashboardProps) {
     notices,
     events,
     addToast,
+    refreshData,
   } = useSociety();
 
   const [exploreAllOpen, setExploreAllOpen] = useState(false);
   const [activeCommunityIdx, setActiveCommunityIdx] = useState(0);
   const [billingSheet, setBillingSheet] = useState<'statement' | 'dues' | 'history' | null>(null);
-  const [duesPaid, setDuesPaid] = useState(false);
   const [qrPassOpen, setQrPassOpen] = useState(false);
+
+  // Live remote MySQL state for bills, gate updates, and service requests
+  const [bills, setBills] = useState<UnitBillRecord[]>([]);
+  const [gateUpdatesList, setGateUpdatesList] = useState<GateUpdateRecord[]>([]);
+  const [serviceRequests, setServiceRequests] = useState<ServiceRequestRecord[]>([]);
+
+  // Helpdesk / Service Desk modal state
+  const [deskModal, setDeskModal] = useState<'Helpdesk' | 'Service Desk' | 'Request Desk' | null>(null);
+  const [ticketCategory, setTicketCategory] = useState('Plumbing');
+  const [ticketTitle, setTicketTitle] = useState('');
+  const [ticketDesc, setTicketDesc] = useState('');
+  const [submittingTicket, setSubmittingTicket] = useState(false);
+
+  const loadServicesFromDb = useCallback(async () => {
+    const res = await SocietyApi.services.list();
+    if (res.data) {
+      setBills(res.data.bills || []);
+      setGateUpdatesList(res.data.gateUpdates || []);
+      setServiceRequests(res.data.serviceRequests || []);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadServicesFromDb();
+  }, [loadServicesFromDb]);
+
+  const unpaidBills = bills.filter((b) => b.status === 'unpaid' || b.status === 'overdue');
+  const duesPaid = bills.length > 0 ? unpaidBills.length === 0 : false;
+  const totalUnpaidAmount = unpaidBills.reduce((sum, b) => sum + Number(b.amount || 0), 0);
 
   const pendingVisitors = visitors.filter(
     (v) => v.unit === currentUser.unit && v.status === 'pending'
@@ -90,10 +125,10 @@ export function ResidentDashboard({ onNavigate }: ResidentDashboardProps) {
 
   const currentCard = communityCards[activeCommunityIdx % communityCards.length];
 
-  const gateUpdates: { label: string; icon: LucideIcon; tab: string; toast?: string }[] = [
-    { label: 'Cab', icon: Car, tab: 'resident_visitors', toast: 'Pre-approve a Cab entry at Gate 1' },
-    { label: 'Exit pass', icon: TicketCheck, tab: 'resident_visitors', toast: 'Create a Gate Exit Pass' },
-    { label: 'School bus', icon: Bus, tab: 'resident_visitors', toast: 'School Bus arrival alerts active' },
+  const gateUpdates: { label: 'Cab' | 'Exit pass' | 'School bus'; icon: LucideIcon; tab: string; toast: string }[] = [
+    { label: 'Cab', icon: Car, tab: 'resident_visitors', toast: 'Pre-approved Cab entry recorded in gate_updates' },
+    { label: 'Exit pass', icon: TicketCheck, tab: 'resident_visitors', toast: 'Gate Exit Pass stored in gate_updates' },
+    { label: 'School bus', icon: Bus, tab: 'resident_visitors', toast: 'School Bus alert stored in gate_updates' },
   ];
 
   const communityServices: { label: string; icon: LucideIcon; tab?: string; action?: () => void }[] = [
@@ -111,10 +146,67 @@ export function ResidentDashboard({ onNavigate }: ResidentDashboardProps) {
       },
     },
     { label: 'Facilities', icon: Building, tab: 'resident_amenities' },
-    { label: 'Service Desk', icon: Wrench, tab: 'resident_notices' },
-    { label: 'Request Desk', icon: HelpCircle, tab: 'resident_notices' },
+    {
+      label: 'Service Desk',
+      icon: Wrench,
+      action: () => {
+        setExploreAllOpen(false);
+        setDeskModal('Service Desk');
+      },
+    },
+    {
+      label: 'Request Desk',
+      icon: HelpCircle,
+      action: () => {
+        setExploreAllOpen(false);
+        setDeskModal('Request Desk');
+      },
+    },
     { label: 'MarketPlace', icon: ShoppingBag, tab: 'resident_events' },
   ];
+
+  const handlePayBills = async (billId?: string, amount?: number) => {
+    const res = await SocietyApi.services.payBill(billId, amount);
+    if (res.error) {
+      addToast('Payment Failed', res.error.message, 'error');
+      return;
+    }
+    addToast(
+      'Payment Recorded in MySQL',
+      `Maintenance payment updated in unit_bills table.`,
+      'success'
+    );
+    await loadServicesFromDb();
+    void refreshData();
+    setBillingSheet(null);
+  };
+
+  const handleSubmitTicket = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!deskModal || !ticketTitle.trim()) return;
+    setSubmittingTicket(true);
+    const res = await SocietyApi.services.createServiceRequest({
+      deskType: deskModal,
+      category: ticketCategory,
+      title: ticketTitle.trim(),
+      description: ticketDesc.trim() || `${deskModal} request submitted by ${currentUser.name} (${currentUser.unit})`,
+    });
+    setSubmittingTicket(false);
+    if (res.error) {
+      addToast('Failed to Submit', res.error.message, 'error');
+      return;
+    }
+    addToast(
+      `${deskModal} Ticket Saved`,
+      `"${ticketTitle.trim()}" stored in phpMyAdmin (service_requests).`,
+      'success'
+    );
+    setTicketTitle('');
+    setTicketDesc('');
+    setDeskModal(null);
+    await loadServicesFromDb();
+    void refreshData();
+  };
 
   return (
     <div className="space-y-6 pt-2 pb-6 bg-white">
@@ -153,16 +245,21 @@ export function ResidentDashboard({ onNavigate }: ResidentDashboardProps) {
           {/* Helpdesk */}
           <button
             type="button"
-            onClick={() => onNavigate('resident_notices')}
+            onClick={() => setDeskModal('Helpdesk')}
             className="flex flex-col items-center gap-2 group"
           >
-            <div className="w-12 h-12 rounded-2xl bg-[#E6F3F3] text-[#0D5C63] flex items-center justify-center group-active:scale-95 transition-transform">
+            <div className="relative w-12 h-12 rounded-2xl bg-[#E6F3F3] text-[#0D5C63] flex items-center justify-center group-active:scale-95 transition-transform">
               <Headset className="w-6 h-6 stroke-[1.9]" />
+              {serviceRequests.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#0D5C63] text-white text-[9px] font-bold flex items-center justify-center">
+                  {serviceRequests.length}
+                </span>
+              )}
             </div>
             <span className="text-xs font-bold text-[#0E2628]">Helpdesk</span>
           </button>
 
-          {/* Explore all (Placed in 2nd row left column exactly as shown in 00:00:00 video frame!) */}
+          {/* Explore all */}
           <button
             type="button"
             onClick={() => setExploreAllOpen(true)}
@@ -237,9 +334,7 @@ export function ResidentDashboard({ onNavigate }: ResidentDashboardProps) {
 
         {/* Stacked Card Deck Container */}
         <div className="relative pb-4 pt-1">
-          {/* 3rd back card in stack */}
           <div className="absolute inset-x-6 bottom-0 h-14 rounded-2xl bg-white border border-slate-200/80 shadow-2xs" />
-          {/* 2nd middle card in stack */}
           <div className="absolute inset-x-3 bottom-2 h-16 rounded-2xl bg-white border border-slate-200/90 shadow-2xs" />
 
           {/* Front Active Card */}
@@ -248,7 +343,6 @@ export function ResidentDashboard({ onNavigate }: ResidentDashboardProps) {
             className="relative z-10 bg-white rounded-2xl border border-slate-200/90 shadow-[0_6px_20px_rgba(0,0,0,0.06)] p-4 cursor-pointer active:scale-[0.99] transition-all"
           >
             <div className="flex items-start gap-3">
-              {/* Left Badge / Thumbnail */}
               <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#E6F3F3] to-[#C4E4E6] border border-[#0D5C63]/20 flex flex-col items-center justify-center flex-shrink-0 text-[#0D5C63]">
                 <span className="text-[9px] font-extrabold uppercase tracking-tighter">
                   {currentCard.badge}
@@ -352,12 +446,11 @@ export function ResidentDashboard({ onNavigate }: ResidentDashboardProps) {
       </section>
 
       {/* =========================================================================
-          2. EXPLORE ALL BOTTOM SHEET [00:00:18]
+          EXPLORE ALL BOTTOM SHEET
          ========================================================================= */}
       {exploreAllOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-[1px]">
           <div className="w-full bg-white rounded-t-[28px] shadow-2xl pt-3 pb-7 px-5 space-y-5 max-h-[86vh] overflow-y-auto animate-in slide-in-from-bottom duration-200">
-            {/* Top Drag Handle */}
             <div
               onClick={() => setExploreAllOpen(false)}
               className="w-10 h-1 rounded-full bg-slate-400 mx-auto cursor-pointer"
@@ -385,16 +478,21 @@ export function ResidentDashboard({ onNavigate }: ResidentDashboardProps) {
                       type="button"
                       onClick={() => {
                         setExploreAllOpen(false);
-                        if (item.toast) addToast(item.label, item.toast, 'info');
-                        void fetch('/api/v1/services', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            type: 'gate_update',
-                            updateType: item.label,
-                            details: item.toast || `${item.label} gate pass created from Explore All`,
-                          }),
-                        }).catch(() => undefined);
+                        void SocietyApi.services
+                          .createGateUpdate(
+                            item.label,
+                            `${item.label} pass created by ${currentUser.name} (Flat ${currentUser.unit})`
+                          )
+                          .then((res) => {
+                            if (res.data) {
+                              addToast(
+                                `${item.label} Saved to DB`,
+                                `Pass ${res.data.passCode} stored in phpMyAdmin (gate_updates).`,
+                                'success'
+                              );
+                              void loadServicesFromDb();
+                            }
+                          });
                         onNavigate(item.tab);
                       }}
                       className="flex flex-col items-center gap-2 group"
@@ -407,9 +505,30 @@ export function ResidentDashboard({ onNavigate }: ResidentDashboardProps) {
                   );
                 })}
               </div>
+
+              {gateUpdatesList.length > 0 && (
+                <div className="pt-2 space-y-1.5">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    Active Gate Updates in DB ({gateUpdatesList.length})
+                  </p>
+                  {gateUpdatesList.slice(0, 3).map((gu) => (
+                    <div
+                      key={gu.id}
+                      className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-[11px]"
+                    >
+                      <span className="font-semibold text-slate-700 truncate">
+                        {gu.update_type}: {gu.details}
+                      </span>
+                      <span className="font-mono font-bold text-[#0D5C63] ml-2 flex-shrink-0">
+                        {gu.pass_code}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Category 2: Community services (3-column grid: Notice, Post, Poll, Survey, Gallery, QR code scanner, Facilities, Service Desk, Request Desk, MarketPlace) */}
+            {/* Category 2: Community services */}
             <div className="space-y-3 pt-2 border-t border-slate-100">
               <h3 className="text-sm font-bold text-[#0E2628]">Community services</h3>
 
@@ -451,10 +570,10 @@ export function ResidentDashboard({ onNavigate }: ResidentDashboardProps) {
         </div>
       )}
 
-      {/* Interactive Bills & Payments Bottom Sheet */}
+      {/* Interactive Bills & Payments Bottom Sheet (backed by unit_bills in MySQL) */}
       {billingSheet && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50">
-          <div className="w-full bg-white rounded-t-[28px] p-5 space-y-4">
+          <div className="w-full bg-white rounded-t-[28px] p-5 space-y-4 max-h-[82vh] overflow-y-auto">
             <div className="w-10 h-1 rounded-full bg-slate-300 mx-auto" />
             <div className="flex items-center justify-between">
               <h3 className="text-base font-bold text-[#0E2628] capitalize">
@@ -466,67 +585,208 @@ export function ResidentDashboard({ onNavigate }: ResidentDashboardProps) {
             </div>
 
             {billingSheet === 'dues' && (
-              <div className="p-4 rounded-2xl bg-[#E6F3F3] border border-[#0D5C63]/30 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-600">
-                    Flat {currentUser.unit} Quarterly Maintenance
-                  </span>
-                  <span
-                    className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
-                      duesPaid ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-800'
-                    }`}
-                  >
-                    {duesPaid ? 'Paid' : 'Due Now'}
-                  </span>
+              <div className="space-y-3">
+                <div className="p-4 rounded-2xl bg-[#E6F3F3] border border-[#0D5C63]/30 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-slate-600">
+                      Flat {currentUser.unit} Outstanding Dues
+                    </span>
+                    <span
+                      className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                        duesPaid ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-800'
+                      }`}
+                    >
+                      {duesPaid ? 'All Paid' : `${unpaidBills.length} Unpaid`}
+                    </span>
+                  </div>
+                  <p className="text-2xl font-bold text-[#0E2628]">
+                    ₹{duesPaid ? '0.00' : totalUnpaidAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  </p>
+                  {!duesPaid && (
+                    <button
+                      type="button"
+                      onClick={() => void handlePayBills()}
+                      className="w-full py-2.5 rounded-full bg-[#0D5C63] text-white text-xs font-bold shadow-xs"
+                    >
+                      Pay All Dues (₹{totalUnpaidAmount.toLocaleString('en-IN')}) via Instant UPI
+                    </button>
+                  )}
                 </div>
-                <p className="text-2xl font-bold text-[#0E2628]">
-                  {duesPaid ? '₹0.00' : '₹4,850.00'}
-                </p>
-                {!duesPaid && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDuesPaid(true);
-                      setBillingSheet(null);
-                      addToast('Payment Successful', 'Maintenance dues of ₹4,850 paid.', 'success');
-                      void fetch('/api/v1/services', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ type: 'pay_bill', billId: 'bill_01', amount: 4850 }),
-                      }).catch(() => undefined);
-                    }}
-                    className="w-full py-2.5 rounded-full bg-[#0D5C63] text-white text-xs font-bold"
+
+                {unpaidBills.map((bill) => (
+                  <div
+                    key={bill.id}
+                    className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2 text-xs"
                   >
-                    Pay ₹4,850 Instant UPI
-                  </button>
-                )}
+                    <div>
+                      <p className="font-bold text-slate-800">{bill.title}</p>
+                      <p className="text-[10px] text-slate-500">
+                        {bill.invoice_no} • {bill.billing_period}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void handlePayBills(bill.id, Number(bill.amount))}
+                      className="px-3 py-1.5 rounded-full bg-[#0D5C63] text-white text-[11px] font-bold flex-shrink-0"
+                    >
+                      Pay ₹{Number(bill.amount).toLocaleString('en-IN')}
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
 
             {billingSheet !== 'dues' && (
               <div className="space-y-2 text-xs">
-                {[
-                  { id: 'INV-2026-10', label: 'Oct 2026 Maintenance', amount: '₹4,850', status: 'Paid' },
-                  { id: 'INV-2026-09', label: 'Sep 2026 Maintenance', amount: '₹4,850', status: 'Paid' },
-                  { id: 'INV-2026-08', label: 'Clubhouse Amenity Pass', amount: '₹500', status: 'Paid' },
-                ].map((row) => (
+                {(bills.length > 0
+                  ? bills
+                  : [
+                      {
+                        id: 'bill_01',
+                        invoice_no: 'INV-2026-1101',
+                        title: 'Monthly Society Maintenance Statement',
+                        amount: 4850,
+                        status: 'unpaid' as const,
+                      },
+                    ]
+                ).map((row) => (
                   <div
                     key={row.id}
                     className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between"
                   >
                     <div>
-                      <p className="font-bold text-slate-800">{row.label}</p>
-                      <p className="text-[10px] text-slate-400 font-mono">{row.id}</p>
+                      <p className="font-bold text-slate-800">{row.title}</p>
+                      <p className="text-[10px] text-slate-400 font-mono">{row.invoice_no}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-[#0D5C63]">{row.amount}</p>
-                      <span className="text-[10px] text-emerald-600 font-semibold">{row.status}</span>
+                      <p className="font-bold text-[#0D5C63]">
+                        ₹{Number(row.amount).toLocaleString('en-IN')}
+                      </p>
+                      <span
+                        className={`text-[10px] font-semibold uppercase ${
+                          row.status === 'paid' ? 'text-emerald-600' : 'text-amber-600'
+                        }`}
+                      >
+                        {row.status}
+                      </span>
                     </div>
                   </div>
                 ))}
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Helpdesk / Service Desk / Request Desk Modal (saves directly to service_requests in MySQL) */}
+      {deskModal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50">
+          <form
+            onSubmit={(e) => void handleSubmitTicket(e)}
+            className="w-full bg-white rounded-t-[28px] p-5 space-y-3.5 max-h-[85vh] overflow-y-auto"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-[#0E2628]">{deskModal}</h3>
+                <p className="text-[11px] text-slate-500">
+                  Log a ticket directly to phpMyAdmin (`service_requests`)
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDeskModal(null)}
+                className="p-1 text-slate-400"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2.5 text-xs">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">Category</label>
+                <select
+                  value={ticketCategory}
+                  onChange={(e) => setTicketCategory(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white"
+                >
+                  <option>Plumbing</option>
+                  <option>Electrical</option>
+                  <option>Carpentry</option>
+                  <option>Housekeeping</option>
+                  <option>Security / Intercom</option>
+                  <option>Billing & Accounts</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  Issue / Request Title *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={ticketTitle}
+                  onChange={(e) => setTicketTitle(e.target.value)}
+                  placeholder="e.g. Kitchen tap leakage or parking sticker request"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  Details
+                </label>
+                <textarea
+                  rows={2}
+                  value={ticketDesc}
+                  onChange={(e) => setTicketDesc(e.target.value)}
+                  placeholder="Preferred time slot or additional details..."
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200"
+                />
+              </div>
+            </div>
+
+            {serviceRequests.length > 0 && (
+              <div className="pt-1 space-y-1.5">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Recent Tickets in MySQL ({serviceRequests.length})
+                </p>
+                <div className="max-h-28 overflow-y-auto space-y-1">
+                  {serviceRequests.slice(0, 4).map((sr) => (
+                    <div
+                      key={sr.id}
+                      className="px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-between text-[11px]"
+                    >
+                      <span className="truncate font-medium text-slate-700">
+                        [{sr.category}] {sr.title}
+                      </span>
+                      <span className="text-[10px] font-bold uppercase text-[#0D5C63] ml-2">
+                        {sr.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-2.5 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setDeskModal(null);
+                  onNavigate('resident_notices');
+                }}
+                className="py-2.5 rounded-full border border-[#0D5C63] text-[#0D5C63] text-xs font-bold"
+              >
+                View Notices
+              </button>
+              <button
+                type="submit"
+                disabled={submittingTicket}
+                className="py-2.5 rounded-full bg-[#0D5C63] text-white text-xs font-bold"
+              >
+                {submittingTicket ? 'Saving…' : 'Submit Ticket'}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 

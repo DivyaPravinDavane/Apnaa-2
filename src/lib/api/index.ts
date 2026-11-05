@@ -16,7 +16,11 @@ import {
 
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1').replace(/\/$/, '');
 const DATA_SOURCE = process.env.NEXT_PUBLIC_DATA_SOURCE || 'api';
-const API_KEY = process.env.NEXT_PUBLIC_API_KEY || '';
+const API_KEY =
+  process.env.NEXT_PUBLIC_API_KEY &&
+  process.env.NEXT_PUBLIC_API_KEY !== 'replace-with-your-apnaa-api-key'
+    ? process.env.NEXT_PUBLIC_API_KEY
+    : '';
 
 export interface PublicOverviewData {
   society: SocietyInfo;
@@ -41,6 +45,59 @@ export interface PublicOverviewData {
     security: { name: string; unit: string; membershipType: string };
     facility: { name: string; unit: string; membershipType: string };
   };
+}
+
+export interface PollRecord {
+  id: string;
+  authorName: string;
+  authorInitial: string;
+  groupName: string;
+  timestamp: string;
+  title: string;
+  subtitle: string;
+  expiresOn: string;
+  responsesCount: number;
+  minSelect: number;
+  maxSelect: number;
+  candidates: string[];
+  votedCandidates?: string[];
+}
+
+export interface UnitBillRecord {
+  id: string;
+  society_id: string;
+  unit: string;
+  user_id: string;
+  invoice_no: string;
+  title: string;
+  category: 'Statement' | 'Dues' | 'Payment history';
+  billing_period: string;
+  amount: string | number;
+  status: 'unpaid' | 'paid' | 'overdue';
+  due_date: string;
+  paid_at: string | null;
+  payment_method: string | null;
+}
+
+export interface GateUpdateRecord {
+  id: string;
+  unit: string;
+  update_type: 'Cab' | 'Exit pass' | 'School bus';
+  details: string;
+  pass_code: string;
+  status: string;
+  created_at: string;
+}
+
+export interface ServiceRequestRecord {
+  id: string;
+  unit: string;
+  desk_type: 'Service Desk' | 'Request Desk' | 'Helpdesk';
+  category: string;
+  title: string;
+  description: string;
+  status: string;
+  created_at: string;
 }
 
 export interface ApiResponse<T> {
@@ -104,8 +161,7 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
 }
 
 /**
- * Society API client. Works in both mock mode (no network) and API mode.
- * Components should read `isApiMode()` before assuming persistence.
+ * Society API client connected to the remote Hostinger MySQL backend.
  */
 export const SocietyApi = {
   isMockMode: () => DATA_SOURCE !== 'api',
@@ -216,6 +272,64 @@ export const SocietyApi = {
         `/bookings/${encodeURIComponent(bookingRef)}/check-in`,
         { method: 'POST' }
       ),
+  },
+
+  // Community Polls & Candidate Votes
+  polls: {
+    list: () => apiFetch<PollRecord[]>('/polls'),
+    vote: (pollId: string, selectedCandidates: string[]) =>
+      apiFetch<{ success: boolean; pollId: string; selectedCount: number; selectedCandidates: string[] }>('/polls', {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'vote',
+          pollId,
+          selectedCandidates,
+        }),
+      }),
+    create: (payload: {
+      title: string;
+      subtitle: string;
+      candidates: string[];
+      minSelect?: number;
+      maxSelect?: number;
+    }) =>
+      apiFetch<PollRecord>('/polls', {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'create',
+          ...payload,
+        }),
+      }),
+  },
+
+  // Bills, Gate Updates & Service Requests
+  services: {
+    list: () =>
+      apiFetch<{
+        bills: UnitBillRecord[];
+        gateUpdates: GateUpdateRecord[];
+        serviceRequests: ServiceRequestRecord[];
+      }>('/services'),
+    payBill: (billId?: string, amount?: number) =>
+      apiFetch<{ success: boolean }>('/services', {
+        method: 'POST',
+        body: JSON.stringify({ type: 'pay_bill', billId, amount }),
+      }),
+    createGateUpdate: (updateType: 'Cab' | 'Exit pass' | 'School bus', details?: string) =>
+      apiFetch<{ id: string; updateType: string; details: string; passCode: string }>('/services', {
+        method: 'POST',
+        body: JSON.stringify({ type: 'gate_update', updateType, details }),
+      }),
+    createServiceRequest: (payload: {
+      deskType: 'Service Desk' | 'Request Desk' | 'Helpdesk';
+      category: string;
+      title: string;
+      description: string;
+    }) =>
+      apiFetch<{ id: string; deskType: string; category: string; title: string; status: string }>('/services', {
+        method: 'POST',
+        body: JSON.stringify({ type: 'service_request', ...payload }),
+      }),
   },
 
   // Notices

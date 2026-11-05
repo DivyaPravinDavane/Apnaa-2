@@ -1,4 +1,5 @@
 import { apiSuccess, route } from '@/lib/server/http';
+import { getDbConfig } from '@/lib/server/config';
 import { query } from '@/lib/server/db';
 import type { RowDataPacket } from 'mysql2/promise';
 
@@ -39,11 +40,26 @@ export const GET = route(async (request) => {
 
   const counts: Record<string, number> = {};
   for (const tbl of ALLOWED_TABLES) {
-    try {
-      const [row] = await query<RowDataPacket>(`SELECT COUNT(*) AS cnt FROM \`${tbl}\``);
-      counts[tbl] = Number(row?.cnt || 0);
-    } catch {
-      counts[tbl] = 0;
+    counts[tbl] = 0;
+  }
+
+  try {
+    const unionSql = ALLOWED_TABLES.map(
+      (tbl) => `SELECT '${tbl}' AS tbl_name, COUNT(*) AS cnt FROM \`${tbl}\``
+    ).join(' UNION ALL ');
+    const countRows = await query<RowDataPacket>(unionSql);
+    for (const r of countRows) {
+      counts[String(r.tbl_name)] = Number(r.cnt || 0);
+    }
+  } catch {
+    // Fallback if a table is missing
+    for (const tbl of ALLOWED_TABLES) {
+      try {
+        const [row] = await query<RowDataPacket>(`SELECT COUNT(*) AS cnt FROM \`${tbl}\``);
+        counts[tbl] = Number(row?.cnt || 0);
+      } catch {
+        counts[tbl] = 0;
+      }
     }
   }
 
@@ -59,9 +75,10 @@ export const GET = route(async (request) => {
     rows = [];
   }
 
+  const dbConfig = getDbConfig();
   return apiSuccess({
-    database: process.env.DB_NAME || 'apna_society',
-    host: process.env.DB_HOST || '127.0.0.1',
+    database: dbConfig.database,
+    host: dbConfig.host,
     activeTable: safeTable,
     tables: ALLOWED_TABLES,
     counts,
@@ -69,4 +86,3 @@ export const GET = route(async (request) => {
     rows,
   });
 });
-

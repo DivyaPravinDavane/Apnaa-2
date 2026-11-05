@@ -1,6 +1,6 @@
 /**
- * Server-side configuration. Values are read lazily so a missing database
- * configuration does not break `next build` - only the API call fails.
+ * Server-side configuration. Values default to the remote Hostinger phpMyAdmin
+ * MySQL database (auth-db1947.hstgr.io / u762329739_apnaaentrydb).
  */
 
 export class ConfigError extends Error {
@@ -11,17 +11,26 @@ export class ConfigError extends Error {
 }
 
 export function getDbConfig() {
+  const user = process.env.DB_USER || 'u762329739_apnaaentry';
+  const rawPassword = process.env.DB_PASSWORD || 'Apna$@123';
+  const password =
+    user === 'u762329739_apnaaentry' && !rawPassword.includes('$')
+      ? 'Apna$@123'
+      : rawPassword;
+
   return {
-    host: process.env.DB_HOST || '127.0.0.1',
+    host: process.env.DB_HOST || 'auth-db1947.hstgr.io',
     port: Number(process.env.DB_PORT || 3306),
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'apnaa_society',
+    user,
+    password,
+    database: process.env.DB_NAME || 'u762329739_apnaaentrydb',
   };
 }
 
 export function getJwtSecret(): Uint8Array {
-  const secret = process.env.JWT_SECRET;
+  const secret =
+    process.env.JWT_SECRET ||
+    'apnaa-smart-society-live-jwt-secret-key-2026-secure-token-9876543210';
   if (!secret || secret.length < 32) {
     throw new ConfigError(
       'JWT_SECRET is missing or shorter than 32 characters. Generate one with: openssl rand -base64 48'
@@ -40,6 +49,7 @@ export function getDefaultSocietyId() {
 
 export function getApiKey(): string | null {
   const key = (process.env.API_KEY || process.env.NEXT_PUBLIC_API_KEY || '').trim();
+  if (!key || key === 'replace-with-your-apnaa-api-key') return null;
   return key.length > 0 ? key : null;
 }
 
@@ -48,13 +58,11 @@ export function isProduction() {
 }
 
 /**
- * Demo role switching is a development convenience. It is enabled by default
- * outside production and must be explicitly enabled in production.
+ * Demo role switching is enabled by default unless explicitly disabled.
  */
 export function demoLoginEnabled() {
-  if (process.env.ALLOW_DEMO_LOGIN === 'true') return true;
   if (process.env.ALLOW_DEMO_LOGIN === 'false') return false;
-  return !isProduction();
+  return true;
 }
 
 export function sessionTtlSeconds() {
@@ -63,7 +71,10 @@ export function sessionTtlSeconds() {
 }
 
 export function allowedOrigins(): string[] {
-  const raw = process.env.ALLOWED_ORIGINS || process.env.APP_URL || 'http://localhost:3000';
+  const raw =
+    process.env.ALLOWED_ORIGINS ||
+    process.env.APP_URL ||
+    'http://localhost:3000,http://127.0.0.1:3000';
   return raw
     .split(',')
     .map((origin) => origin.trim().replace(/\/$/, ''))

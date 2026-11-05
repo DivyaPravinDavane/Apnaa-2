@@ -23,14 +23,14 @@ export function DemoRoleSwitcher({ onOpenLanding, onSelectRole }: DemoRoleSwitch
       title: 'Resident',
       subtitle: `Flat ${personas?.resident.unit || 'A-1204'} (${personas?.resident.name || 'Priya Sharma'})`,
       icon: Home,
-      color: 'bg-purple-700 text-white',
+      color: 'bg-[#0D5C63] text-white',
     },
     {
       role: 'admin',
       title: 'Administrator',
       subtitle: `${personas?.admin.membershipType || 'Secretary'} (${personas?.admin.name || 'Rajesh Nair'})`,
       icon: Building2,
-      color: 'bg-purple-900 text-white',
+      color: 'bg-[#073B3E] text-white',
     },
     {
       role: 'security',
@@ -44,7 +44,7 @@ export function DemoRoleSwitcher({ onOpenLanding, onSelectRole }: DemoRoleSwitch
       title: 'Facility Manager',
       subtitle: `${personas?.facility.unit || 'Clubhouse'} (${personas?.facility.name || 'Anand Verma'})`,
       icon: UserCheck,
-      color: 'bg-purple-800 text-white',
+      color: 'bg-[#147A7F] text-white',
     },
   ];
 
@@ -61,7 +61,7 @@ export function DemoRoleSwitcher({ onOpenLanding, onSelectRole }: DemoRoleSwitch
           >
             <div className="px-3.5 py-2.5 bg-[#073B3E] text-white flex items-center justify-between">
               <div className="flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-purple-300" />
+                <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
                 <span className="text-[11px] font-semibold tracking-wide uppercase">Switch App Role</span>
               </div>
               <span className="text-[9px] bg-white/20 px-2 py-0.5 rounded-full font-medium">Live Demo</span>
@@ -81,7 +81,7 @@ export function DemoRoleSwitcher({ onOpenLanding, onSelectRole }: DemoRoleSwitch
                     }}
                     className={`w-full flex items-center gap-2.5 p-2 rounded-xl text-left transition-all ${
                       isActive
-                        ? 'bg-purple-50 border border-purple-200 shadow-xs'
+                        ? 'bg-[#E6F3F3] border border-[#C4E4E6] shadow-xs'
                         : 'hover:bg-slate-50 border border-transparent'
                     }`}
                   >
@@ -90,7 +90,7 @@ export function DemoRoleSwitcher({ onOpenLanding, onSelectRole }: DemoRoleSwitch
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <span className={`text-xs font-bold ${isActive ? 'text-purple-950' : 'text-slate-800'}`}>
+                        <span className={`text-xs font-bold ${isActive ? 'text-[#073B3E]' : 'text-slate-800'}`}>
                           {item.title}
                         </span>
                         {isActive && (
@@ -110,7 +110,7 @@ export function DemoRoleSwitcher({ onOpenLanding, onSelectRole }: DemoRoleSwitch
                     onOpenLanding();
                     setIsOpen(false);
                   }}
-                  className="w-full mt-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-[#0D5C63] text-[11px] font-bold transition-colors border border-purple-200"
+                  className="w-full mt-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl bg-[#E6F3F3] hover:bg-[#C4E4E6] text-[#0D5C63] text-[11px] font-bold transition-colors border border-[#C4E4E6]"
                 >
                   <span>Welcome / Sign-In Screen</span>
                 </button>
@@ -126,7 +126,7 @@ export function DemoRoleSwitcher({ onOpenLanding, onSelectRole }: DemoRoleSwitch
                 }}
                 className="flex items-center gap-1 text-[11px] font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-2 py-1 rounded-lg transition-colors"
               >
-                <RefreshCw className="w-3 h-3" />
+                <RefreshCw className="w-3.5 h-3.5" />
                 Reset
               </button>
             </div>
@@ -137,15 +137,15 @@ export function DemoRoleSwitcher({ onOpenLanding, onSelectRole }: DemoRoleSwitch
       {/* Compact Floating Pill Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-[#073B3E]/95 hover:bg-[#0D5C63] text-white shadow-lg transition-all border border-purple-400/40 focus:outline-none"
+        className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-[#073B3E]/95 hover:bg-[#0D5C63] text-white shadow-lg transition-all border border-emerald-400/40 focus:outline-none"
         aria-label="Toggle Demo Role Menu"
       >
         <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-        <span className="text-[10px] font-bold uppercase tracking-wider text-purple-100">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-100">
           {currentRole}
         </span>
         <span className="text-[10px] opacity-75">({currentUser.name.split(' ')[0]})</span>
-        {isOpen ? <ChevronDown className="w-3.5 h-3.5 text-purple-300" /> : <ChevronUp className="w-3.5 h-3.5 text-purple-300" />}
+        {isOpen ? <ChevronDown className="w-3.5 h-3.5 text-emerald-300" /> : <ChevronUp className="w-3.5 h-3.5 text-emerald-300" />}
       </button>
     </div>
   );

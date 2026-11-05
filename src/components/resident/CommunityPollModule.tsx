@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSociety } from '@/context/SocietyContext';
+import { SocietyApi, type PollRecord } from '@/lib/api';
 import {
   ArrowLeft,
   Search,
@@ -14,22 +15,6 @@ import {
   SlidersHorizontal,
   X,
 } from 'lucide-react';
-
-interface PollItem {
-  id: string;
-  authorName: string;
-  authorInitial: string;
-  groupName: string;
-  timestamp: string;
-  title: string;
-  subtitle: string;
-  expiresOn: string;
-  responsesCount: number;
-  minSelect: number;
-  maxSelect: number;
-  candidates: string[];
-  votedCandidates?: string[];
-}
 
 const DEFAULT_CANDIDATES = [
   '01 CANDIDATE A',
@@ -52,32 +37,31 @@ const DEFAULT_CANDIDATES = [
   '18 CANDIDATE R',
 ];
 
-const INITIAL_POLLS: PollItem[] = [
+const INITIAL_POLLS: PollRecord[] = [
   {
-    id: 'poll_ec_2026',
+    id: 'poll_01',
     authorName: 'Executive Committee WHCA...',
     authorInitial: 'E',
     groupName: 'Test Group for Polling',
     timestamp: '07 Dec 2023 | 05:06 PM',
     title: 'TEST POLL',
-    subtitle: 'TEST POLL',
+    subtitle: 'CHOOSE ONLY 15 CANDIDATES',
     expiresOn: '30 Nov 2026, 06:00 PM',
-    responsesCount: 48,
+    responsesCount: 1,
     minSelect: 15,
     maxSelect: 15,
     candidates: DEFAULT_CANDIDATES,
   },
 ];
 
-const POLL_STORAGE_KEY = 'apnaa_polls_state_v1';
-
 interface CommunityPollModuleProps {
   onBack: () => void;
 }
 
 export function CommunityPollModule({ onBack }: CommunityPollModuleProps) {
-  const { addToast, currentUser } = useSociety();
-  const [polls, setPolls] = useState<PollItem[]>(INITIAL_POLLS);
+  const { addToast, currentUser, refreshData } = useSociety();
+  const [polls, setPolls] = useState<PollRecord[]>(INITIAL_POLLS);
+  const [activePollId, setActivePollId] = useState<string>('poll_01');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCandidates, setSelectedCandidates] = useState<string[]>([]);
   const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
@@ -86,60 +70,62 @@ export function CommunityPollModule({ onBack }: CommunityPollModuleProps) {
   const [createPollOpen, setCreatePollOpen] = useState(false);
   const [newPollTitle, setNewPollTitle] = useState('');
   const [newPollOptions, setNewPollOptions] = useState('Option 1, Option 2, Option 3');
+  const [syncingVote, setSyncingVote] = useState(false);
+
+  const loadPollsFromRemoteDb = useCallback(async () => {
+    const res = await SocietyApi.polls.list();
+    if (res.data && res.data.length > 0) {
+      setPolls(res.data);
+      const target = res.data.find((p) => p.id === activePollId) || res.data[0];
+      setActivePollId(target.id);
+      if (Array.isArray(target.votedCandidates)) {
+        setSelectedCandidates(target.votedCandidates);
+      }
+    }
+  }, [activePollId]);
 
   useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem(POLL_STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved) as PollItem[];
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setPolls(parsed);
-          if (parsed[0]?.votedCandidates?.length) {
-            setSelectedCandidates(parsed[0].votedCandidates);
-          }
-        }
-      }
-    } catch {
-      // ignore storage errors
-    }
-  }, []);
+    void loadPollsFromRemoteDb();
+  }, [loadPollsFromRemoteDb]);
 
-  const savePolls = (next: PollItem[]) => {
-    setPolls(next);
+  const activePoll = polls.find((p) => p.id === activePollId) || polls[0];
+
+  const syncSelectionToDatabase = async (pollId: string, nextCandidates: string[]) => {
+    setSyncingVote(true);
     try {
-      window.localStorage.setItem(POLL_STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      // ignore storage errors
+      await SocietyApi.polls.vote(pollId, nextCandidates);
+    } finally {
+      setSyncingVote(false);
     }
   };
 
-  const activePoll = polls[0];
-
   const toggleCandidate = (candidate: string) => {
-    setSelectedCandidates((prev) => {
-      if (prev.includes(candidate)) {
-        return prev.filter((c) => c !== candidate);
-      }
-      if (prev.length >= activePoll.maxSelect) {
+    let next: string[];
+    if (selectedCandidates.includes(candidate)) {
+      next = selectedCandidates.filter((c) => c !== candidate);
+    } else {
+      if (selectedCandidates.length >= activePoll.maxSelect) {
         addToast(
           'Maximum Limit Reached',
           `You can select at most ${activePoll.maxSelect} candidates.`,
           'warning'
         );
-        return prev;
+        return;
       }
-      const next = [...prev, candidate];
-      // Automatically open confirmation modal when reaching the 15-candidate target
+      next = [...selectedCandidates, candidate];
       if (next.length === activePoll.minSelect) {
         setTimeout(() => setConfirmSubmitOpen(true), 180);
       }
-      return next;
-    });
+    }
+
+    setSelectedCandidates(next);
+    void syncSelectionToDatabase(activePoll.id, next);
   };
 
   const handleQuickSelect15 = () => {
     const first15 = activePoll.candidates.slice(0, activePoll.minSelect);
     setSelectedCandidates(first15);
+    void syncSelectionToDatabase(activePoll.id, first15);
     setConfirmSubmitOpen(true);
   };
 
@@ -151,72 +137,65 @@ export function CommunityPollModule({ onBack }: CommunityPollModuleProps) {
     setConfirmSubmitOpen(true);
   };
 
-  const handleConfirmVote = () => {
-    const updated = polls.map((p, idx) =>
-      idx === 0
-        ? {
-            ...p,
-            responsesCount: p.votedCandidates ? p.responsesCount : p.responsesCount + 1,
-            votedCandidates: selectedCandidates,
-          }
-        : p
-    );
-    savePolls(updated);
+  const handleConfirmVote = async () => {
     setConfirmSubmitOpen(false);
+    const res = await SocietyApi.polls.vote(activePoll.id, selectedCandidates);
+    if (res.error) {
+      addToast('Vote Failed', res.error.message, 'error');
+      return;
+    }
+
+    setPolls((prev) =>
+      prev.map((p) =>
+        p.id === activePoll.id
+          ? {
+              ...p,
+              responsesCount: p.votedCandidates ? p.responsesCount : p.responsesCount + 1,
+              votedCandidates: selectedCandidates,
+            }
+          : p
+      )
+    );
+
     addToast(
-      'Poll Vote Recorded',
-      `Your vote for ${selectedCandidates.length} candidate(s) has been securely submitted.`,
+      'Poll Vote Recorded in MySQL',
+      `Your vote for ${selectedCandidates.length} candidate(s) is saved to phpMyAdmin (poll_votes).`,
       'success'
     );
-    void fetch('/api/v1/polls', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'vote',
-        pollId: activePoll.id === 'poll_ec_2026' ? 'poll_01' : activePoll.id,
-        selectedCandidates,
-      }),
-    }).catch(() => undefined);
+    await loadPollsFromRemoteDb();
+    void refreshData();
   };
 
-  const handleCreatePoll = (e: React.FormEvent) => {
+  const handleCreatePoll = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPollTitle.trim()) return;
     const opts = newPollOptions
       .split(',')
       .map((s, i) => `${String(i + 1).padStart(2, '0')} ${s.trim().toUpperCase()}`)
       .filter(Boolean);
-    const created: PollItem = {
-      id: `poll_${Date.now()}`,
-      authorName: `${currentUser.name} (${currentUser.unit})`,
-      authorInitial: currentUser.name.charAt(0).toUpperCase(),
-      groupName: 'Owners & Residents Group',
-      timestamp: 'Just now',
+
+    const candidates = opts.length > 0 ? opts : DEFAULT_CANDIDATES;
+    const res = await SocietyApi.polls.create({
       title: newPollTitle.trim().toUpperCase(),
       subtitle: newPollTitle.trim(),
-      expiresOn: '30 Nov 2026, 06:00 PM',
-      responsesCount: 1,
+      candidates,
       minSelect: 1,
-      maxSelect: Math.max(1, opts.length),
-      candidates: opts.length > 0 ? opts : DEFAULT_CANDIDATES,
-    };
-    savePolls([created, ...polls]);
+      maxSelect: Math.max(1, candidates.length),
+    });
+
+    if (res.error || !res.data) {
+      addToast('Failed to Create Poll', res.error?.message || 'Database error', 'error');
+      return;
+    }
+
+    const created = res.data;
+    setPolls((prev) => [created, ...prev]);
+    setActivePollId(created.id);
     setSelectedCandidates([]);
     setNewPollTitle('');
     setCreatePollOpen(false);
-    addToast('Poll Published', 'Your community poll is now live.', 'success');
-    void fetch('/api/v1/polls', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'create',
-        title: created.title,
-        subtitle: created.subtitle,
-        candidates: created.candidates,
-        minSelect: created.minSelect,
-        maxSelect: created.maxSelect,
-      }),
-    }).catch(() => undefined);
+    addToast('Poll Saved to phpMyAdmin', `Poll "${created.title}" stored in community_polls.`, 'success');
+    void refreshData();
   };
 
   const filteredCandidates = activePoll.candidates.filter((c) =>
@@ -241,12 +220,19 @@ export function CommunityPollModule({ onBack }: CommunityPollModuleProps) {
             </h1>
           </div>
 
-          {activePoll.votedCandidates && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold border border-emerald-200">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              Voted
-            </span>
-          )}
+          <div className="flex items-center gap-1.5">
+            {syncingVote && (
+              <span className="text-[10px] font-semibold text-[#0D5C63] animate-pulse">
+                Saving to DB…
+              </span>
+            )}
+            {activePoll.votedCandidates && activePoll.votedCandidates.length > 0 && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold border border-emerald-200">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Saved in DB ({selectedCandidates.length})
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Rounded Search Bar Below */}
@@ -260,6 +246,29 @@ export function CommunityPollModule({ onBack }: CommunityPollModuleProps) {
           />
           <Search className="w-4 h-4 text-slate-500 absolute right-3.5 top-1/2 -translate-y-1/2" />
         </div>
+
+        {/* Poll Selector if multiple polls exist in MySQL */}
+        {polls.length > 1 && (
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+            {polls.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => {
+                  setActivePollId(p.id);
+                  setSelectedCandidates(p.votedCandidates || []);
+                }}
+                className={`px-3 py-1 rounded-full text-[11px] font-bold whitespace-nowrap transition-colors ${
+                  p.id === activePoll.id
+                    ? 'bg-[#0D5C63] text-white'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {p.title}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 2. ACTIVE POLL CARD */}
@@ -291,7 +300,7 @@ export function CommunityPollModule({ onBack }: CommunityPollModuleProps) {
               onClick={() =>
                 addToast(
                   'Poll Instructions',
-                  `Select ${activePoll.minSelect} candidates and tap Submit Poll to record your e-Vote.`,
+                  `Select ${activePoll.minSelect} candidates and tap Submit Poll to record your e-Vote in phpMyAdmin.`,
                   'info'
                 )
               }
@@ -386,7 +395,7 @@ export function CommunityPollModule({ onBack }: CommunityPollModuleProps) {
         </div>
       </div>
 
-      {/* 3. FLOATING PURPLE "+" BUTTON */}
+      {/* 3. FLOATING "+" BUTTON */}
       <button
         type="button"
         onClick={() => setCreatePollOpen(true)}
@@ -413,7 +422,7 @@ export function CommunityPollModule({ onBack }: CommunityPollModuleProps) {
         </button>
       </div>
 
-      {/* 5. CONFIRMATION MODAL [00:00:35]: "Submit poll" */}
+      {/* 5. CONFIRMATION MODAL: "Submit poll" */}
       {confirmSubmitOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-[1px]">
           <div className="w-full bg-white rounded-t-[28px] shadow-2xl pt-3 pb-6 px-5 space-y-4 max-h-[82vh] flex flex-col">
@@ -422,7 +431,7 @@ export function CommunityPollModule({ onBack }: CommunityPollModuleProps) {
             <div className="text-left">
               <h3 className="text-base font-bold text-[#0E2628]">Submit poll</h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                Are you sure you want to submit your vote for the following {selectedCandidates.length} candidate(s)?
+                Are you sure you want to submit your vote for the following {selectedCandidates.length} candidate(s) as {currentUser.name} ({currentUser.unit})?
               </p>
             </div>
 
@@ -439,7 +448,7 @@ export function CommunityPollModule({ onBack }: CommunityPollModuleProps) {
               ))}
             </div>
 
-            {/* Side-by-side "Cancel" (outlined) and "Yes" (solid purple) buttons */}
+            {/* Side-by-side "Cancel" and "Yes" buttons */}
             <div className="grid grid-cols-2 gap-3 pt-1">
               <button
                 type="button"
@@ -450,7 +459,7 @@ export function CommunityPollModule({ onBack }: CommunityPollModuleProps) {
               </button>
               <button
                 type="button"
-                onClick={handleConfirmVote}
+                onClick={() => void handleConfirmVote()}
                 className="py-2.5 rounded-full bg-[#0D5C63] hover:bg-[#094449] text-white font-bold text-xs shadow-sm transition-colors"
               >
                 Yes
@@ -496,7 +505,7 @@ export function CommunityPollModule({ onBack }: CommunityPollModuleProps) {
       {createPollOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50">
           <form
-            onSubmit={handleCreatePoll}
+            onSubmit={(e) => void handleCreatePoll(e)}
             className="w-full bg-white rounded-t-3xl p-5 space-y-3.5"
           >
             <div className="flex items-center justify-between">
@@ -553,4 +562,3 @@ export function CommunityPollModule({ onBack }: CommunityPollModuleProps) {
     </div>
   );
 }
-

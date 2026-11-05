@@ -13,10 +13,10 @@ export function ProfileSettingsModule() {
   const [email, setEmail] = useState(currentUser.email);
   const [phone, setPhone] = useState(currentUser.phone);
   const [bio, setBio] = useState(currentUser.bio || '');
-  const [gender, setGender] = useState('Male');
-  const [dob, setDob] = useState('Not Available');
-  const [bloodGroup, setBloodGroup] = useState('O+');
-  const [govtId, setGovtId] = useState('********435E');
+  const [gender, setGender] = useState(currentUser.gender || 'Male');
+  const [dob, setDob] = useState(currentUser.dateOfBirth || 'Not Available');
+  const [bloodGroup, setBloodGroup] = useState(currentUser.bloodGroup || 'O+');
+  const [govtId, setGovtId] = useState(currentUser.govtIdNumber || '********435E');
   const [isPhonePublic, setIsPhonePublic] = useState(currentUser.isPhonePublic || false);
   const [isEmailPublic, setIsEmailPublic] = useState(currentUser.isEmailPublic || false);
 
@@ -28,6 +28,10 @@ export function ProfileSettingsModule() {
     setEmail(currentUser.email);
     setPhone(currentUser.phone);
     setBio(currentUser.bio || '');
+    setGender(currentUser.gender || 'Male');
+    setDob(currentUser.dateOfBirth || 'Not Available');
+    setBloodGroup(currentUser.bloodGroup || 'O+');
+    setGovtId(currentUser.govtIdNumber || '********435E');
     setIsPhonePublic(currentUser.isPhonePublic || false);
     setIsEmailPublic(currentUser.isEmailPublic || false);
   }, [currentUser]);
@@ -39,6 +43,10 @@ export function ProfileSettingsModule() {
       email,
       phone,
       bio,
+      gender,
+      dateOfBirth: dob,
+      bloodGroup,
+      govtIdNumber: govtId,
       isPhonePublic,
       isEmailPublic,
     });
@@ -77,7 +85,7 @@ export function ProfileSettingsModule() {
         </div>
       </div>
 
-      {/* Main White Rounded Profile Sheet (matches 00:00:10 in video) */}
+      {/* Main White Rounded Profile Sheet */}
       <div className="flex-1 bg-white rounded-t-[28px] shadow-sm px-5 pt-3 pb-8 space-y-6 -mt-1">
         {/* Top Handle */}
         <div className="w-10 h-1 rounded-full bg-[#073B3E] mx-auto" />
@@ -92,7 +100,7 @@ export function ProfileSettingsModule() {
             )}
           </div>
           <h2 className="text-sm font-bold text-[#0E2628] pt-1">{currentUser.name}</h2>
-          <p className="text-xs font-bold text-[#0E2628]">PIN : 107864</p>
+          <p className="text-xs font-bold text-[#0E2628]">PIN : {currentUser.pinCode || '107864'}</p>
           <p className="text-[11px] text-slate-400">
             Registered {currentUser.membershipType} • Resident • {currentUser.unit}
           </p>

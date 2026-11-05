@@ -43,7 +43,7 @@ export default function DatabaseExplorerPage() {
     void fetchTableData(activeTable);
     const interval = setInterval(() => {
       void fetchTableData(activeTable);
-    }, 3000);
+    }, 5000);
     return () => clearInterval(interval);
   }, [activeTable, fetchTableData]);
 
@@ -69,14 +69,14 @@ export default function DatabaseExplorerPage() {
             <Database className="w-5 h-5 text-emerald-300" />
             <div>
               <h1 className="text-sm font-bold tracking-tight flex items-center gap-2">
-                MySQL Live Database Inspector (phpMyAdmin View)
+                MySQL Live Database Inspector (Hostinger phpMyAdmin)
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-400/30">
                   <CheckCircle2 className="w-3 h-3" />
-                  LIVE CONNECTED (Auto-refresh 3s)
+                  LIVE REMOTE DB (Auto-refresh 5s)
                 </span>
               </h1>
               <p className="text-[11px] text-slate-300 font-mono">
-                Server: {data?.host || '127.0.0.1'}:3306 » Database: {data?.database || 'apna_society'} » Table: {activeTable}
+                Server: {data?.host || 'auth-db1947.hstgr.io'}:3306 » Database: {data?.database || 'u762329739_apnaaentrydb'} » Table: {activeTable}
               </p>
             </div>
           </div>
@@ -216,4 +216,3 @@ export default function DatabaseExplorerPage() {
     </div>
   );
 }
-
