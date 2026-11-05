@@ -1,101 +1,153 @@
 @import "tailwindcss";
 
 :root {
-  --purple-primary: #6B21A8;
-  --purple-dark: #2E1065;
-  --purple-secondary: #9333EA;
-  --purple-accent: #EDE9FE;
-  --purple-pale: #F8F6FC;
-  --main-bg: #F8F6FC;
+  --teal-primary: #0D5C63;
+  --teal-dark: #073B3E;
+  --teal-secondary: #147A7F;
+  --mint-accent: #E6F3F3;
+  --mint-pale: #F4F9F9;
+  --main-bg: #F8F9FA;
   --card-bg: #FFFFFF;
-  --text-primary: #1C1326;
-  --text-secondary: #6E6280;
-  --border-subtle: #EAE2F2;
+  --text-primary: #0E2628;
+  --text-secondary: #4E6E70;
+  --border-subtle: #D5EAEB;
   --status-success: #198754;
   --status-warning: #D97706;
   --status-error: #DC4444;
-  --status-info: #6B21A8;
+  --status-info: #0D5C63;
 
-  /* Aliases for backwards compatibility */
-  --teal-primary: #6B21A8;
-  --teal-dark: #2E1065;
-  --teal-secondary: #9333EA;
-  --mint-accent: #EDE9FE;
-  --mint-pale: #F8F6FC;
+  /* Aliases mapped to dark bluish-green */
+  --purple-primary: #0D5C63;
+  --purple-dark: #073B3E;
+  --purple-secondary: #147A7F;
+  --purple-accent: #E6F3F3;
+  --purple-pale: #F4F9F9;
 }
 
 @theme inline {
   --font-serif: var(--font-serif);
-  --color-purple-primary: #6B21A8;
-  --color-purple-dark: #2E1065;
-  --color-purple-secondary: #9333EA;
-  --color-purple-accent: #EDE9FE;
-  --color-purple-pale: #F8F6FC;
-  --color-main-bg: #F8F6FC;
+  --color-teal-primary: #0D5C63;
+  --color-teal-dark: #073B3E;
+  --color-teal-secondary: #147A7F;
+  --color-mint-accent: #E6F3F3;
+  --color-mint-pale: #F4F9F9;
+  --color-main-bg: #F8F9FA;
   --color-card-bg: #FFFFFF;
-  --color-text-primary: #1C1326;
-  --color-text-secondary: #6E6280;
-  --color-border-subtle: #EAE2F2;
+  --color-text-primary: #0E2628;
+  --color-text-secondary: #4E6E70;
+  --color-border-subtle: #D5EAEB;
   --color-status-success: #198754;
   --color-status-warning: #D97706;
   --color-status-error: #DC4444;
-  --color-status-info: #6B21A8;
+  --color-status-info: #0D5C63;
 
-  /* Aliases for backwards compatibility */
-  --color-teal-primary: #6B21A8;
-  --color-teal-dark: #2E1065;
-  --color-teal-secondary: #9333EA;
-  --color-mint-accent: #EDE9FE;
-  --color-mint-pale: #F8F6FC;
+  /* Map purple-* theme tokens to dark bluish-green so any purple utility renders bluish-green */
+  --color-purple-50: #F0F9F9;
+  --color-purple-100: #E6F3F3;
+  --color-purple-200: #C4E4E6;
+  --color-purple-300: #92CCD0;
+  --color-purple-400: #57ACB2;
+  --color-purple-500: #24888F;
+  --color-purple-600: #147A7F;
+  --color-purple-700: #0D5C63;
+  --color-purple-800: #0A484E;
+  --color-purple-900: #073B3E;
+  --color-purple-950: #042427;
+
+  --color-purple-primary: #0D5C63;
+  --color-purple-dark: #073B3E;
+  --color-purple-secondary: #147A7F;
+  --color-purple-accent: #E6F3F3;
+  --color-purple-pale: #F4F9F9;
 }
 
 body {
-  background-color: #F8F6FC;
-  color: #1C1326;
+  background-color: #F8F9FA;
+  color: #0E2628;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior-y: none;
 }
 
-/* Custom scrollbars */
+/* Custom sleek mobile scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #DDD4EC;
+  background: rgba(13, 92, 99, 0.24);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #BAA7DA;
+  background: rgba(13, 92, 99, 0.42);
 }
 
 /* Base button defaults */
 button {
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Direct helper utilities */
 .font-serif {
   font-family: var(--font-serif), "Playfair Display", Georgia, Cambria, serif;
 }
-.bg-purple-primary { background-color: #6B21A8; }
-.bg-purple-dark { background-color: #2E1065; }
-.bg-purple-secondary { background-color: #9333EA; }
-.bg-purple-pale { background-color: #F8F6FC; }
-.bg-purple-accent { background-color: #EDE9FE; }
-.text-purple-primary { color: #6B21A8; }
-.text-purple-dark { color: #2E1065; }
-.border-subtle { border-color: #EAE2F2; }
+.bg-purple-primary, .bg-teal-primary { background-color: #0D5C63; }
+.bg-purple-dark, .bg-teal-dark { background-color: #073B3E; }
+.bg-purple-secondary, .bg-teal-secondary { background-color: #147A7F; }
+.bg-purple-pale, .bg-mint-pale { background-color: #F4F9F9; }
+.bg-purple-accent, .bg-mint-accent { background-color: #E6F3F3; }
+.text-purple-primary, .text-teal-primary { color: #0D5C63; }
+.text-purple-dark, .text-teal-dark { color: #073B3E; }
+.border-subtle { border-color: #D5EAEB; }
 
-/* Teal / mint class aliases mapped to purple */
-.bg-teal-primary { background-color: #6B21A8; }
-.bg-teal-dark { background-color: #2E1065; }
-.bg-teal-secondary { background-color: #9333EA; }
-.bg-mint-pale { background-color: #F8F6FC; }
-.bg-mint-accent { background-color: #EDE9FE; }
-.text-teal-primary { color: #6B21A8; }
-.text-teal-dark { color: #2E1065; }
+/* ==========================================================================
+   MOBILE APP SHELL VIEWPORT OVERRIDES
+   Forces all inner modules to render with mobile-first single/dual column
+   layouts even when viewed inside the mobile column on a desktop monitor.
+   ========================================================================== */
+.mobile-viewport {
+  transform: translateZ(0);
+  container-type: inline-size;
+}
+
+/* Keep 1-column base grids stacked in 1 column inside the mobile column */
+.mobile-viewport .grid.grid-cols-1 {
+  grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+}
+
+/* Keep 2-column base grids (like 2x2 Quick Actions & KPI tiles) at 2 columns max */
+.mobile-viewport .grid.grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+/* Reset desktop-only grid column spans inside single-column mobile grids */
+.mobile-viewport .lg\:col-span-2,
+.mobile-viewport .lg\:col-span-3,
+.mobile-viewport .lg\:col-span-5,
+.mobile-viewport .lg\:col-span-7 {
+  grid-column: span 1 / span 1 !important;
+}
+
+/* Stack flex-col containers that would otherwise switch to horizontal on desktop */
+.mobile-viewport .flex.flex-col.sm\:flex-row,
+.mobile-viewport .flex.flex-col.md\:flex-row,
+.mobile-viewport .flex.flex-col.lg\:flex-row {
+  flex-direction: column !important;
+  align-items: stretch !important;
+}
+
+/* Scale down oversized desktop headings inside the mobile app column */
+.mobile-viewport h1.sm\:text-3xl {
+  font-size: 1.375rem !important;
+  line-height: 1.75rem !important;
+}
+
+.mobile-viewport h2.sm\:text-3xl {
+  font-size: 1.25rem !important;
+  line-height: 1.65rem !important;
+}

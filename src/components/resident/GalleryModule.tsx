@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSociety } from '@/context/SocietyContext';
-import { Album } from '@/types';
 import {
   Image as ImageIcon,
   Search,
@@ -17,7 +16,7 @@ export function GalleryModule() {
   const { albums, uploadMedia, addToast } = useSociety();
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeAlbum, setActiveAlbum] = useState<Album | null>(null);
+  const [activeAlbumId, setActiveAlbumId] = useState<string | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   // Upload modal state
@@ -28,6 +27,10 @@ export function GalleryModule() {
 
   const categories = ['All', 'Festivals', 'Sports', 'Clubhouse', 'Events'];
 
+  const activeAlbum = activeAlbumId
+    ? albums.find((a) => a.id === activeAlbumId) || null
+    : null;
+
   const filteredAlbums = albums.filter((alb) => {
     if (selectedCategory !== 'All' && alb.category !== selectedCategory) return false;
     if (searchQuery.trim()) {
@@ -37,7 +40,9 @@ export function GalleryModule() {
     return true;
   });
 
-  const activeMediaList = activeAlbum ? activeAlbum.mediaItems : [];
+  const activeMediaList = activeAlbum
+    ? activeAlbum.mediaItems.filter((item) => item.status !== 'rejected')
+    : [];
 
   // Lightbox keyboard controls
   useEffect(() => {
@@ -66,7 +71,7 @@ export function GalleryModule() {
       uploadUrl.trim() ||
       'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80';
 
-    uploadMedia(targetAlbumId, uploadTitle, finalUrl);
+    uploadMedia(targetAlbumId || albums[0]?.id || '', uploadTitle, finalUrl);
     setIsUploadOpen(false);
     setUploadTitle('');
     setUploadUrl('');
@@ -77,17 +82,20 @@ export function GalleryModule() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1C1326]">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0E2628]">
             Community Gallery
           </h1>
-          <p className="text-xs sm:text-sm text-[#6E6280] mt-1">
+          <p className="text-xs sm:text-sm text-[#4E6E70] mt-1">
             Moments, festivals, and sporting memories captured at Green Valley Residency.
           </p>
         </div>
 
         <button
-          onClick={() => setIsUploadOpen(true)}
-          className="self-start sm:self-auto flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#6B21A8] text-white font-semibold text-xs hover:bg-[#581C87] transition-colors shadow-sm"
+          onClick={() => {
+            setTargetAlbumId(activeAlbumId || albums[0]?.id || '');
+            setIsUploadOpen(true);
+          }}
+          className="self-start sm:self-auto flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0D5C63] text-white font-semibold text-xs hover:bg-[#094449] transition-colors shadow-sm"
         >
           <Upload className="w-4 h-4" />
           <span>Contribute Photos</span>
@@ -98,28 +106,30 @@ export function GalleryModule() {
       {activeAlbum ? (
         <div className="space-y-6">
           <button
-            onClick={() => setActiveAlbum(null)}
-            className="flex items-center gap-2 text-xs font-semibold text-[#6B21A8] hover:underline"
+            onClick={() => setActiveAlbumId(null)}
+            className="flex items-center gap-2 text-xs font-semibold text-[#0D5C63] hover:underline"
           >
             <ChevronLeft className="w-4 h-4" />
             <span>Back to All Albums</span>
           </button>
 
-          <div className="flex items-center justify-between pb-3 border-b border-[#EAE2F2]">
+          <div className="flex items-center justify-between pb-3 border-b border-[#D5EAEB]">
             <div>
-              <span className="text-[10px] font-bold uppercase bg-purple-50 text-[#6B21A8] px-2.5 py-0.5 rounded-full">
+              <span className="text-[10px] font-bold uppercase bg-purple-50 text-[#0D5C63] px-2.5 py-0.5 rounded-full">
                 {activeAlbum.category}
               </span>
               <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">
                 {activeAlbum.title}
               </h2>
-              <p className="text-xs text-slate-500">{activeAlbum.date} • {activeAlbum.count} photos</p>
+              <p className="text-xs text-slate-500">
+                {activeAlbum.date} • {activeMediaList.length} photos
+              </p>
             </div>
           </div>
 
           {/* Photos Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {activeAlbum.mediaItems.map((item, idx) => (
+            {activeMediaList.map((item, idx) => (
               <div
                 key={item.id}
                 onClick={() => setLightboxIndex(idx)}
@@ -131,6 +141,11 @@ export function GalleryModule() {
                   fill
                   className="object-cover group-hover:scale-105 transition-transform duration-300"
                 />
+                {item.status === 'pending' && (
+                  <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold uppercase shadow">
+                    Pending Review
+                  </div>
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3.5 text-white">
                   <p className="text-xs font-bold leading-tight truncate">{item.title}</p>
                   <p className="text-[10px] text-slate-300 mt-0.5">By {item.uploader}</p>
@@ -151,8 +166,8 @@ export function GalleryModule() {
                   onClick={() => setSelectedCategory(c)}
                   className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
                     selectedCategory === c
-                      ? 'bg-[#6B21A8] text-white'
-                      : 'bg-white border border-[#EAE2F2] text-slate-600 hover:bg-slate-50'
+                      ? 'bg-[#0D5C63] text-white'
+                      : 'bg-white border border-[#D5EAEB] text-slate-600 hover:bg-slate-50'
                   }`}
                 >
                   {c}
@@ -167,61 +182,64 @@ export function GalleryModule() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search gallery..."
-                className="w-full pl-9 pr-4 py-2 bg-white border border-[#EAE2F2] rounded-xl text-xs focus:outline-none focus:border-[#6B21A8]"
+                className="w-full pl-9 pr-4 py-2 bg-white border border-[#D5EAEB] rounded-xl text-xs focus:outline-none focus:border-[#0D5C63]"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredAlbums.map((alb) => (
-              <div
-                key={alb.id}
-                onClick={() => setActiveAlbum(alb)}
-                className="bg-white rounded-3xl border border-[#EAE2F2] overflow-hidden hover:shadow-lg hover:border-purple-300 transition-all cursor-pointer flex flex-col group"
-              >
-                <div className="relative h-52 w-full overflow-hidden">
-                  <Image
-                    src={alb.coverImage}
-                    alt={alb.title}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-3.5 left-3.5">
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-white/95 px-2.5 py-1 rounded-full text-slate-800 shadow-sm">
-                      {alb.category}
-                    </span>
+            {filteredAlbums.map((alb) => {
+              const visibleCount = alb.mediaItems.filter((m) => m.status !== 'rejected').length;
+              return (
+                <div
+                  key={alb.id}
+                  onClick={() => setActiveAlbumId(alb.id)}
+                  className="bg-white rounded-3xl border border-[#D5EAEB] overflow-hidden hover:shadow-lg hover:border-purple-300 transition-all cursor-pointer flex flex-col group"
+                >
+                  <div className="relative h-52 w-full overflow-hidden">
+                    <Image
+                      src={alb.coverImage}
+                      alt={alb.title}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute top-3.5 left-3.5">
+                      <span className="text-[10px] font-bold uppercase tracking-wider bg-white/95 px-2.5 py-1 rounded-full text-slate-800 shadow-sm">
+                        {alb.category}
+                      </span>
+                    </div>
+                    <div className="absolute bottom-3.5 right-3.5 bg-black/60 backdrop-blur text-white text-[11px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1.5">
+                      <ImageIcon className="w-3.5 h-3.5" />
+                      <span>{visibleCount} Photos</span>
+                    </div>
                   </div>
-                  <div className="absolute bottom-3.5 right-3.5 bg-black/60 backdrop-blur text-white text-[11px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1.5">
-                    <ImageIcon className="w-3.5 h-3.5" />
-                    <span>{alb.count} Photos</span>
-                  </div>
-                </div>
 
-                <div className="p-5 flex items-center justify-between">
-                  <div>
-                    <h3 className="font-bold text-base text-slate-900 group-hover:text-[#6B21A8] transition-colors">
-                      {alb.title}
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-0.5">{alb.date}</p>
+                  <div className="p-5 flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold text-base text-slate-900 group-hover:text-[#0D5C63] transition-colors">
+                        {alb.title}
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-0.5">{alb.date}</p>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-[#0D5C63] transition-colors" />
                   </div>
-                  <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-[#6B21A8] transition-colors" />
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
 
       {/* Full-Screen Lightbox */}
-      {lightboxIndex !== null && activeAlbum && (
+      {lightboxIndex !== null && activeAlbum && activeMediaList[lightboxIndex] && (
         <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col justify-between p-4 sm:p-8">
           {/* Top Bar */}
           <div className="flex items-center justify-between text-white z-10">
             <div>
-              <p className="text-sm font-bold">{activeAlbum.mediaItems[lightboxIndex]?.title}</p>
+              <p className="text-sm font-bold">{activeMediaList[lightboxIndex]?.title}</p>
               <p className="text-xs text-slate-400">
-                Photo {lightboxIndex + 1} of {activeAlbum.mediaItems.length} • Contributed by{' '}
-                {activeAlbum.mediaItems[lightboxIndex]?.uploader}
+                Photo {lightboxIndex + 1} of {activeMediaList.length} • Contributed by{' '}
+                {activeMediaList[lightboxIndex]?.uploader}
               </p>
             </div>
             <button
@@ -237,7 +255,7 @@ export function GalleryModule() {
             <button
               onClick={() =>
                 setLightboxIndex((prev) =>
-                  prev !== null && prev > 0 ? prev - 1 : activeAlbum.mediaItems.length - 1
+                  prev !== null && prev > 0 ? prev - 1 : activeMediaList.length - 1
                 )
               }
               className="absolute left-2 sm:left-4 z-10 p-3 rounded-full bg-white/10 hover:bg-white/30 text-white transition-colors"
@@ -247,8 +265,8 @@ export function GalleryModule() {
 
             <div className="relative w-full max-w-4xl h-full max-h-[75vh]">
               <Image
-                src={activeAlbum.mediaItems[lightboxIndex]?.url || ''}
-                alt={activeAlbum.mediaItems[lightboxIndex]?.title || ''}
+                src={activeMediaList[lightboxIndex]?.url || ''}
+                alt={activeMediaList[lightboxIndex]?.title || ''}
                 fill
                 className="object-contain"
               />
@@ -257,7 +275,7 @@ export function GalleryModule() {
             <button
               onClick={() =>
                 setLightboxIndex((prev) =>
-                  prev !== null && prev < activeAlbum.mediaItems.length - 1 ? prev + 1 : 0
+                  prev !== null && prev < activeMediaList.length - 1 ? prev + 1 : 0
                 )
               }
               className="absolute right-2 sm:right-4 z-10 p-3 rounded-full bg-white/10 hover:bg-white/30 text-white transition-colors"
@@ -295,7 +313,7 @@ export function GalleryModule() {
                 <select
                   value={targetAlbumId}
                   onChange={(e) => setTargetAlbumId(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8] bg-white"
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63] bg-white"
                 >
                   {albums.map((a) => (
                     <option key={a.id} value={a.id}>
@@ -314,7 +332,7 @@ export function GalleryModule() {
                   value={uploadTitle}
                   onChange={(e) => setUploadTitle(e.target.value)}
                   placeholder="e.g. Diya lighting with family"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                 />
               </div>
 
@@ -327,11 +345,11 @@ export function GalleryModule() {
                   value={uploadUrl}
                   onChange={(e) => setUploadUrl(e.target.value)}
                   placeholder="https://images.unsplash.com/..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                 />
               </div>
 
-              <div className="p-3 bg-[#F8F6FC] rounded-xl text-[11px] text-slate-600">
+              <div className="p-3 bg-[#F4F9F9] rounded-xl text-[11px] text-slate-600">
                 Uploaded pictures are submitted to the management committee for moderation before being visible to everyone.
               </div>
 
@@ -345,7 +363,7 @@ export function GalleryModule() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 rounded-xl bg-[#6B21A8] hover:bg-[#581C87] text-white text-xs font-semibold shadow-sm"
+                  className="flex-1 py-2.5 rounded-xl bg-[#0D5C63] hover:bg-[#094449] text-white text-xs font-semibold shadow-sm"
                 >
                   Submit Photo
                 </button>

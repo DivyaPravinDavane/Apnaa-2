@@ -39,24 +39,24 @@ export function AdminAuditReports() {
     <div className="max-w-7xl mx-auto space-y-6 pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1C1326]">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0E2628]">
             Audit Logs & Compliance Reports
           </h1>
-          <p className="text-xs sm:text-sm text-[#6E6280] mt-1">
+          <p className="text-xs sm:text-sm text-[#4E6E70] mt-1">
             Immutable log of gate verifications, booking creations, notice broadcasts, and policy modifications.
           </p>
         </div>
 
         <button
           onClick={handleExportCsv}
-          className="self-start sm:self-auto flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#6B21A8] text-white font-semibold text-xs hover:bg-[#581C87] transition-colors shadow-sm"
+          className="self-start sm:self-auto flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0D5C63] text-white font-semibold text-xs hover:bg-[#094449] transition-colors shadow-sm"
         >
           <Download className="w-4 h-4" />
           <span>Export Audit CSV</span>
         </button>
       </div>
 
-      <div className="bg-white p-4 rounded-2xl border border-[#EAE2F2] shadow-sm flex items-center justify-between">
+      <div className="bg-white p-4 rounded-2xl border border-[#D5EAEB] shadow-sm flex items-center justify-between">
         <div className="relative w-full max-w-md">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
@@ -64,7 +64,7 @@ export function AdminAuditReports() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search audit trail by actor, action, or details..."
-            className="w-full pl-9 pr-4 py-2 bg-[#F8F6FC] border border-[#EAE2F2] rounded-xl text-xs focus:outline-none focus:border-[#6B21A8]"
+            className="w-full pl-9 pr-4 py-2 bg-[#F4F9F9] border border-[#D5EAEB] rounded-xl text-xs focus:outline-none focus:border-[#0D5C63]"
           />
         </div>
 
@@ -73,10 +73,10 @@ export function AdminAuditReports() {
         </span>
       </div>
 
-      <div className="bg-white rounded-3xl border border-[#EAE2F2] overflow-hidden shadow-sm">
+      <div className="bg-white rounded-3xl border border-[#D5EAEB] overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs text-slate-600">
-            <thead className="bg-[#F8F6FC] text-slate-700 font-bold uppercase tracking-wider text-[11px] border-b border-[#EAE2F2]">
+            <thead className="bg-[#F4F9F9] text-slate-700 font-bold uppercase tracking-wider text-[11px] border-b border-[#D5EAEB]">
               <tr>
                 <th className="px-6 py-4">Action Event</th>
                 <th className="px-6 py-4">Actor</th>
@@ -88,7 +88,7 @@ export function AdminAuditReports() {
               {filtered.map((log) => (
                 <tr key={log.id} className="hover:bg-slate-50/60 transition-colors">
                   <td className="px-6 py-4 font-bold text-slate-900">{log.action}</td>
-                  <td className="px-6 py-4 font-semibold text-[#6B21A8]">{log.actor}</td>
+                  <td className="px-6 py-4 font-semibold text-[#0D5C63]">{log.actor}</td>
                   <td className="px-6 py-4 font-mono text-[11px]">{log.timestamp}</td>
                   <td className="px-6 py-4 text-slate-700">{log.details}</td>
                 </tr>

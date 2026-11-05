@@ -83,10 +83,10 @@ export function NoticesModule() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1C1326]">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0E2628]">
             Notices & Circulars
           </h1>
-          <p className="text-xs sm:text-sm text-[#6E6280] mt-1">
+          <p className="text-xs sm:text-sm text-[#4E6E70] mt-1">
             Stay updated with official committee broadcasts, maintenance schedules, and AGM circulars.
           </p>
         </div>
@@ -94,7 +94,7 @@ export function NoticesModule() {
         {currentRole === 'admin' && (
           <button
             onClick={() => setIsComposeOpen(true)}
-            className="self-start sm:self-auto flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#6B21A8] text-white font-semibold text-xs hover:bg-[#581C87] transition-colors shadow-sm"
+            className="self-start sm:self-auto flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0D5C63] text-white font-semibold text-xs hover:bg-[#094449] transition-colors shadow-sm"
           >
             <Plus className="w-4 h-4" />
             Publish Notice
@@ -144,7 +144,7 @@ export function NoticesModule() {
       )}
 
       {/* Filter and Search Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-[#EAE2F2] shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+      <div className="bg-white p-4 rounded-2xl border border-[#D5EAEB] shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
         <div className="relative flex-1 max-w-md">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
@@ -152,7 +152,7 @@ export function NoticesModule() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search notices by keyword or topic..."
-            className="w-full pl-9 pr-4 py-2 bg-[#F8F6FC] border border-[#EAE2F2] rounded-xl text-xs focus:outline-none focus:border-[#6B21A8]"
+            className="w-full pl-9 pr-4 py-2 bg-[#F4F9F9] border border-[#D5EAEB] rounded-xl text-xs focus:outline-none focus:border-[#0D5C63]"
           />
         </div>
 
@@ -160,7 +160,7 @@ export function NoticesModule() {
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-[#EAE2F2] bg-white text-slate-700 focus:outline-none focus:border-[#6B21A8]"
+            className="px-3 py-2 rounded-xl border border-[#D5EAEB] bg-white text-slate-700 focus:outline-none focus:border-[#0D5C63]"
           >
             {categories.map((c) => (
               <option key={c} value={c}>
@@ -172,7 +172,7 @@ export function NoticesModule() {
           <select
             value={selectedPriority}
             onChange={(e) => setSelectedPriority(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-[#EAE2F2] bg-white text-slate-700 focus:outline-none focus:border-[#6B21A8]"
+            className="px-3 py-2 rounded-xl border border-[#D5EAEB] bg-white text-slate-700 focus:outline-none focus:border-[#0D5C63]"
           >
             {priorities.map((p) => (
               <option key={p} value={p}>
@@ -181,12 +181,12 @@ export function NoticesModule() {
             ))}
           </select>
 
-          <label className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#EAE2F2] cursor-pointer hover:bg-slate-50 text-slate-700 font-medium">
+          <label className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#D5EAEB] cursor-pointer hover:bg-slate-50 text-slate-700 font-medium">
             <input
               type="checkbox"
               checked={unreadOnly}
               onChange={(e) => setUnreadOnly(e.target.checked)}
-              className="rounded text-[#6B21A8] focus:ring-0"
+              className="rounded text-[#0D5C63] focus:ring-0"
             />
             <span>Unread Only</span>
           </label>
@@ -196,7 +196,7 @@ export function NoticesModule() {
       {/* Notices Feed Cards */}
       <div className="space-y-3">
         {filteredNotices.length === 0 ? (
-          <div className="py-16 text-center bg-white rounded-3xl border border-[#EAE2F2] text-slate-400">
+          <div className="py-16 text-center bg-white rounded-3xl border border-[#D5EAEB] text-slate-400">
             <BellRing className="w-10 h-10 mx-auto text-slate-300 mb-2" />
             <p className="text-sm font-semibold text-slate-700">No notices match your filter</p>
             <p className="text-xs text-slate-400 mt-1">Try clearing some of your search parameters.</p>
@@ -211,8 +211,8 @@ export function NoticesModule() {
               }}
               className={`p-5 rounded-2xl border transition-all cursor-pointer shadow-sm hover:shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ${
                 !notice.isRead
-                  ? 'bg-[#F8F6FC] border-[#6B21A8]/30 border-l-4 border-l-[#6B21A8]'
-                  : 'bg-white border-[#EAE2F2]'
+                  ? 'bg-[#F4F9F9] border-[#0D5C63]/30 border-l-4 border-l-[#0D5C63]'
+                  : 'bg-white border-[#D5EAEB]'
               }`}
             >
               <div className="flex-1 space-y-1.5 min-w-0">
@@ -227,22 +227,22 @@ export function NoticesModule() {
                     {notice.publishDate}
                   </span>
                   {!notice.isRead && (
-                    <span className="w-2 h-2 rounded-full bg-[#9333EA]" title="Unread" />
+                    <span className="w-2 h-2 rounded-full bg-[#147A7F]" title="Unread" />
                   )}
                 </div>
 
-                <h3 className="font-bold text-base text-[#1C1326] leading-snug">
+                <h3 className="font-bold text-base text-[#0E2628] leading-snug">
                   {notice.title}
                 </h3>
 
-                <p className="text-xs text-[#6E6280] line-clamp-2 leading-relaxed">
+                <p className="text-xs text-[#4E6E70] line-clamp-2 leading-relaxed">
                   {notice.body}
                 </p>
 
                 <div className="flex items-center gap-4 text-xs text-slate-500 pt-1">
                   <span>Issued by: <strong>{notice.author}</strong></span>
                   {notice.attachmentName && (
-                    <span className="flex items-center gap-1 text-[#6B21A8] font-medium">
+                    <span className="flex items-center gap-1 text-[#0D5C63] font-medium">
                       <FileText className="w-3.5 h-3.5" />
                       {notice.attachmentName}
                     </span>
@@ -257,7 +257,7 @@ export function NoticesModule() {
               </div>
 
               <div className="flex items-center gap-2 self-end md:self-center">
-                <span className="text-xs font-semibold text-[#6B21A8] flex items-center gap-1">
+                <span className="text-xs font-semibold text-[#0D5C63] flex items-center gap-1">
                   <span>Read Notice</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </span>
@@ -303,7 +303,7 @@ export function NoticesModule() {
               {activeNoticeDetail.attachmentName && (
                 <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-purple-100 text-[#6B21A8]">
+                    <div className="p-2 rounded-xl bg-purple-100 text-[#0D5C63]">
                       <FileText className="w-5 h-5" />
                     </div>
                     <div>
@@ -342,7 +342,7 @@ export function NoticesModule() {
                       acknowledgeNotice(activeNoticeDetail.id);
                       setActiveNoticeDetail({ ...activeNoticeDetail, isAcknowledged: true });
                     }}
-                    className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-[#6B21A8] hover:bg-[#581C87] text-white text-xs font-semibold shadow-sm"
+                    className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-[#0D5C63] hover:bg-[#094449] text-white text-xs font-semibold shadow-sm"
                   >
                     Acknowledge Receipt
                   </button>
@@ -415,7 +415,7 @@ export function NoticesModule() {
                   value={composeDraft.title}
                   onChange={(e) => setComposeDraft({ ...composeDraft, title: e.target.value })}
                   placeholder="e.g. Water supply maintenance on Saturday"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                 />
               </div>
 
@@ -430,7 +430,7 @@ export function NoticesModule() {
                   value={composeDraft.body}
                   onChange={(e) => setComposeDraft({ ...composeDraft, body: e.target.value })}
                   placeholder="Provide complete details, timings, and instructions for residents…"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs leading-relaxed focus:outline-none focus:border-[#6B21A8]"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs leading-relaxed focus:outline-none focus:border-[#0D5C63]"
                 />
               </div>
 
@@ -444,7 +444,7 @@ export function NoticesModule() {
                     onChange={(e) =>
                       setComposeDraft({ ...composeDraft, category: e.target.value as Notice['category'] })
                     }
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:border-[#0D5C63]"
                   >
                     {['Water Shutdown', 'Maintenance', 'Security Alert', 'AGM Notification', 'General Rules', 'Events'].map(
                       (category) => (
@@ -464,7 +464,7 @@ export function NoticesModule() {
                     onChange={(e) =>
                       setComposeDraft({ ...composeDraft, priority: e.target.value as Notice['priority'] })
                     }
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:border-[#0D5C63]"
                   >
                     <option value="normal">Normal</option>
                     <option value="high">Important</option>
@@ -483,7 +483,7 @@ export function NoticesModule() {
                     required
                     value={composeDraft.publishDate}
                     onChange={(e) => setComposeDraft({ ...composeDraft, publishDate: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                   />
                 </div>
                 <div>
@@ -494,7 +494,7 @@ export function NoticesModule() {
                     type="date"
                     value={composeDraft.expiryDate}
                     onChange={(e) => setComposeDraft({ ...composeDraft, expiryDate: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                   />
                 </div>
               </div>
@@ -506,7 +506,7 @@ export function NoticesModule() {
                   onChange={(e) =>
                     setComposeDraft({ ...composeDraft, requiresAcknowledgement: e.target.checked })
                   }
-                  className="rounded border-slate-300 text-[#6B21A8]"
+                  className="rounded border-slate-300 text-[#0D5C63]"
                 />
                 Require residents to acknowledge receipt
               </label>
@@ -521,7 +521,7 @@ export function NoticesModule() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 rounded-xl bg-[#6B21A8] hover:bg-[#581C87] text-white text-xs font-semibold shadow-sm"
+                  className="flex-1 py-2.5 rounded-xl bg-[#0D5C63] hover:bg-[#094449] text-white text-xs font-semibold shadow-sm"
                 >
                   Publish Notice
                 </button>

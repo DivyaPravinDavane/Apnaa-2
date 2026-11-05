@@ -73,7 +73,7 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
     .filter((b) => b.status !== 'cancelled')
     .forEach((b) => usageCounts.set(b.amenityName, (usageCounts.get(b.amenityName) || 0) + 1));
   const usageTotal = Array.from(usageCounts.values()).reduce((sum, value) => sum + value, 0);
-  const usagePalette = ['#6B21A8', '#9333EA', '#240B3B', '#C084FC', '#7E22CE'];
+  const usagePalette = ['#0D5C63', '#147A7F', '#073B3E', '#C084FC', '#7E22CE'];
   const sortedUsage = Array.from(usageCounts.entries()).sort((a, b) => b[1] - a[1]);
   const amenityUsageData =
     usageTotal === 0
@@ -104,28 +104,28 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-12">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#EAE2F2] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#D5EAEB] pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1C1326]">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0E2628]">
               Admin Operations Dashboard
             </h1>
             <span className="text-[10px] font-bold uppercase bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">
               Live Overview
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-[#6E6280] mt-1">
+          <p className="text-xs sm:text-sm text-[#4E6E70] mt-1">
             {society.name} • Operations Console
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-slate-500 bg-white border border-[#EAE2F2] px-3 py-1.5 rounded-xl">
+          <span className="text-xs font-semibold text-slate-500 bg-white border border-[#D5EAEB] px-3 py-1.5 rounded-xl">
             {dateRange}
           </span>
           <button
             onClick={resetDemoData}
-            className="p-2 rounded-xl border border-[#EAE2F2] bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+            className="p-2 rounded-xl border border-[#D5EAEB] bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors"
             title="Refresh statistics from the database"
           >
             <RefreshCw className="w-4 h-4" />
@@ -135,10 +135,10 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
 
       {/* Summary Metrics (4 Cards) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl bg-white border border-[#EAE2F2] shadow-sm">
+        <div className="p-5 rounded-2xl bg-white border border-[#D5EAEB] shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500">Total Residents</span>
-            <div className="p-2 rounded-xl bg-purple-50 text-[#6B21A8]">
+            <div className="p-2 rounded-xl bg-purple-50 text-[#0D5C63]">
               <Users className="w-4 h-4" />
             </div>
           </div>
@@ -149,10 +149,10 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
           </p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-white border border-[#EAE2F2] shadow-sm">
+        <div className="p-5 rounded-2xl bg-white border border-[#D5EAEB] shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500">Expected Visitors</span>
-            <div className="p-2 rounded-xl bg-purple-50 text-[#6B21A8]">
+            <div className="p-2 rounded-xl bg-purple-50 text-[#0D5C63]">
               <Shield className="w-4 h-4" />
             </div>
           </div>
@@ -162,7 +162,7 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
           <p className="text-xs text-slate-500 mt-1">Across all 4 gates today</p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-white border border-[#EAE2F2] shadow-sm">
+        <div className="p-5 rounded-2xl bg-white border border-[#D5EAEB] shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500">Pending Approvals</span>
             <div className="p-2 rounded-xl bg-amber-50 text-amber-700">
@@ -175,10 +175,10 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
           <p className="text-xs text-slate-500 mt-1">Awaiting resident confirmation</p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-white border border-[#EAE2F2] shadow-sm">
+        <div className="p-5 rounded-2xl bg-white border border-[#D5EAEB] shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500">Today&apos;s Bookings</span>
-            <div className="p-2 rounded-xl bg-purple-50 text-[#6B21A8]">
+            <div className="p-2 rounded-xl bg-purple-50 text-[#0D5C63]">
               <CalendarCheck className="w-4 h-4" />
             </div>
           </div>
@@ -194,13 +194,13 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
       {/* Analytics Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: Weekly Amenity Bookings Bar Chart (7 Cols) */}
-        <div className="lg:col-span-7 p-6 rounded-3xl bg-white border border-[#EAE2F2] shadow-sm space-y-4">
+        <div className="lg:col-span-7 p-6 rounded-3xl bg-white border border-[#D5EAEB] shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-bold text-base text-slate-900">Amenity Booking Activity</h3>
               <p className="text-xs text-slate-500">Daily reservation counts over the last 7 days</p>
             </div>
-            <span className="text-xs font-semibold text-[#6B21A8] bg-purple-50 px-2.5 py-1 rounded-full">
+            <span className="text-xs font-semibold text-[#0D5C63] bg-purple-50 px-2.5 py-1 rounded-full">
               {usageTotal === 0 && peakDay.bookings === 0 ? 'Awaiting bookings' : `Peak: ${peakDay.day}`}
             </span>
           </div>
@@ -211,16 +211,16 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
                 <XAxis dataKey="day" stroke="#94A3B8" fontSize={12} tickLine={false} />
                 <YAxis stroke="#94A3B8" fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip
-                  cursor={{ fill: '#F8F6FC' }}
+                  cursor={{ fill: '#F4F9F9' }}
                   contentStyle={{
-                    backgroundColor: '#240B3B',
+                    backgroundColor: '#073B3E',
                     color: '#FFF',
                     borderRadius: '12px',
                     border: 'none',
                     fontSize: '12px',
                   }}
                 />
-                <Bar dataKey="bookings" fill="#6B21A8" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="bookings" fill="#0D5C63" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -284,7 +284,7 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
       {/* Lower Section: Recent Operational Activity & Admin Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Recent Activity Log (8 Cols) */}
-        <div className="lg:col-span-8 p-6 rounded-3xl bg-white border border-[#EAE2F2] shadow-sm space-y-4">
+        <div className="lg:col-span-8 p-6 rounded-3xl bg-white border border-[#D5EAEB] shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-bold text-base text-slate-900">Recent Society Activity</h3>
@@ -292,7 +292,7 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
             </div>
             <button
               onClick={() => onNavigateTab('admin_audit')}
-              className="text-xs font-semibold text-[#6B21A8] hover:underline"
+              className="text-xs font-semibold text-[#0D5C63] hover:underline"
             >
               View Full Audit Trail
             </button>
@@ -305,7 +305,7 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
                 className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 flex items-start justify-between gap-3"
               >
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-purple-100 text-[#6B21A8] flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <div className="w-8 h-8 rounded-lg bg-purple-100 text-[#0D5C63] flex items-center justify-center flex-shrink-0 mt-0.5">
                     <CheckCircle2 className="w-4 h-4" />
                   </div>
                   <div>
@@ -322,7 +322,7 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
         </div>
 
         {/* Quick Operational Shortcuts (4 Cols) */}
-        <div className="lg:col-span-4 p-6 rounded-3xl bg-white border border-[#EAE2F2] shadow-sm space-y-4">
+        <div className="lg:col-span-4 p-6 rounded-3xl bg-white border border-[#D5EAEB] shadow-sm space-y-4">
           <h3 className="font-bold text-base text-slate-900">Admin Actions</h3>
 
           <div className="space-y-2.5">
@@ -331,7 +331,7 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
               className="w-full flex items-center justify-between p-3 rounded-2xl border border-slate-100 hover:border-purple-300 hover:bg-purple-50/50 transition-all text-left"
             >
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-purple-50 text-[#6B21A8]">
+                <div className="p-2 rounded-xl bg-purple-50 text-[#0D5C63]">
                   <UserPlus className="w-4 h-4" />
                 </div>
                 <div>

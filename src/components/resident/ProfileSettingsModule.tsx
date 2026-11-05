@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSociety } from '@/context/SocietyContext';
-import { Lock, Bell } from 'lucide-react';
+import { QrCode, Pencil, PhoneCall, X } from 'lucide-react';
 import Image from 'next/image';
+import { QRCodeSVG } from 'qrcode.react';
 
 export function ProfileSettingsModule() {
   const { currentUser, updateUserProfile } = useSociety();
@@ -12,11 +13,24 @@ export function ProfileSettingsModule() {
   const [email, setEmail] = useState(currentUser.email);
   const [phone, setPhone] = useState(currentUser.phone);
   const [bio, setBio] = useState(currentUser.bio || '');
+  const [gender, setGender] = useState('Male');
+  const [dob, setDob] = useState('Not Available');
+  const [bloodGroup, setBloodGroup] = useState('O+');
+  const [govtId, setGovtId] = useState('********435E');
   const [isPhonePublic, setIsPhonePublic] = useState(currentUser.isPhonePublic || false);
   const [isEmailPublic, setIsEmailPublic] = useState(currentUser.isEmailPublic || false);
 
-  const [notifVisitor, setNotifVisitor] = useState(true);
-  const [notifBookings, setNotifBookings] = useState(true);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
+
+  useEffect(() => {
+    setName(currentUser.name);
+    setEmail(currentUser.email);
+    setPhone(currentUser.phone);
+    setBio(currentUser.bio || '');
+    setIsPhonePublic(currentUser.isPhonePublic || false);
+    setIsEmailPublic(currentUser.isEmailPublic || false);
+  }, [currentUser]);
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,202 +42,275 @@ export function ProfileSettingsModule() {
       isPhonePublic,
       isEmailPublic,
     });
+    setEditModalOpen(false);
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-12">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1C1326]">
-          Household Profile & Settings
-        </h1>
-        <p className="text-xs sm:text-sm text-[#6E6280] mt-1">
-          Manage your personal details, household preferences, and directory visibility rules.
-        </p>
+    <div className="min-h-full bg-[#F2F2F5] -mx-3.5 -mt-1 pb-8 flex flex-col">
+      {/* Top Bar: "My profile" + QR Icon */}
+      <div className="px-4 pt-4 pb-3 flex items-center justify-between bg-[#E9E8EE]">
+        <h1 className="text-base font-bold text-[#0E2628]">My profile</h1>
+        <button
+          type="button"
+          onClick={() => setQrOpen(true)}
+          className="p-1.5 rounded-lg text-[#0E2628] hover:bg-black/5"
+          aria-label="Show Profile QR"
+        >
+          <QrCode className="w-5 h-5" />
+        </button>
       </div>
 
-      <div className="bg-white rounded-3xl border border-[#EAE2F2] p-6 sm:p-8 shadow-sm space-y-8">
-        {/* Profile Card Header */}
-        <div className="flex flex-col sm:flex-row items-center gap-5 pb-6 border-b border-[#EAE2F2]">
-          <div className="relative w-24 h-24 rounded-3xl overflow-hidden border-2 border-purple-300 flex-shrink-0 shadow-sm">
+      {/* Sub-banner Preview Card behind sheet */}
+      <div className="px-4 py-3 bg-[#E9E8EE] flex items-center gap-3">
+        <div className="relative w-12 h-12 rounded-full overflow-hidden border border-white/60 bg-[#0D5C63] text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+          {currentUser.avatar ? (
             <Image src={currentUser.avatar} alt={currentUser.name} fill className="object-cover" />
+          ) : (
+            <span>{currentUser.name.charAt(0)}</span>
+          )}
+        </div>
+        <div>
+          <p className="text-sm font-bold text-[#0E2628]">{currentUser.name}</p>
+          <p className="text-[11px] text-slate-500">
+            Flat {currentUser.unit} • {currentUser.wing}
+          </p>
+        </div>
+      </div>
+
+      {/* Main White Rounded Profile Sheet (matches 00:00:10 in video) */}
+      <div className="flex-1 bg-white rounded-t-[28px] shadow-sm px-5 pt-3 pb-8 space-y-6 -mt-1">
+        {/* Top Handle */}
+        <div className="w-10 h-1 rounded-full bg-[#073B3E] mx-auto" />
+
+        {/* Centered Avatar + Name + PIN + Role */}
+        <div className="text-center space-y-1.5 pt-1">
+          <div className="relative w-16 h-16 rounded-full overflow-hidden mx-auto border-2 border-[#E6F3F3] bg-[#0D5C63] text-white flex items-center justify-center font-bold text-xl shadow-xs">
+            {currentUser.avatar ? (
+              <Image src={currentUser.avatar} alt={currentUser.name} fill className="object-cover" />
+            ) : (
+              <span>{currentUser.name.charAt(0)}</span>
+            )}
+          </div>
+          <h2 className="text-sm font-bold text-[#0E2628] pt-1">{currentUser.name}</h2>
+          <p className="text-xs font-bold text-[#0E2628]">PIN : 107864</p>
+          <p className="text-[11px] text-slate-400">
+            Registered {currentUser.membershipType} • Resident • {currentUser.unit}
+          </p>
+        </div>
+
+        {/* Section 1: Profile bio */}
+        <div className="space-y-3 pt-2">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-[#0E2628]">Profile bio</h3>
+            <button
+              type="button"
+              onClick={() => setEditModalOpen(true)}
+              className="p-1 text-slate-400 hover:text-[#0D5C63]"
+              aria-label="Edit profile bio"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
           </div>
 
-          <div className="text-center sm:text-left flex-1 min-w-0">
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-              <h2 className="text-xl font-bold text-slate-900">{currentUser.name}</h2>
-              <span className="text-xs font-bold uppercase bg-purple-50 text-[#6B21A8] px-2.5 py-0.5 rounded-full">
-                {currentUser.membershipType}
-              </span>
+          <div className="space-y-2.5 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400">Gender:</span>
+              <span className="font-semibold text-[#0E2628]">{gender}</span>
             </div>
-            <p className="text-sm font-semibold text-[#6B21A8] mt-0.5">
-              Flat {currentUser.unit} • {currentUser.wing}
-            </p>
-            <p className="text-xs text-slate-500 mt-1">{currentUser.societyName}</p>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400">Date of birth:</span>
+              <span className="font-semibold text-[#0E2628]">{dob}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400">Blood Group:</span>
+              <span className="font-semibold text-[#0E2628]">{bloodGroup}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400">Govt. ID Number:</span>
+              <span className="font-semibold text-[#0E2628] font-mono">{govtId}</span>
+            </div>
           </div>
         </div>
 
-        {/* Edit Form */}
-        <form onSubmit={handleSaveProfile} className="space-y-6">
-          <h3 className="font-bold text-base text-slate-900">Personal Information</h3>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                Full Name
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-[#6B21A8]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                Flat & Unit
-              </label>
-              <input
-                type="text"
-                disabled
-                value={`Flat ${currentUser.unit} (${currentUser.wing})`}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-xs sm:text-sm cursor-not-allowed"
-              />
-              <p className="text-[10px] text-slate-400 mt-1">
-                Unit assignment is verified by the society administration.
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                Email Address
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-[#6B21A8]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                Registered Mobile
-              </label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-[#6B21A8]"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-              Short Bio / Community Introduction
-            </label>
-            <textarea
-              rows={3}
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-[#6B21A8]"
-            />
-          </div>
-
-          {/* Privacy Controls Section */}
-          <div className="pt-4 border-t border-slate-100 space-y-4">
-            <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
-              <Lock className="w-4 h-4 text-[#6B21A8]" />
-              <span>Directory Privacy Controls</span>
-            </h3>
-            <p className="text-xs text-slate-500">
-              Control what information fellow residents can view in the member directory.
-            </p>
-
-            <div className="space-y-3">
-              <label className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100 cursor-pointer">
-                <div>
-                  <p className="text-xs font-semibold text-slate-900">Make Mobile Phone Public</p>
-                  <p className="text-[11px] text-slate-500">
-                    If disabled, your phone number will be hidden in the community directory.
-                  </p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={isPhonePublic}
-                  onChange={(e) => setIsPhonePublic(e.target.checked)}
-                  className="rounded text-[#6B21A8] focus:ring-0 w-4 h-4"
-                />
-              </label>
-
-              <label className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100 cursor-pointer">
-                <div>
-                  <p className="text-xs font-semibold text-slate-900">Make Email Address Public</p>
-                  <p className="text-[11px] text-slate-500">
-                    If disabled, only administrators can contact you by email.
-                  </p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={isEmailPublic}
-                  onChange={(e) => setIsEmailPublic(e.target.checked)}
-                  className="rounded text-[#6B21A8] focus:ring-0 w-4 h-4"
-                />
-              </label>
-            </div>
-          </div>
-
-          {/* Notifications Preferences */}
-          <div className="pt-4 border-t border-slate-100 space-y-4">
-            <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
-              <Bell className="w-4 h-4 text-[#6B21A8]" />
-              <span>In-App Notification Preferences</span>
-            </h3>
-
-            <div className="space-y-3">
-              <label className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100 cursor-pointer">
-                <div>
-                  <p className="text-xs font-semibold text-slate-900">Visitor Gate Arrival Alerts</p>
-                  <p className="text-[11px] text-slate-500">
-                    Receive instant 1-tap approval alerts when guests arrive at Gate 1.
-                  </p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={notifVisitor}
-                  onChange={(e) => setNotifVisitor(e.target.checked)}
-                  className="rounded text-[#6B21A8] focus:ring-0 w-4 h-4"
-                />
-              </label>
-
-              <label className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100 cursor-pointer">
-                <div>
-                  <p className="text-xs font-semibold text-slate-900">Amenity Slot Reminders</p>
-                  <p className="text-[11px] text-slate-500">
-                    Reminders 1 hour before your confirmed swimming or sports session.
-                  </p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={notifBookings}
-                  onChange={(e) => setNotifBookings(e.target.checked)}
-                  className="rounded text-[#6B21A8] focus:ring-0 w-4 h-4"
-                />
-              </label>
-            </div>
-          </div>
-
-          <div className="flex justify-end pt-2">
+        {/* Section 2: Contact details */}
+        <div className="space-y-3 pt-3 border-t border-slate-100">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-[#0E2628]">Contact details</h3>
             <button
-              type="submit"
-              className="px-6 py-2.5 rounded-xl bg-[#6B21A8] hover:bg-[#581C87] text-white font-semibold text-xs shadow-md transition-all active:scale-95"
+              type="button"
+              onClick={() => setEditModalOpen(true)}
+              className="p-1 text-slate-400 hover:text-[#0D5C63]"
+              aria-label="Edit contact details"
             >
-              Save Changes
+              <Pencil className="w-3.5 h-3.5" />
             </button>
           </div>
-        </form>
+
+          <div className="space-y-2.5 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400">Phone Number:</span>
+              <span className="font-semibold text-[#0E2628] flex items-center gap-1.5">
+                <span>{currentUser.phone}</span>
+                <PhoneCall className="w-3.5 h-3.5 text-slate-400" />
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400">Email ID:</span>
+              <span className="font-semibold text-[#0E2628]">{currentUser.email}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 3: Unit number */}
+        <div className="space-y-2 pt-3 border-t border-slate-100">
+          <h3 className="text-sm font-bold text-[#0E2628]">Unit number</h3>
+          <div className="p-3 rounded-2xl bg-[#F8F9FA] border border-slate-200/70 flex items-center justify-between text-xs">
+            <div>
+              <p className="font-bold text-[#0E2628]">
+                Flat {currentUser.unit} ({currentUser.wing})
+              </p>
+              <p className="text-[11px] text-slate-500">Westend Heights D... • Apnaa Society</p>
+            </div>
+            <span className="px-2.5 py-1 rounded-full bg-[#E6F3F3] text-[#0D5C63] text-[10px] font-bold">
+              {currentUser.membershipType}
+            </span>
+          </div>
+        </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      {editModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50">
+          <form
+            onSubmit={handleSaveProfile}
+            className="w-full bg-white rounded-t-[28px] p-5 space-y-3.5 max-h-[85vh] overflow-y-auto"
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-[#0E2628]">Edit Profile &amp; Contact</h3>
+              <button
+                type="button"
+                onClick={() => setEditModalOpen(false)}
+                className="p-1 text-slate-400"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2.5 text-xs">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">Full Name</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Gender</label>
+                  <input
+                    type="text"
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Blood Group
+                  </label>
+                  <input
+                    type="text"
+                    value={bloodGroup}
+                    onChange={(e) => setBloodGroup(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Date of Birth
+                  </label>
+                  <input
+                    type="text"
+                    value={dob}
+                    onChange={(e) => setDob(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Govt. ID Number
+                  </label>
+                  <input
+                    type="text"
+                    value={govtId}
+                    onChange={(e) => setGovtId(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">Phone</label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setEditModalOpen(false)}
+                className="py-2.5 rounded-full border border-[#0D5C63] text-[#0D5C63] text-xs font-bold"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="py-2.5 rounded-full bg-[#0D5C63] text-white text-xs font-bold"
+              >
+                Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Resident QR Modal */}
+      {qrOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50">
+          <div className="w-full bg-white rounded-t-[28px] p-5 text-center space-y-4">
+            <div className="w-10 h-1 rounded-full bg-slate-300 mx-auto" />
+            <h3 className="text-sm font-bold text-[#0E2628]">Resident Digital PIN &amp; QR</h3>
+            <div className="p-3 rounded-2xl border-2 border-dashed border-[#0D5C63]/40 inline-block">
+              <QRCodeSVG value={`APNAA-RESIDENT-${currentUser.unit}-107864`} size={148} />
+            </div>
+            <p className="text-xs font-bold text-[#0D5C63]">PIN : 107864</p>
+            <button
+              type="button"
+              onClick={() => setQrOpen(false)}
+              className="w-full py-2.5 rounded-full bg-[#0D5C63] text-white text-xs font-bold"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

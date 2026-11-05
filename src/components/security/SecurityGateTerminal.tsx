@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSociety } from '@/context/SocietyContext';
 import { Visitor } from '@/types';
 import {
@@ -18,6 +18,8 @@ import {
 export function SecurityGateTerminal() {
   const {
     visitors,
+    members,
+    society,
     securityLogs,
     checkInVisitor,
     checkOutVisitor,
@@ -34,21 +36,31 @@ export function SecurityGateTerminal() {
     message?: string;
   } | null>(null);
 
+  const activeMembers = members.filter((m) => m.isActive !== false);
+
   // Walk-in Registration form
   const [walkinName, setWalkinName] = useState('');
   const [walkinPhone, setWalkinPhone] = useState('');
-  const [walkinUnit, setWalkinUnit] = useState('A-1204');
+  const [walkinUnit, setWalkinUnit] = useState(activeMembers[0]?.unit || 'A-1204');
   const [walkinPurpose, setWalkinPurpose] = useState('Delivery');
   const [walkinVehicle, setWalkinVehicle] = useState('');
 
   // Scanning simulation
   const [, setIsSimulatingScan] = useState(false);
 
+  // Live ticking clock
+  const [now, setNow] = useState<Date>(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   // Stats
   const expectedCount = visitors.filter((v) => v.status === 'expected' || v.status === 'approved').length;
   const pendingCount = visitors.filter((v) => v.status === 'pending').length;
   const entriesCount = securityLogs.filter((l) => l.status === 'entry').length;
   const exitsCount = securityLogs.filter((l) => l.status === 'exit').length;
+  const scannableVisitors = visitors.filter((v) => v.status !== 'checked_out');
 
   const handleLookup = (code: string) => {
     const trimmed = code.trim().toUpperCase();
@@ -95,12 +107,12 @@ export function SecurityGateTerminal() {
     });
   };
 
-  const currentTime = new Date().toLocaleTimeString('en-IN', {
+  const currentTime = now.toLocaleTimeString('en-IN', {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
   });
-  const currentDate = new Date().toLocaleDateString('en-IN', {
+  const currentDate = now.toLocaleDateString('en-IN', {
     weekday: 'long',
     day: 'numeric',
     month: 'short',
@@ -110,9 +122,9 @@ export function SecurityGateTerminal() {
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-12">
       {/* High-Contrast Gate Terminal Header */}
-      <div className="p-6 rounded-3xl bg-[#240B3B] text-white border border-purple-800/60 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-6 rounded-3xl bg-[#073B3E] text-white border border-purple-800/60 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-[#6B21A8] text-purple-200 flex items-center justify-center font-bold text-xl shadow-md">
+          <div className="w-12 h-12 rounded-2xl bg-[#0D5C63] text-purple-200 flex items-center justify-center font-bold text-xl shadow-md">
             G1
           </div>
           <div>
@@ -123,7 +135,7 @@ export function SecurityGateTerminal() {
               <span className="w-2.5 h-2.5 rounded-full bg-purple-400 animate-pulse" />
             </div>
             <p className="text-xs text-purple-200/80 mt-0.5">
-              Officer On Duty: <strong className="text-white">{currentUser.name}</strong> • Green Valley Residency
+              Officer On Duty: <strong className="text-white">{currentUser.name}</strong> • {society.name}
             </p>
           </div>
         </div>
@@ -141,7 +153,7 @@ export function SecurityGateTerminal() {
             setActiveModal('scan');
             setIsSimulatingScan(true);
           }}
-          className="p-5 rounded-3xl bg-[#6B21A8] hover:bg-[#581C87] text-white shadow-md active:scale-95 transition-all text-left flex flex-col justify-between h-36 border border-purple-500/40"
+          className="p-5 rounded-3xl bg-[#0D5C63] hover:bg-[#094449] text-white shadow-md active:scale-95 transition-all text-left flex flex-col justify-between h-36 border border-purple-500/40"
         >
           <div className="p-2.5 rounded-2xl bg-white/10 w-fit">
             <QrCode className="w-6 h-6 text-purple-200" />
@@ -154,7 +166,7 @@ export function SecurityGateTerminal() {
 
         <button
           onClick={() => setActiveModal('register')}
-          className="p-5 rounded-3xl bg-[#4C1D95] hover:bg-[#3B1578] text-white shadow-md active:scale-95 transition-all text-left flex flex-col justify-between h-36 border border-purple-600/40"
+          className="p-5 rounded-3xl bg-[#0A484E] hover:bg-[#073B3E] text-white shadow-md active:scale-95 transition-all text-left flex flex-col justify-between h-36 border border-purple-600/40"
         >
           <div className="p-2.5 rounded-2xl bg-white/10 w-fit">
             <UserPlus className="w-6 h-6 text-purple-200" />
@@ -200,7 +212,7 @@ export function SecurityGateTerminal() {
       </div>
 
       {/* Summary KPI Strip */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-white p-4 rounded-3xl border border-[#EAE2F2] shadow-sm text-center">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-white p-4 rounded-3xl border border-[#D5EAEB] shadow-sm text-center">
         <div className="p-3">
           <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Expected</p>
           <p className="text-2xl font-bold text-slate-900 mt-1">{expectedCount}</p>
@@ -224,7 +236,7 @@ export function SecurityGateTerminal() {
         <div className="p-6 rounded-3xl bg-white border-2 border-purple-500 shadow-xl space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
             <div className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-[#6B21A8]" />
+              <Shield className="w-5 h-5 text-[#0D5C63]" />
               <h3 className="font-bold text-base text-slate-900">Pass Verification Outcome</h3>
             </div>
             <button
@@ -241,7 +253,7 @@ export function SecurityGateTerminal() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h4 className="text-lg font-bold text-slate-900">{lookupResult.visitor.name}</h4>
-                    <span className="font-mono text-xs font-bold bg-[#6B21A8] text-white px-2.5 py-0.5 rounded-full">
+                    <span className="font-mono text-xs font-bold bg-[#0D5C63] text-white px-2.5 py-0.5 rounded-full">
                       {lookupResult.visitor.passCode}
                     </span>
                   </div>
@@ -262,7 +274,7 @@ export function SecurityGateTerminal() {
                         ? 'bg-rose-100 text-rose-800'
                         : lookupResult.visitor.status === 'pending'
                         ? 'bg-amber-100 text-amber-800'
-                        : 'bg-purple-100 text-[#6B21A8]'
+                        : 'bg-purple-100 text-[#0D5C63]'
                     }`}
                   >
                     STATUS: {lookupResult.visitor.status}
@@ -278,7 +290,7 @@ export function SecurityGateTerminal() {
                       checkInVisitor(lookupResult.visitor!.passCode, 'Gate 1 - Main Entrance');
                       setLookupResult(null);
                     }}
-                    className="flex-1 py-3 rounded-2xl bg-[#6B21A8] hover:bg-[#581C87] text-white font-bold text-sm shadow-md flex items-center justify-center gap-2"
+                    className="flex-1 py-3 rounded-2xl bg-[#0D5C63] hover:bg-[#094449] text-white font-bold text-sm shadow-md flex items-center justify-center gap-2"
                   >
                     <CheckCircle2 className="w-5 h-5" />
                     <span>Authorize Entry & Log In</span>
@@ -319,20 +331,20 @@ export function SecurityGateTerminal() {
       )}
 
       {/* Real-time Gate Log Table */}
-      <div className="bg-white rounded-3xl border border-[#EAE2F2] overflow-hidden shadow-sm space-y-4 p-6">
+      <div className="bg-white rounded-3xl border border-[#D5EAEB] overflow-hidden shadow-sm space-y-4 p-6">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-bold text-base text-slate-900">Today&apos;s Gate Log</h3>
             <p className="text-xs text-slate-500">Live feed of visitor entry and exit scans at Gate 1</p>
           </div>
-          <span className="text-xs font-semibold bg-purple-50 text-[#6B21A8] px-3 py-1 rounded-full">
+          <span className="text-xs font-semibold bg-purple-50 text-[#0D5C63] px-3 py-1 rounded-full">
             Gate 1
           </span>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs text-slate-600">
-            <thead className="bg-[#F8F6FC] text-slate-700 font-bold uppercase tracking-wider text-[11px] border-b border-[#EAE2F2]">
+            <thead className="bg-[#F4F9F9] text-slate-700 font-bold uppercase tracking-wider text-[11px] border-b border-[#D5EAEB]">
               <tr>
                 <th className="px-5 py-3">Visitor Name</th>
                 <th className="px-5 py-3">Destination Unit</th>
@@ -346,7 +358,7 @@ export function SecurityGateTerminal() {
               {securityLogs.map((log) => (
                 <tr key={log.id} className="hover:bg-slate-50/60 transition-colors">
                   <td className="px-5 py-3.5 font-bold text-slate-900">{log.visitorName}</td>
-                  <td className="px-5 py-3.5 font-semibold text-[#6B21A8]">Flat {log.unit}</td>
+                  <td className="px-5 py-3.5 font-semibold text-[#0D5C63]">Flat {log.unit}</td>
                   <td className="px-5 py-3.5 font-mono text-[11px] font-bold text-slate-600">
                     {log.passCode}
                   </td>
@@ -356,7 +368,7 @@ export function SecurityGateTerminal() {
                     <span
                       className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full ${
                         log.status === 'entry'
-                          ? 'bg-purple-100 text-[#6B21A8]'
+                          ? 'bg-purple-100 text-[#0D5C63]'
                           : log.status === 'exit'
                           ? 'bg-slate-100 text-slate-700'
                           : 'bg-rose-100 text-rose-800'
@@ -400,28 +412,33 @@ export function SecurityGateTerminal() {
             </div>
 
             <p className="text-xs text-slate-400">
-              Demo Test: Click below to simulate scanning a visitor pass from the queue.
+              Demo Test: Click below to simulate scanning a visitor pass from the live queue.
             </p>
 
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => {
-                  setActiveModal(null);
-                  handleLookup('V-9421');
-                }}
-                className="py-2.5 rounded-xl bg-[#6B21A8] hover:bg-[#581C87] text-white text-xs font-bold"
-              >
-                Scan Rohan Mehta (V-9421)
-              </button>
-              <button
-                onClick={() => {
-                  setActiveModal(null);
-                  handleLookup('V-8812');
-                }}
-                className="py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold"
-              >
-                Scan Sneha Kapoor (V-8812)
-              </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+              {scannableVisitors.slice(0, 6).map((vis) => (
+                <button
+                  key={vis.id}
+                  onClick={() => {
+                    setActiveModal(null);
+                    handleLookup(vis.passCode);
+                  }}
+                  className={`py-2.5 px-3 rounded-xl text-white text-xs font-bold truncate ${
+                    vis.status === 'pending'
+                      ? 'bg-amber-600 hover:bg-amber-700'
+                      : vis.status === 'checked_in'
+                      ? 'bg-sky-700 hover:bg-sky-800'
+                      : 'bg-[#0D5C63] hover:bg-[#094449]'
+                  }`}
+                >
+                  Scan {vis.name} ({vis.passCode})
+                </button>
+              ))}
+              {scannableVisitors.length === 0 && (
+                <p className="col-span-2 text-xs text-slate-500 py-2">
+                  No active visitor passes in queue. Register a walk-in or invite a visitor first.
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -452,7 +469,7 @@ export function SecurityGateTerminal() {
                   value={walkinName}
                   onChange={(e) => setWalkinName(e.target.value)}
                   placeholder="e.g. Ramesh Kumar"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                 />
               </div>
 
@@ -466,7 +483,7 @@ export function SecurityGateTerminal() {
                   value={walkinPhone}
                   onChange={(e) => setWalkinPhone(e.target.value)}
                   placeholder="+91 98..."
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                 />
               </div>
 
@@ -478,12 +495,13 @@ export function SecurityGateTerminal() {
                   <select
                     value={walkinUnit}
                     onChange={(e) => setWalkinUnit(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8] bg-white font-semibold"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63] bg-white font-semibold"
                   >
-                    <option value="A-1204">Flat A-1204 (Priya Sharma)</option>
-                    <option value="B-804">Flat B-804 (Kunal Singhal)</option>
-                    <option value="C-402">Flat C-402 (Rajesh Nair)</option>
-                    <option value="A-701">Flat A-701 (Dr. Anita Roy)</option>
+                    {activeMembers.map((member) => (
+                      <option key={member.id} value={member.unit}>
+                        Flat {member.unit} ({member.name})
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -494,7 +512,7 @@ export function SecurityGateTerminal() {
                   <select
                     value={walkinPurpose}
                     onChange={(e) => setWalkinPurpose(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8] bg-white"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63] bg-white"
                   >
                     <option>Delivery</option>
                     <option>Maintenance / Plumbing</option>
@@ -513,7 +531,7 @@ export function SecurityGateTerminal() {
                   value={walkinVehicle}
                   onChange={(e) => setWalkinVehicle(e.target.value.toUpperCase())}
                   placeholder="e.g. MH 02 CD 5678"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8] font-mono"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63] font-mono"
                 />
               </div>
 
@@ -531,7 +549,7 @@ export function SecurityGateTerminal() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 rounded-xl bg-[#6B21A8] hover:bg-[#581C87] text-white text-xs font-semibold shadow-sm"
+                  className="flex-1 py-2.5 rounded-xl bg-[#0D5C63] hover:bg-[#094449] text-white text-xs font-semibold shadow-sm"
                 >
                   Send Approval Request
                 </button>
@@ -565,7 +583,7 @@ export function SecurityGateTerminal() {
                 value={lookupQuery}
                 onChange={(e) => setLookupQuery(e.target.value.toUpperCase())}
                 placeholder="V-9421"
-                className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 text-center font-mono font-bold text-lg focus:outline-none focus:border-[#6B21A8]"
+                className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 text-center font-mono font-bold text-lg focus:outline-none focus:border-[#0D5C63]"
               />
 
               <button
@@ -573,7 +591,7 @@ export function SecurityGateTerminal() {
                   setActiveModal(null);
                   handleLookup(lookupQuery);
                 }}
-                className="w-full py-3 rounded-xl bg-[#6B21A8] hover:bg-[#581C87] text-white text-xs font-bold uppercase tracking-wider shadow-sm"
+                className="w-full py-3 rounded-xl bg-[#0D5C63] hover:bg-[#094449] text-white text-xs font-bold uppercase tracking-wider shadow-sm"
               >
                 Verify Pass Code
               </button>

@@ -78,10 +78,10 @@ export function MyBookingsModule({ onNavigateToAmenities }: MyBookingsModuleProp
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1C1326]">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0E2628]">
             My Reservations
           </h1>
-          <p className="text-xs sm:text-sm text-[#6E6280] mt-1">
+          <p className="text-xs sm:text-sm text-[#4E6E70] mt-1">
             Track your amenity reservations, show admission passes, and manage cancellation for Flat {currentUser.unit}.
           </p>
         </div>
@@ -89,7 +89,7 @@ export function MyBookingsModule({ onNavigateToAmenities }: MyBookingsModuleProp
         {onNavigateToAmenities && (
           <button
             onClick={onNavigateToAmenities}
-            className="self-start sm:self-auto px-4 py-2.5 rounded-xl bg-[#6B21A8] text-white font-semibold text-xs hover:bg-[#581C87] transition-colors shadow-sm"
+            className="self-start sm:self-auto px-4 py-2.5 rounded-xl bg-[#0D5C63] text-white font-semibold text-xs hover:bg-[#094449] transition-colors shadow-sm"
           >
             + New Reservation
           </button>
@@ -98,7 +98,7 @@ export function MyBookingsModule({ onNavigateToAmenities }: MyBookingsModuleProp
 
       {/* Tabs & Search */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-1.5 p-1 bg-white rounded-xl border border-[#EAE2F2] text-xs">
+        <div className="flex items-center gap-1.5 p-1 bg-white rounded-xl border border-[#D5EAEB] text-xs">
           {(['upcoming', 'completed', 'cancelled', 'all'] as const).map((tab) => {
             const count = myBookings.filter((b) => {
               if (tab === 'upcoming') return b.status === 'confirmed' || b.status === 'checked_in';
@@ -113,7 +113,7 @@ export function MyBookingsModule({ onNavigateToAmenities }: MyBookingsModuleProp
                 onClick={() => setActiveTab(tab)}
                 className={`px-3 py-1.5 rounded-lg font-semibold capitalize transition-colors flex items-center gap-1.5 ${
                   activeTab === tab
-                    ? 'bg-[#6B21A8] text-white shadow-sm'
+                    ? 'bg-[#0D5C63] text-white shadow-sm'
                     : 'text-slate-600 hover:bg-slate-50'
                 }`}
               >
@@ -137,7 +137,7 @@ export function MyBookingsModule({ onNavigateToAmenities }: MyBookingsModuleProp
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by ref or amenity..."
-            className="w-full pl-9 pr-4 py-2 bg-white border border-[#EAE2F2] rounded-xl text-xs focus:outline-none focus:border-[#6B21A8]"
+            className="w-full pl-9 pr-4 py-2 bg-white border border-[#D5EAEB] rounded-xl text-xs focus:outline-none focus:border-[#0D5C63]"
           />
         </div>
       </div>
@@ -145,7 +145,7 @@ export function MyBookingsModule({ onNavigateToAmenities }: MyBookingsModuleProp
       {/* Bookings List */}
       <div className="space-y-4">
         {filteredBookings.length === 0 ? (
-          <div className="py-16 text-center bg-white rounded-3xl border border-[#EAE2F2] text-slate-400">
+          <div className="py-16 text-center bg-white rounded-3xl border border-[#D5EAEB] text-slate-400">
             <BookmarkCheck className="w-10 h-10 mx-auto text-slate-300 mb-2" />
             <p className="text-sm font-semibold text-slate-700">No bookings found</p>
             <p className="text-xs text-slate-400 mt-1">
@@ -156,7 +156,7 @@ export function MyBookingsModule({ onNavigateToAmenities }: MyBookingsModuleProp
           filteredBookings.map((b) => (
             <div
               key={b.id}
-              className="p-5 rounded-3xl bg-white border border-[#EAE2F2] shadow-sm hover:border-purple-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-5"
+              className="p-5 rounded-3xl bg-white border border-[#D5EAEB] shadow-sm hover:border-purple-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-5"
             >
               <div className="flex items-start gap-4">
                 <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden flex-shrink-0">
@@ -172,11 +172,11 @@ export function MyBookingsModule({ onNavigateToAmenities }: MyBookingsModuleProp
                     Ref: {b.bookingReference}
                   </p>
                   <p className="text-xs text-slate-600 flex items-center gap-1.5 pt-1">
-                    <Calendar className="w-3.5 h-3.5 text-[#6B21A8]" />
+                    <Calendar className="w-3.5 h-3.5 text-[#0D5C63]" />
                     <span>{b.date} • {b.timeSlot}</span>
                   </p>
                   <p className="text-xs text-slate-500 flex items-center gap-1.5">
-                    <Users className="w-3.5 h-3.5 text-[#6B21A8]" />
+                    <Users className="w-3.5 h-3.5 text-[#0D5C63]" />
                     <span>{b.guestCount} Attendees (Flat {b.unit})</span>
                   </p>
                 </div>
@@ -195,7 +195,7 @@ export function MyBookingsModule({ onNavigateToAmenities }: MyBookingsModuleProp
 
                 <button
                   onClick={() => setSelectedBookingForPass(b)}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#6B21A8] hover:bg-[#581C87] text-white text-xs font-semibold shadow-sm transition-colors"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0D5C63] hover:bg-[#094449] text-white text-xs font-semibold shadow-sm transition-colors"
                 >
                   <QrCode className="w-4 h-4" />
                   <span>Show Pass</span>
@@ -262,7 +262,7 @@ export function MyBookingsModule({ onNavigateToAmenities }: MyBookingsModuleProp
 
             <button
               onClick={() => setSelectedBookingForPass(null)}
-              className="w-full py-2.5 rounded-xl bg-[#6B21A8] text-white text-xs font-semibold hover:bg-[#581C87]"
+              className="w-full py-2.5 rounded-xl bg-[#0D5C63] text-white text-xs font-semibold hover:bg-[#094449]"
             >
               Done
             </button>

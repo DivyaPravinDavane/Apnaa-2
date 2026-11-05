@@ -95,10 +95,10 @@ export function AdminAmenityManagement() {
     <div className="max-w-7xl mx-auto space-y-6 pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1C1326]">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0E2628]">
             Amenities Administration
           </h1>
-          <p className="text-xs sm:text-sm text-[#6E6280] mt-1">
+          <p className="text-xs sm:text-sm text-[#4E6E70] mt-1">
             Configure capacity limits, operating hours, slot intervals, rules, and maintenance closures.
           </p>
         </div>
@@ -110,7 +110,7 @@ export function AdminAmenityManagement() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search amenities or categories…"
-            className="w-full pl-9 pr-4 py-2.5 bg-white border border-[#EAE2F2] rounded-xl text-xs focus:outline-none focus:border-[#6B21A8]"
+            className="w-full pl-9 pr-4 py-2.5 bg-white border border-[#D5EAEB] rounded-xl text-xs focus:outline-none focus:border-[#0D5C63]"
           />
         </div>
       </div>
@@ -119,14 +119,14 @@ export function AdminAmenityManagement() {
         {filtered.map((amenity) => (
           <div
             key={amenity.id}
-            className="bg-white rounded-3xl border border-[#EAE2F2] overflow-hidden shadow-sm flex flex-col justify-between"
+            className="bg-white rounded-3xl border border-[#D5EAEB] overflow-hidden shadow-sm flex flex-col justify-between"
           >
             <div>
               <div className="relative h-44 w-full">
                 {amenity.coverImage ? (
                   <Image src={amenity.coverImage} alt={amenity.name} fill className="object-cover" />
                 ) : (
-                  <div className="w-full h-full bg-[#F8F6FC] flex items-center justify-center text-slate-400">
+                  <div className="w-full h-full bg-[#F4F9F9] flex items-center justify-center text-slate-400">
                     <CalendarCheck className="w-10 h-10" />
                   </div>
                 )}
@@ -148,7 +148,7 @@ export function AdminAmenityManagement() {
               <div className="p-5 space-y-3">
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="font-bold text-base text-slate-900">{amenity.name}</h3>
-                  <span className="text-[10px] font-semibold bg-purple-50 text-[#6B21A8] px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] font-semibold bg-purple-50 text-[#0D5C63] px-2 py-0.5 rounded-full">
                     {amenity.category}
                   </span>
                 </div>
@@ -190,7 +190,7 @@ export function AdminAmenityManagement() {
               </button>
               <button
                 onClick={() => openEditor(amenity)}
-                className="text-xs text-[#6B21A8] font-bold hover:underline"
+                className="text-xs text-[#0D5C63] font-bold hover:underline"
               >
                 Edit Rules
               </button>
@@ -224,7 +224,7 @@ export function AdminAmenityManagement() {
                     required
                     value={draft.name}
                     onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                   />
                 </div>
                 <div>
@@ -234,7 +234,7 @@ export function AdminAmenityManagement() {
                   <select
                     value={draft.status}
                     onChange={(e) => setDraft({ ...draft, status: e.target.value as Amenity['status'] })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:border-[#0D5C63]"
                   >
                     <option value="available">Available</option>
                     <option value="maintenance">Maintenance</option>
@@ -255,7 +255,7 @@ export function AdminAmenityManagement() {
                     required
                     value={draft.capacity}
                     onChange={(e) => setDraft({ ...draft, capacity: Number(e.target.value) })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                   />
                 </div>
                 <div>
@@ -269,7 +269,7 @@ export function AdminAmenityManagement() {
                     required
                     value={draft.slotDurationMinutes}
                     onChange={(e) => setDraft({ ...draft, slotDurationMinutes: Number(e.target.value) })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                   />
                 </div>
                 <div>
@@ -283,7 +283,7 @@ export function AdminAmenityManagement() {
                     required
                     value={draft.bookingHorizonDays}
                     onChange={(e) => setDraft({ ...draft, bookingHorizonDays: Number(e.target.value) })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                   />
                 </div>
                 <div>
@@ -294,7 +294,7 @@ export function AdminAmenityManagement() {
                     required
                     value={draft.operatingHours}
                     onChange={(e) => setDraft({ ...draft, operatingHours: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                   />
                 </div>
               </div>
@@ -307,7 +307,7 @@ export function AdminAmenityManagement() {
                   required
                   value={draft.location}
                   onChange={(e) => setDraft({ ...draft, location: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                 />
               </div>
 
@@ -320,7 +320,7 @@ export function AdminAmenityManagement() {
                   rows={3}
                   value={draft.description}
                   onChange={(e) => setDraft({ ...draft, description: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                 />
               </div>
 
@@ -333,7 +333,7 @@ export function AdminAmenityManagement() {
                     rows={5}
                     value={draft.rules}
                     onChange={(e) => setDraft({ ...draft, rules: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs leading-relaxed focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs leading-relaxed focus:outline-none focus:border-[#0D5C63]"
                   />
                 </div>
                 <div>
@@ -344,7 +344,7 @@ export function AdminAmenityManagement() {
                     rows={5}
                     value={draft.facilities}
                     onChange={(e) => setDraft({ ...draft, facilities: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs leading-relaxed focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs leading-relaxed focus:outline-none focus:border-[#0D5C63]"
                   />
                 </div>
               </div>
@@ -360,7 +360,7 @@ export function AdminAmenityManagement() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 py-2.5 rounded-xl bg-[#6B21A8] hover:bg-[#581C87] disabled:opacity-60 text-white text-xs font-semibold shadow-sm"
+                  className="flex-1 py-2.5 rounded-xl bg-[#0D5C63] hover:bg-[#094449] disabled:opacity-60 text-white text-xs font-semibold shadow-sm"
                 >
                   {saving ? 'Saving…' : 'Save Configuration'}
                 </button>

@@ -104,10 +104,10 @@ export function EventsModule() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1C1326]">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0E2628]">
             Events &amp; Community
           </h1>
-          <p className="text-xs sm:text-sm text-[#6E6280] mt-1">
+          <p className="text-xs sm:text-sm text-[#4E6E70] mt-1">
             Join community celebrations, sports competitions, and cultural workshops at Green Valley Residency.
           </p>
         </div>
@@ -115,7 +115,7 @@ export function EventsModule() {
         {currentRole === 'admin' && (
           <button
             onClick={() => setIsCreateOpen(true)}
-            className="self-start sm:self-auto flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#6B21A8] text-white font-semibold text-xs hover:bg-[#581C87] transition-colors shadow-sm"
+            className="self-start sm:self-auto flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0D5C63] text-white font-semibold text-xs hover:bg-[#094449] transition-colors shadow-sm"
           >
             <Plus className="w-4 h-4" />
             Create Event
@@ -126,12 +126,12 @@ export function EventsModule() {
       {/* Controls: Tabs & View Mode */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <div className="flex items-center p-1 bg-white rounded-xl border border-[#EAE2F2] text-xs">
+          <div className="flex items-center p-1 bg-white rounded-xl border border-[#D5EAEB] text-xs">
             <button
               onClick={() => setActiveTab('upcoming')}
               className={`px-3 py-1.5 rounded-lg font-semibold transition-colors ${
                 activeTab === 'upcoming'
-                  ? 'bg-[#6B21A8] text-white shadow-sm'
+                  ? 'bg-[#0D5C63] text-white shadow-sm'
                   : 'text-slate-600 hover:bg-slate-50'
               }`}
             >
@@ -141,7 +141,7 @@ export function EventsModule() {
               onClick={() => setActiveTab('past')}
               className={`px-3 py-1.5 rounded-lg font-semibold transition-colors ${
                 activeTab === 'past'
-                  ? 'bg-[#6B21A8] text-white shadow-sm'
+                  ? 'bg-[#0D5C63] text-white shadow-sm'
                   : 'text-slate-600 hover:bg-slate-50'
               }`}
             >
@@ -149,11 +149,11 @@ export function EventsModule() {
             </button>
           </div>
 
-          <div className="flex items-center p-1 bg-white rounded-xl border border-[#EAE2F2] text-xs">
+          <div className="flex items-center p-1 bg-white rounded-xl border border-[#D5EAEB] text-xs">
             <button
               onClick={() => setViewMode('cards')}
               className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
-                viewMode === 'cards' ? 'bg-[#6B21A8] text-white' : 'text-slate-600'
+                viewMode === 'cards' ? 'bg-[#0D5C63] text-white' : 'text-slate-600'
               }`}
             >
               Cards
@@ -161,7 +161,7 @@ export function EventsModule() {
             <button
               onClick={() => setViewMode('calendar')}
               className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
-                viewMode === 'calendar' ? 'bg-[#6B21A8] text-white' : 'text-slate-600'
+                viewMode === 'calendar' ? 'bg-[#0D5C63] text-white' : 'text-slate-600'
               }`}
             >
               Calendar
@@ -177,14 +177,14 @@ export function EventsModule() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search events by name or venue..."
-            className="w-full pl-9 pr-4 py-2 bg-white border border-[#EAE2F2] rounded-xl text-xs focus:outline-none focus:border-[#6B21A8]"
+            className="w-full pl-9 pr-4 py-2 bg-white border border-[#D5EAEB] rounded-xl text-xs focus:outline-none focus:border-[#0D5C63]"
           />
         </div>
       </div>
 
       {/* Events Grid */}
       {filteredEvents.length === 0 ? (
-        <div className="bg-white rounded-3xl border border-[#EAE2F2] p-10 text-center space-y-2">
+        <div className="bg-white rounded-3xl border border-[#D5EAEB] p-10 text-center space-y-2">
           <Sparkles className="w-8 h-8 text-purple-300 mx-auto" />
           <p className="text-sm font-semibold text-slate-700">
             {searchQuery ? 'No events match your search.' : `No ${activeTab} events yet.`}
@@ -202,7 +202,7 @@ export function EventsModule() {
           {filteredEvents.map((evt) => (
             <div
               key={evt.id}
-              className="bg-white rounded-3xl border border-[#EAE2F2] overflow-hidden hover:shadow-md hover:border-purple-300 transition-all flex flex-col group"
+              className="bg-white rounded-3xl border border-[#D5EAEB] overflow-hidden hover:shadow-md hover:border-purple-300 transition-all flex flex-col group"
             >
               {/* Image Header */}
               <div className="relative h-52 w-full overflow-hidden">
@@ -226,20 +226,20 @@ export function EventsModule() {
               {/* Event Body */}
               <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                 <div className="space-y-2">
-                  <h3 className="font-bold text-lg text-[#1C1326] group-hover:text-[#6B21A8] transition-colors leading-snug">
+                  <h3 className="font-bold text-lg text-[#0E2628] group-hover:text-[#0D5C63] transition-colors leading-snug">
                     {evt.title}
                   </h3>
-                  <p className="text-xs text-[#6E6280] line-clamp-2 leading-relaxed">
+                  <p className="text-xs text-[#4E6E70] line-clamp-2 leading-relaxed">
                     {evt.description}
                   </p>
 
-                  <div className="space-y-1 text-xs text-[#6E6280] pt-2">
+                  <div className="space-y-1 text-xs text-[#4E6E70] pt-2">
                     <p className="flex items-center gap-2">
-                      <Calendar className="w-3.5 h-3.5 text-[#6B21A8]" />
+                      <Calendar className="w-3.5 h-3.5 text-[#0D5C63]" />
                       <span>{evt.date} • {evt.time}</span>
                     </p>
                     <p className="flex items-center gap-2">
-                      <MapPin className="w-3.5 h-3.5 text-[#6B21A8]" />
+                      <MapPin className="w-3.5 h-3.5 text-[#0D5C63]" />
                       <span>{evt.venue}</span>
                     </p>
                   </div>
@@ -261,8 +261,8 @@ export function EventsModule() {
                       }
                       className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                         evt.rsvpStatus === 'attending'
-                          ? 'bg-[#6B21A8] text-white shadow-sm'
-                          : 'bg-purple-50 text-[#6B21A8] hover:bg-purple-100'
+                          ? 'bg-[#0D5C63] text-white shadow-sm'
+                          : 'bg-purple-50 text-[#0D5C63] hover:bg-purple-100'
                       }`}
                     >
                       {evt.rsvpStatus === 'attending' ? '✓ Attending' : 'Attending'}
@@ -326,7 +326,7 @@ export function EventsModule() {
               <p className="text-xs text-slate-600 mt-2 leading-relaxed">{selectedEvent.description}</p>
             </div>
 
-            <div className="p-3.5 bg-[#F8F6FC] rounded-2xl text-xs space-y-1.5 text-slate-700">
+            <div className="p-3.5 bg-[#F4F9F9] rounded-2xl text-xs space-y-1.5 text-slate-700">
               <p className="flex justify-between">
                 <span>Date &amp; Time:</span>
                 <span className="font-semibold">{selectedEvent.date} ({selectedEvent.time})</span>
@@ -349,7 +349,7 @@ export function EventsModule() {
 
             <button
               onClick={() => setSelectedEvent(null)}
-              className="w-full py-2.5 rounded-xl bg-[#6B21A8] text-white text-xs font-semibold hover:bg-[#581C87]"
+              className="w-full py-2.5 rounded-xl bg-[#0D5C63] text-white text-xs font-semibold hover:bg-[#094449]"
             >
               Close
             </button>
@@ -387,7 +387,7 @@ export function EventsModule() {
                   value={createDraft.title}
                   onChange={(e) => setCreateDraft({ ...createDraft, title: e.target.value })}
                   placeholder="e.g. Republic Day Flag Hoisting"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                 />
               </div>
 
@@ -402,7 +402,7 @@ export function EventsModule() {
                   value={createDraft.description}
                   onChange={(e) => setCreateDraft({ ...createDraft, description: e.target.value })}
                   placeholder="Describe the event, activities, and what residents should bring…"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs leading-relaxed focus:outline-none focus:border-[#6B21A8]"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs leading-relaxed focus:outline-none focus:border-[#0D5C63]"
                 />
               </div>
 
@@ -414,7 +414,7 @@ export function EventsModule() {
                   <select
                     value={createDraft.category}
                     onChange={(e) => setCreateDraft({ ...createDraft, category: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:border-[#0D5C63]"
                   >
                     {['Festival', 'Wellness', 'Kids & Family', 'Sports', 'Cultural', 'Community'].map(
                       (category) => (
@@ -436,7 +436,7 @@ export function EventsModule() {
                     required
                     value={createDraft.capacity}
                     onChange={(e) => setCreateDraft({ ...createDraft, capacity: Number(e.target.value) })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                   />
                 </div>
               </div>
@@ -451,7 +451,7 @@ export function EventsModule() {
                     required
                     value={createDraft.date}
                     onChange={(e) => setCreateDraft({ ...createDraft, date: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                   />
                 </div>
                 <div>
@@ -463,7 +463,7 @@ export function EventsModule() {
                     value={createDraft.time}
                     onChange={(e) => setCreateDraft({ ...createDraft, time: e.target.value })}
                     placeholder="e.g. 6:00 PM - 9:00 PM"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                   />
                 </div>
               </div>
@@ -479,7 +479,7 @@ export function EventsModule() {
                     value={createDraft.venue}
                     onChange={(e) => setCreateDraft({ ...createDraft, venue: e.target.value })}
                     placeholder="e.g. Clubhouse Banquet Hall"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                   />
                 </div>
                 <div>
@@ -490,7 +490,7 @@ export function EventsModule() {
                     type="date"
                     value={createDraft.deadline}
                     onChange={(e) => setCreateDraft({ ...createDraft, deadline: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                   />
                 </div>
               </div>
@@ -503,7 +503,7 @@ export function EventsModule() {
                   <input
                     value={createDraft.organizer}
                     onChange={(e) => setCreateDraft({ ...createDraft, organizer: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                   />
                 </div>
                 <div>
@@ -515,7 +515,7 @@ export function EventsModule() {
                     value={createDraft.coverImage}
                     onChange={(e) => setCreateDraft({ ...createDraft, coverImage: e.target.value })}
                     placeholder="https://… (optional)"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                   />
                 </div>
               </div>
@@ -530,7 +530,7 @@ export function EventsModule() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 rounded-xl bg-[#6B21A8] hover:bg-[#581C87] text-white text-xs font-semibold shadow-sm"
+                  className="flex-1 py-2.5 rounded-xl bg-[#0D5C63] hover:bg-[#094449] text-white text-xs font-semibold shadow-sm"
                 >
                   Publish Event
                 </button>

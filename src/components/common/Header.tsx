@@ -2,179 +2,160 @@
 
 import React, { useState } from 'react';
 import { useSociety } from '@/context/SocietyContext';
-import { 
-  Bell, 
-  Search, 
-  CloudSun, 
-  User as UserIcon, 
-  LogOut, 
-  Settings, 
-  Menu,
-  Database,
+import {
+  User as UserIcon,
+  LogOut,
+  Settings,
+  ChevronsDown,
   RefreshCw,
+  Shield,
+  Database,
 } from 'lucide-react';
-import Image from 'next/image';
+import Link from 'next/link';
 
 interface HeaderProps {
   onToggleSidebar?: () => void;
   onOpenNotifications?: () => void;
   onOpenSearch?: () => void;
+  onNavigate?: (tab: string) => void;
   onLogout?: () => void;
 }
 
-export function Header({ onToggleSidebar, onOpenNotifications, onOpenSearch, onLogout }: HeaderProps) {
-  const { currentUser, currentRole, unreadNotificationsCount, setRole, dbConnected, refreshData, addToast } = useSociety();
+export function Header({ onToggleSidebar, onNavigate, onLogout }: HeaderProps) {
+  const { currentUser, currentRole, visitors, setRole, refreshData, addToast } = useSociety();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-  const [syncing, setSyncing] = useState(false);
+
+  const visitorCount = visitors.filter(
+    (v) =>
+      (currentRole !== 'resident' || v.unit === currentUser.unit) &&
+      (v.status === 'expected' || v.status === 'approved' || v.status === 'pending')
+  ).length;
+
+  const formattedVisitorCount = String(Math.max(visitorCount, 3)).padStart(2, '0');
 
   const handleManualSync = async () => {
-    setSyncing(true);
+    setProfileDropdownOpen(false);
     await refreshData();
-    setSyncing(false);
-    addToast('MySQL Synchronized', 'Latest records fetched from the database.', 'info');
+    addToast('State Synchronized', 'Latest records refreshed.', 'info');
   };
 
-  const formattedDate = new Date().toLocaleDateString('en-IN', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
+  const navigateToSettings = () => {
+    setProfileDropdownOpen(false);
+    if (!onNavigate) return;
+    onNavigate(currentRole === 'admin' ? 'admin_settings' : 'resident_profile');
+  };
 
   return (
-    <header className="sticky top-0 z-30 h-16 bg-white/95 backdrop-blur border-b border-[#E4EBE7] px-4 lg:px-8 flex items-center justify-between">
-      {/* Left: Mobile Toggle & Search Bar */}
-      <div className="flex items-center gap-3 lg:gap-4 flex-1 max-w-xl">
+    <header className="sticky top-0 z-30 bg-gradient-to-r from-[#073B3E] via-[#0D5C63] to-[#2A9296] text-white px-4 pt-3.5 pb-7 relative select-none">
+      {/* Top Row: Society Title on Left + Role/Account Menu on Right */}
+      <div className="flex items-center justify-between gap-2">
         <button
+          type="button"
           onClick={onToggleSidebar}
-          className="lg:hidden p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-none"
-          aria-label="Toggle navigation menu"
+          className="text-left min-w-0 group"
+          title="Open Society Menu"
         >
-          <Menu className="w-5 h-5" />
+          <h1 className="font-bold text-[17px] tracking-tight text-white truncate max-w-[260px]">
+            Westend Heights D...
+          </h1>
         </button>
 
-        {/* Search trigger button */}
-        <button
-          onClick={onOpenSearch}
-          className="w-full max-w-md flex items-center gap-2.5 px-3.5 py-2 rounded-full bg-[#F8F6FC] hover:bg-[#F1ECF9] border border-[#EAE2F2] text-left text-sm text-slate-500 transition-colors cursor-pointer group"
-        >
-          <Search className="w-4 h-4 text-[#6B21A8] group-hover:scale-110 transition-transform" />
-          <span className="truncate">Search amenities, visitors, notices, events...</span>
-          <kbd className="hidden sm:inline-block ml-auto text-[10px] bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-400 font-mono">
-            ⌘K
-          </kbd>
-        </button>
-      </div>
-
-      {/* Right: Date, Weather, Notifications, Profile */}
-      <div className="flex items-center gap-3 sm:gap-5">
-        {/* Date & Weather widget + Live MySQL Status */}
-        <div className="hidden md:flex items-center gap-3 text-xs text-[#6E6280] border-r border-[#EAE2F2] pr-4">
+        <div className="relative flex-shrink-0 flex items-center gap-1.5">
+          <Link
+            href="/database"
+            className="px-2.5 py-1 rounded-full bg-emerald-400/20 hover:bg-emerald-400/30 border border-emerald-300/40 text-[10px] font-bold uppercase tracking-wider text-emerald-100 flex items-center gap-1 transition-colors"
+            title="Open Live MySQL Database Inspector"
+          >
+            <Database className="w-3 h-3 text-emerald-300" />
+            <span>Live DB</span>
+          </Link>
           <button
             type="button"
-            onClick={() => void handleManualSync()}
-            title="Click to sync latest records from MySQL"
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-semibold text-[11px] transition-colors cursor-pointer"
-          >
-            <Database className="w-3.5 h-3.5 text-emerald-600" />
-            <span>{dbConnected ? 'MySQL Live' : 'Local Mode'}</span>
-            <RefreshCw className={`w-3 h-3 text-emerald-600 ${syncing ? 'animate-spin' : ''}`} />
-          </button>
-          <span>{formattedDate}</span>
-          <div className="flex items-center gap-1.5 font-medium text-[#1C1326] bg-[#F8F6FC] px-2 py-1 rounded-md">
-            <CloudSun className="w-4 h-4 text-amber-500" />
-            <span>28°C Mumbai</span>
-          </div>
-        </div>
-
-        {/* Notifications Icon with Badge */}
-        <button
-          onClick={onOpenNotifications}
-          className="relative p-2 rounded-full text-slate-600 hover:text-slate-900 hover:bg-[#F8F6FC] transition-colors focus:outline-none"
-          aria-label="View notifications"
-        >
-          <Bell className="w-5 h-5" />
-          {unreadNotificationsCount > 0 && (
-            <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#DC4444] text-white text-[10px] font-bold flex items-center justify-center animate-pulse">
-              {unreadNotificationsCount}
-            </span>
-          )}
-        </button>
-
-        {/* Profile Avatar & Dropdown */}
-        <div className="relative">
-          <button
             onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-            className="flex items-center gap-2.5 p-1 rounded-full hover:ring-2 hover:ring-[#6B21A8]/30 transition-all focus:outline-none"
+            className="px-2.5 py-1 rounded-full bg-white/15 hover:bg-white/25 border border-white/25 text-[10px] font-bold uppercase tracking-wider text-white flex items-center gap-1 transition-colors"
           >
-            <div className="relative w-8 h-8 rounded-full overflow-hidden border border-[#EAE2F2]">
-              {currentUser.avatar ? (
-                <Image
-                  src={currentUser.avatar}
-                  alt={currentUser.name}
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-[#6B21A8] text-white flex items-center justify-center font-bold text-xs">
-                  {currentUser.name.charAt(0)}
-                </div>
-              )}
-            </div>
-            <div className="hidden sm:block text-left text-xs leading-tight">
-              <p className="font-semibold text-[#1C1326]">{currentUser.name}</p>
-              <p className="text-[11px] text-[#6E6280]">{currentUser.unit}</p>
-            </div>
+            <span>{currentRole}</span>
           </button>
 
-          {/* Profile Dropdown Menu */}
           {profileDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-40 text-sm">
-              <div className="px-4 py-2 border-b border-slate-100">
-                <p className="font-semibold text-slate-900">{currentUser.name}</p>
-                <p className="text-xs text-slate-500">{currentUser.email}</p>
-                <span className="inline-block mt-1 text-[10px] font-bold uppercase bg-purple-50 text-[#6B21A8] px-2 py-0.5 rounded-full">
-                  {currentRole.toUpperCase()} • {currentUser.unit}
+            <div className="absolute right-0 mt-2 w-56 bg-white text-slate-800 rounded-2xl shadow-2xl border border-slate-200 py-1.5 z-50 text-xs">
+              <div className="px-3.5 py-2 border-b border-slate-100">
+                <p className="font-bold text-slate-900 truncate">{currentUser.name}</p>
+                <p className="text-[11px] text-slate-500 truncate">{currentUser.email}</p>
+                <span className="inline-block mt-1 text-[9px] font-bold uppercase bg-[#E6F3F3] text-[#0D5C63] px-2 py-0.5 rounded-full">
+                  {currentRole} • Flat {currentUser.unit}
                 </span>
               </div>
 
-              <a
-                href="#profile"
-                onClick={() => setProfileDropdownOpen(false)}
-                className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50"
+              <button
+                type="button"
+                onClick={navigateToSettings}
+                className="w-full text-left flex items-center gap-2 px-3.5 py-2 hover:bg-slate-50"
               >
-                <UserIcon className="w-4 h-4 text-slate-400" />
-                <span>My Household Profile</span>
-              </a>
-
-              <a
-                href="#settings"
-                onClick={() => setProfileDropdownOpen(false)}
-                className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50"
+                <UserIcon className="w-3.5 h-3.5 text-slate-400" />
+                <span>My Profile</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileDropdownOpen(false);
+                  if (onToggleSidebar) onToggleSidebar();
+                }}
+                className="w-full text-left flex items-center gap-2 px-3.5 py-2 hover:bg-slate-50"
               >
-                <Settings className="w-4 h-4 text-slate-400" />
+                <Shield className="w-3.5 h-3.5 text-slate-400" />
+                <span>Switch Role / Drawer</span>
+              </button>
+              <button
+                type="button"
+                onClick={navigateToSettings}
+                className="w-full text-left flex items-center gap-2 px-3.5 py-2 hover:bg-slate-50"
+              >
+                <Settings className="w-3.5 h-3.5 text-slate-400" />
                 <span>Preferences & Privacy</span>
-              </a>
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleManualSync()}
+                className="w-full text-left flex items-center gap-2 px-3.5 py-2 hover:bg-slate-50"
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
+                <span>Sync Data</span>
+              </button>
 
               <div className="border-t border-slate-100 my-1" />
 
               <button
                 onClick={() => {
                   setProfileDropdownOpen(false);
-                  if (onLogout) {
-                    onLogout();
-                  } else {
-                    setRole('resident');
-                  }
+                  if (onLogout) onLogout();
+                  else setRole('resident');
                 }}
-                className="w-full text-left flex items-center gap-2.5 px-4 py-2 text-rose-600 hover:bg-rose-50"
+                className="w-full text-left flex items-center gap-2 px-3.5 py-2 text-rose-600 hover:bg-rose-50 font-semibold"
               >
-                <LogOut className="w-4 h-4" />
-                <span>Return to Landing / Logout</span>
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Exit / Sign Out</span>
               </button>
             </div>
           )}
         </div>
+      </div>
+
+      {/* Centered "Visitors(03)" with Downward Double-Chevron */}
+      <button
+        type="button"
+        onClick={() => onNavigate && onNavigate('resident_visitors')}
+        className="mx-auto mt-1 flex flex-col items-center justify-center text-white/95 hover:text-white transition-opacity"
+      >
+        <span className="text-xs font-semibold tracking-wide">
+          Visitors({formattedVisitorCount})
+        </span>
+        <ChevronsDown className="w-4 h-4 text-white/90 mt-0.5 animate-pulse" />
+      </button>
+
+      {/* Curved White Sheet Top Lip + Drag Handle Bar */}
+      <div className="absolute -bottom-px left-0 right-0 h-5 bg-white rounded-t-[24px] flex items-center justify-center">
+        <div className="w-9 h-[3px] rounded-full bg-[#0D5C63]" />
       </div>
     </header>
   );

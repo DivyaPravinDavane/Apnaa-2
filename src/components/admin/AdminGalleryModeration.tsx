@@ -16,15 +16,15 @@ export function AdminGalleryModeration() {
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-12">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1C1326]">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0E2628]">
           Gallery Content Moderation
         </h1>
-        <p className="text-xs sm:text-sm text-[#6E6280] mt-1">
+        <p className="text-xs sm:text-sm text-[#4E6E70] mt-1">
           Review resident-submitted photographs before publishing them to the public society gallery.
         </p>
       </div>
 
-      <div className="bg-white rounded-3xl border border-[#EAE2F2] p-6 shadow-sm space-y-4">
+      <div className="bg-white rounded-3xl border border-[#D5EAEB] p-6 shadow-sm space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <h3 className="font-bold text-base text-slate-900">Submitted Photos Queue</h3>
           <span className="text-xs font-semibold text-slate-500">

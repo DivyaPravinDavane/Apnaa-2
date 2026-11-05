@@ -13,6 +13,7 @@ import { ToastContainer } from '@/components/common/ToastContainer';
 
 // Resident Screens
 import { ResidentDashboard } from '@/components/resident/ResidentDashboard';
+import { CommunityPollModule } from '@/components/resident/CommunityPollModule';
 import { VisitorsModule } from '@/components/resident/VisitorsModule';
 import { AmenitiesModule } from '@/components/resident/AmenitiesModule';
 import { MyBookingsModule } from '@/components/resident/MyBookingsModule';
@@ -53,6 +54,14 @@ function MainAppShell() {
   const rolePrefix = `${currentRole}_`;
   const activeTab = currentTab.startsWith(rolePrefix) ? currentTab : defaultTab[currentRole];
 
+  const handleSelectTab = (tab: string) => {
+    if (tab === 'resident_notifications') {
+      setNotificationDrawerOpen(true);
+      return;
+    }
+    setCurrentTab(tab);
+  };
+
   // Global Cmd+K / Ctrl+K keyboard shortcut listener for search
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -65,36 +74,14 @@ function MainAppShell() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  if (!authReady) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8F6FC]">
-        <div className="flex flex-col items-center gap-3 text-center">
-          <div className="w-10 h-10 rounded-full border-4 border-purple-200 border-t-[#6B21A8] animate-spin" />
-          <p className="text-xs font-semibold text-[#6E6280]">Verifying secure session…</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="relative min-h-screen">
-        <LandingLoginPage onLoginSuccess={(role) => setRole(role)} />
-        {/* Floating Demo Role Switcher also available on landing */}
-        <DemoRoleSwitcher
-          onOpenLanding={() => void logout()}
-        />
-        <ToastContainer />
-      </div>
-    );
-  }
-
   // Render active tab in portal
   const renderActiveTabContent = () => {
     switch (activeTab) {
       // Resident
       case 'resident_home':
-        return <ResidentDashboard onNavigate={(tab) => setCurrentTab(tab)} />;
+        return <ResidentDashboard onNavigate={(tab) => handleSelectTab(tab)} />;
+      case 'resident_poll':
+        return <CommunityPollModule onBack={() => handleSelectTab('resident_home')} />;
       case 'resident_visitors':
         return <VisitorsModule />;
       case 'resident_amenities':
@@ -102,7 +89,7 @@ function MainAppShell() {
       case 'resident_bookings':
         return (
           <MyBookingsModule
-            onNavigateToAmenities={() => setCurrentTab('resident_amenities')}
+            onNavigateToAmenities={() => handleSelectTab('resident_amenities')}
           />
         );
       case 'resident_notices':
@@ -119,7 +106,7 @@ function MainAppShell() {
 
       // Admin
       case 'admin_dashboard':
-        return <AdminDashboard onNavigateTab={(tab) => setCurrentTab(tab)} />;
+        return <AdminDashboard onNavigateTab={(tab) => handleSelectTab(tab)} />;
       case 'admin_residents':
         return <AdminResidentsModule />;
       case 'admin_visitors':
@@ -155,56 +142,84 @@ function MainAppShell() {
         return <FacilityDashboard />;
 
       default:
-        return <ResidentDashboard onNavigate={(tab) => setCurrentTab(tab)} />;
+        return <ResidentDashboard onNavigate={(tab) => handleSelectTab(tab)} />;
     }
   };
 
+  // Hide the purple curved Home banner when viewing screens with their own custom top bars
+  const hideBannerHeader = activeTab === 'resident_poll' || activeTab === 'resident_profile';
+
   return (
-    <div className="min-h-screen bg-[#F7F8F6] flex flex-col">
-      {/* Sidebar for Desktop & Mobile Slide-over */}
-      <Sidebar
-        currentTab={activeTab}
-        onSelectTab={(tab) => setCurrentTab(tab)}
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
+    <div className="min-h-dvh w-full bg-[#F8F9FA] flex flex-col items-center">
+      {/* Mobile-layout column */}
+      <div className="w-full max-w-[480px] h-dvh bg-white overflow-hidden flex flex-col relative shadow-[0_0_40px_rgba(0,0,0,0.04)]">
+        <div className="mobile-viewport relative flex-1 flex flex-col overflow-hidden bg-white">
+          {!authReady ? (
+            <div className="flex-1 flex items-center justify-center bg-[#F8F9FA]">
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="w-9 h-9 rounded-full border-4 border-purple-200 border-t-[#0D5C63] animate-spin" />
+                <p className="text-xs font-semibold text-slate-500">Loading Apnaa Society…</p>
+              </div>
+            </div>
+          ) : !isAuthenticated ? (
+            <div className="flex-1 overflow-y-auto relative">
+              <LandingLoginPage onLoginSuccess={(role) => setRole(role)} />
+              <ToastContainer />
+            </div>
+          ) : (
+            <>
+              {/* Slide-over Mobile App Drawer */}
+              <Sidebar
+                currentTab={activeTab}
+                onSelectTab={(tab) => handleSelectTab(tab)}
+                isOpen={sidebarOpen}
+                onClose={() => setSidebarOpen(false)}
+              />
 
-      {/* Main Content Area (Offset by sidebar on desktop) */}
-      <div className="flex-1 flex flex-col lg:pl-64">
-        {/* Header */}
-        <Header
-          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-          onOpenNotifications={() => setNotificationDrawerOpen(true)}
-          onOpenSearch={() => setSearchOpen(true)}
-          onLogout={() => void logout()}
-        />
+              {/* Top Purple Curved Banner Header (shown on Home & main screens) */}
+              {!hideBannerHeader && (
+                <Header
+                  onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+                  onOpenNotifications={() => setNotificationDrawerOpen(true)}
+                  onOpenSearch={() => setSearchOpen(true)}
+                  onNavigate={(tab) => handleSelectTab(tab)}
+                  onLogout={() => void logout()}
+                />
+              )}
 
-        {/* Page Content Body */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-24 lg:pb-12 max-w-7xl w-full mx-auto">
-          {renderActiveTabContent()}
-        </main>
+              {/* Scrollable Mobile Screen Content */}
+              <main className="flex-1 overflow-y-auto bg-white px-3.5 pb-6 pt-1">
+                {renderActiveTabContent()}
+              </main>
 
-        {/* Mobile Bottom Navigation for Residents */}
-        <MobileBottomNav
-          currentTab={activeTab}
-          onSelectTab={(tab) => setCurrentTab(tab)}
-          onOpenMenu={() => setSidebarOpen(true)}
-        />
+              {/* Sticky Bottom Tab Bar (hidden on full-screen poll view, which has its own Filter bar) */}
+              {activeTab !== 'resident_poll' && (
+                <MobileBottomNav
+                  currentTab={activeTab}
+                  onSelectTab={(tab) => handleSelectTab(tab)}
+                  onOpenMenu={() => setSidebarOpen(true)}
+                  onOpenSearch={() => setSearchOpen(true)}
+                  onOpenNotifications={() => setNotificationDrawerOpen(true)}
+                />
+              )}
+
+              {/* Scoped Overlays inside the Mobile Screen */}
+              <DemoRoleSwitcher onOpenLanding={() => void logout()} />
+              <ToastContainer />
+              <GlobalSearchModal
+                isOpen={searchOpen}
+                onClose={() => setSearchOpen(false)}
+                onNavigate={(tab) => handleSelectTab(tab)}
+              />
+              <NotificationDrawer
+                isOpen={notificationDrawerOpen}
+                onClose={() => setNotificationDrawerOpen(false)}
+                onNavigate={(tab) => handleSelectTab(tab)}
+              />
+            </>
+          )}
+        </div>
       </div>
-
-      {/* Global Interactive Elements */}
-      <DemoRoleSwitcher onOpenLanding={() => void logout()} />
-      <ToastContainer />
-      <GlobalSearchModal
-        isOpen={searchOpen}
-        onClose={() => setSearchOpen(false)}
-        onNavigate={(tab) => setCurrentTab(tab)}
-      />
-      <NotificationDrawer
-        isOpen={notificationDrawerOpen}
-        onClose={() => setNotificationDrawerOpen(false)}
-        onNavigate={(tab) => setCurrentTab(tab)}
-      />
     </div>
   );
 }

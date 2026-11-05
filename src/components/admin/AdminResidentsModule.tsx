@@ -135,17 +135,17 @@ export function AdminResidentsModule() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1C1326]">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0E2628]">
             Residents & Units Management
           </h1>
-          <p className="text-xs sm:text-sm text-[#6E6280] mt-1">
+          <p className="text-xs sm:text-sm text-[#4E6E70] mt-1">
             {activeCount} active portal account{activeCount === 1 ? '' : 's'} • maintain unit allocations and access.
           </p>
         </div>
 
         <button
           onClick={() => setIsAddOpen(true)}
-          className="self-start sm:self-auto flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#6B21A8] text-white font-semibold text-xs hover:bg-[#581C87] transition-colors shadow-sm"
+          className="self-start sm:self-auto flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0D5C63] text-white font-semibold text-xs hover:bg-[#094449] transition-colors shadow-sm"
         >
           <UserPlus className="w-4 h-4" />
           <span>Add Resident / Unit</span>
@@ -153,7 +153,7 @@ export function AdminResidentsModule() {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-[#EAE2F2] shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="bg-white p-4 rounded-2xl border border-[#D5EAEB] shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="relative w-full sm:w-80">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
@@ -161,7 +161,7 @@ export function AdminResidentsModule() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by name, flat (e.g. A-1204)…"
-            className="w-full pl-9 pr-4 py-2 bg-[#F8F6FC] border border-[#EAE2F2] rounded-xl text-xs focus:outline-none focus:border-[#6B21A8]"
+            className="w-full pl-9 pr-4 py-2 bg-[#F4F9F9] border border-[#D5EAEB] rounded-xl text-xs focus:outline-none focus:border-[#0D5C63]"
           />
         </div>
 
@@ -172,7 +172,7 @@ export function AdminResidentsModule() {
               onClick={() => setWingFilter(w)}
               className={`px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition-colors ${
                 wingFilter === w
-                  ? 'bg-[#6B21A8] text-white'
+                  ? 'bg-[#0D5C63] text-white'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -183,10 +183,10 @@ export function AdminResidentsModule() {
       </div>
 
       {/* Residents Table */}
-      <div className="bg-white rounded-3xl border border-[#EAE2F2] overflow-hidden shadow-sm">
+      <div className="bg-white rounded-3xl border border-[#D5EAEB] overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs text-slate-600">
-            <thead className="bg-[#F8F6FC] text-slate-700 font-bold uppercase tracking-wider text-[11px] border-b border-[#EAE2F2]">
+            <thead className="bg-[#F4F9F9] text-slate-700 font-bold uppercase tracking-wider text-[11px] border-b border-[#D5EAEB]">
               <tr>
                 <th className="px-6 py-4">Resident</th>
                 <th className="px-6 py-4">Unit & Wing</th>
@@ -207,7 +207,7 @@ export function AdminResidentsModule() {
                           {res.avatar ? (
                             <Image src={res.avatar} alt={res.name} fill className="object-cover" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-[#6B21A8] font-bold text-xs">
+                            <div className="w-full h-full flex items-center justify-center text-[#0D5C63] font-bold text-xs">
                               {res.name.charAt(0)}
                             </div>
                           )}
@@ -227,7 +227,7 @@ export function AdminResidentsModule() {
                     </td>
 
                     <td className="px-6 py-4">
-                      <span className="inline-block px-2.5 py-0.5 rounded-full font-semibold text-[10px] bg-purple-50 text-[#6B21A8]">
+                      <span className="inline-block px-2.5 py-0.5 rounded-full font-semibold text-[10px] bg-purple-50 text-[#0D5C63]">
                         {res.membershipType || (res.role.includes('Owner') ? 'Owner' : 'Tenant')}
                       </span>
                     </td>
@@ -302,7 +302,7 @@ export function AdminResidentsModule() {
                     value={draft.name}
                     onChange={(e) => setDraft({ ...draft, name: e.target.value })}
                     placeholder="e.g. Vikram Malhotra"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                   />
                 </div>
 
@@ -316,7 +316,7 @@ export function AdminResidentsModule() {
                     value={draft.unit}
                     onChange={(e) => setDraft({ ...draft, unit: e.target.value })}
                     placeholder="e.g. B-902"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                   />
                 </div>
               </div>
@@ -329,7 +329,7 @@ export function AdminResidentsModule() {
                   <select
                     value={draft.wing}
                     onChange={(e) => setDraft({ ...draft, wing: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8] bg-white"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63] bg-white"
                   >
                     <option>A Wing</option>
                     <option>B Wing</option>
@@ -347,7 +347,7 @@ export function AdminResidentsModule() {
                     value={draft.floor}
                     onChange={(e) => setDraft({ ...draft, floor: e.target.value })}
                     placeholder="e.g. 9th Floor"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                   />
                 </div>
               </div>
@@ -362,7 +362,7 @@ export function AdminResidentsModule() {
                     onChange={(e) =>
                       setDraft({ ...draft, membershipType: e.target.value as ResidentDraft['membershipType'] })
                     }
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8] bg-white"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63] bg-white"
                   >
                     <option value="Owner">Owner</option>
                     <option value="Tenant">Tenant</option>
@@ -377,7 +377,7 @@ export function AdminResidentsModule() {
                   <select
                     value={draft.role}
                     onChange={(e) => setDraft({ ...draft, role: e.target.value as UserRole })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8] bg-white"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63] bg-white"
                   >
                     <option value="resident">Resident</option>
                     <option value="admin">Committee Admin</option>
@@ -398,7 +398,7 @@ export function AdminResidentsModule() {
                     value={draft.phone}
                     onChange={(e) => setDraft({ ...draft, phone: e.target.value })}
                     placeholder="+91 98..."
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                   />
                 </div>
 
@@ -412,7 +412,7 @@ export function AdminResidentsModule() {
                     value={draft.email}
                     onChange={(e) => setDraft({ ...draft, email: e.target.value })}
                     placeholder="name@example.com"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                   />
                 </div>
               </div>
@@ -426,7 +426,7 @@ export function AdminResidentsModule() {
                   value={draft.password}
                   onChange={(e) => setDraft({ ...draft, password: e.target.value })}
                   placeholder="Leave blank to auto-generate a secure password"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                 />
                 <p className="text-[10px] text-slate-400 mt-1">
                   Minimum 12 characters. Generated passwords are shown once after saving.
@@ -444,7 +444,7 @@ export function AdminResidentsModule() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 py-2.5 rounded-xl bg-[#6B21A8] hover:bg-[#581C87] disabled:opacity-60 text-white text-xs font-semibold shadow-sm"
+                  className="flex-1 py-2.5 rounded-xl bg-[#0D5C63] hover:bg-[#094449] disabled:opacity-60 text-white text-xs font-semibold shadow-sm"
                 >
                   {saving ? 'Saving…' : 'Save Resident'}
                 </button>
@@ -482,7 +482,7 @@ export function AdminResidentsModule() {
                   required
                   value={editDraft.name}
                   onChange={(e) => setEditDraft({ ...editDraft, name: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                 />
               </div>
 
@@ -495,7 +495,7 @@ export function AdminResidentsModule() {
                     required
                     value={editDraft.unit}
                     onChange={(e) => setEditDraft({ ...editDraft, unit: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                   />
                 </div>
                 <div>
@@ -506,7 +506,7 @@ export function AdminResidentsModule() {
                     required
                     value={editDraft.wing}
                     onChange={(e) => setEditDraft({ ...editDraft, wing: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                   />
                 </div>
                 <div>
@@ -517,7 +517,7 @@ export function AdminResidentsModule() {
                     required
                     value={editDraft.floor}
                     onChange={(e) => setEditDraft({ ...editDraft, floor: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0D5C63]"
                   />
                 </div>
               </div>
@@ -535,7 +535,7 @@ export function AdminResidentsModule() {
                         membershipType: e.target.value as typeof editDraft.membershipType,
                       })
                     }
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:border-[#6B21A8]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:border-[#0D5C63]"
                   >
                     <option value="Owner">Owner</option>
                     <option value="Tenant">Tenant</option>
@@ -581,7 +581,7 @@ export function AdminResidentsModule() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 py-2.5 rounded-xl bg-[#6B21A8] hover:bg-[#581C87] disabled:opacity-60 text-white text-xs font-semibold shadow-sm"
+                  className="flex-1 py-2.5 rounded-xl bg-[#0D5C63] hover:bg-[#094449] disabled:opacity-60 text-white text-xs font-semibold shadow-sm"
                 >
                   {saving ? 'Saving…' : 'Save Changes'}
                 </button>

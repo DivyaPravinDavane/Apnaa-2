@@ -149,10 +149,10 @@ export function VisitorsModule() {
     <div className="max-w-7xl mx-auto space-y-6 pb-12">
       {/* Title */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1C1326]">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0E2628]">
           Visitor Management
         </h1>
-        <p className="text-xs sm:text-sm text-[#6E6280] mt-1">
+        <p className="text-xs sm:text-sm text-[#4E6E70] mt-1">
           Manage visitor requests, pre-approvals, and generate digital gate passes for Flat {currentUser.unit}.
         </p>
       </div>
@@ -162,7 +162,7 @@ export function VisitorsModule() {
         {/* Left Column: List (7 Cols) */}
         <div className="lg:col-span-7 space-y-4">
           {/* Tabs */}
-          <div className="flex items-center gap-1.5 p-1 bg-white rounded-xl border border-[#EAE2F2] overflow-x-auto text-xs">
+          <div className="flex items-center gap-1.5 p-1 bg-white rounded-xl border border-[#D5EAEB] overflow-x-auto text-xs">
             {(['expected', 'pending', 'completed', 'denied', 'all'] as const).map((tab) => {
               const count = myVisitors.filter((v) => {
                 if (tab === 'expected') return v.status === 'expected' || v.status === 'approved';
@@ -178,7 +178,7 @@ export function VisitorsModule() {
                   onClick={() => setActiveTab(tab)}
                   className={`px-3 py-1.5 rounded-lg font-semibold capitalize whitespace-nowrap transition-colors flex items-center gap-1.5 ${
                     activeTab === tab
-                      ? 'bg-[#6B21A8] text-white shadow-sm'
+                      ? 'bg-[#0D5C63] text-white shadow-sm'
                       : 'text-slate-600 hover:bg-slate-50'
                   }`}
                 >
@@ -203,14 +203,14 @@ export function VisitorsModule() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by visitor name, pass code (e.g. V-9421), or purpose..."
-              className="w-full pl-9 pr-4 py-2.5 bg-white border border-[#EAE2F2] rounded-xl text-xs sm:text-sm focus:outline-none focus:border-[#6B21A8]"
+              className="w-full pl-9 pr-4 py-2.5 bg-white border border-[#D5EAEB] rounded-xl text-xs sm:text-sm focus:outline-none focus:border-[#0D5C63]"
             />
           </div>
 
           {/* Visitor Cards List */}
           <div className="space-y-3">
             {filteredVisitors.length === 0 ? (
-              <div className="p-10 rounded-2xl bg-white border border-[#EAE2F2] text-center text-slate-400">
+              <div className="p-10 rounded-2xl bg-white border border-[#D5EAEB] text-center text-slate-400">
                 <Users className="w-8 h-8 mx-auto text-slate-300 mb-2" />
                 <p className="text-sm font-medium text-slate-600">No visitors found in this tab</p>
                 <p className="text-xs text-slate-400 mt-1">
@@ -221,28 +221,28 @@ export function VisitorsModule() {
               filteredVisitors.map((vis) => (
                 <div
                   key={vis.id}
-                  className="p-4 rounded-2xl bg-white border border-[#EAE2F2] hover:border-[#6B21A8]/30 transition-all shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  className="p-4 rounded-2xl bg-white border border-[#D5EAEB] hover:border-[#0D5C63]/30 transition-all shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                 >
                   <div className="flex items-start gap-3.5">
-                    <div className="w-10 h-10 rounded-full bg-purple-50 text-[#6B21A8] flex items-center justify-center font-bold text-sm flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-purple-50 text-[#0D5C63] flex items-center justify-center font-bold text-sm flex-shrink-0">
                       {vis.name.charAt(0)}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-sm text-[#1C1326]">{vis.name}</h4>
+                        <h4 className="font-bold text-sm text-[#0E2628]">{vis.name}</h4>
                         {getStatusBadge(vis.status)}
                       </div>
-                      <p className="text-xs text-[#6E6280] mt-0.5">
+                      <p className="text-xs text-[#4E6E70] mt-0.5">
                         Purpose: <span className="font-medium text-slate-800">{vis.purpose}</span>
                       </p>
                       <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-500 mt-1.5">
                         <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-[#6B21A8]" />
+                          <Clock className="w-3 h-3 text-[#0D5C63]" />
                           {vis.visitDate} • {vis.arrivalTime}
                         </span>
                         {vis.vehicleNumber && (
                           <span className="flex items-center gap-1 font-mono text-slate-600">
-                            <Car className="w-3 h-3 text-[#6B21A8]" />
+                            <Car className="w-3 h-3 text-[#0D5C63]" />
                             {vis.vehicleNumber}
                           </span>
                         )}
@@ -262,7 +262,7 @@ export function VisitorsModule() {
                         </button>
                         <button
                           onClick={() => approveVisitor(vis.id)}
-                          className="px-4 py-1.5 rounded-lg bg-[#6B21A8] text-white hover:bg-[#581C87] text-xs font-semibold shadow-sm"
+                          className="px-4 py-1.5 rounded-lg bg-[#0D5C63] text-white hover:bg-[#094449] text-xs font-semibold shadow-sm"
                         >
                           Approve
                         </button>
@@ -270,7 +270,7 @@ export function VisitorsModule() {
                     ) : (
                       <button
                         onClick={() => setSelectedVisitorForPass(vis)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-50 hover:bg-purple-100 text-[#6B21A8] text-xs font-semibold transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-50 hover:bg-purple-100 text-[#0D5C63] text-xs font-semibold transition-colors"
                       >
                         <QrCode className="w-3.5 h-3.5" />
                         <span>Pass ({vis.passCode})</span>
@@ -284,14 +284,14 @@ export function VisitorsModule() {
         </div>
 
         {/* Right Column: "Invite Visitor" Form (5 Cols) */}
-        <div className="lg:col-span-5 bg-white p-5 sm:p-6 rounded-2xl border border-[#EAE2F2] shadow-sm">
-          <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#EAE2F2]">
-            <div className="p-2 rounded-xl bg-purple-50 text-[#6B21A8]">
+        <div className="lg:col-span-5 bg-white p-5 sm:p-6 rounded-2xl border border-[#D5EAEB] shadow-sm">
+          <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#D5EAEB]">
+            <div className="p-2 rounded-xl bg-purple-50 text-[#0D5C63]">
               <Plus className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-bold text-base text-[#1C1326]">Invite Visitor</h3>
-              <p className="text-xs text-[#6E6280]">Generate pre-approved gate pass</p>
+              <h3 className="font-bold text-base text-[#0E2628]">Invite Visitor</h3>
+              <p className="text-xs text-[#4E6E70]">Generate pre-approved gate pass</p>
             </div>
           </div>
 
@@ -309,7 +309,7 @@ export function VisitorsModule() {
                 className={`w-full px-3.5 py-2.5 rounded-xl border text-xs sm:text-sm focus:outline-none ${
                   formErrors.name
                     ? 'border-rose-400 bg-rose-50/50'
-                    : 'border-[#EAE2F2] focus:border-[#6B21A8]'
+                    : 'border-[#D5EAEB] focus:border-[#0D5C63]'
                 }`}
               />
               {formErrors.name && (
@@ -330,7 +330,7 @@ export function VisitorsModule() {
                 className={`w-full px-3.5 py-2.5 rounded-xl border text-xs sm:text-sm focus:outline-none ${
                   formErrors.phone
                     ? 'border-rose-400 bg-rose-50/50'
-                    : 'border-[#EAE2F2] focus:border-[#6B21A8]'
+                    : 'border-[#D5EAEB] focus:border-[#0D5C63]'
                 }`}
               />
               {formErrors.phone && (
@@ -348,7 +348,7 @@ export function VisitorsModule() {
                   type="date"
                   value={formData.visitDate}
                   onChange={(e) => setFormData({ ...formData, visitDate: e.target.value })}
-                  className="w-full px-3 py-2.5 rounded-xl border border-[#EAE2F2] text-xs focus:outline-none focus:border-[#6B21A8]"
+                  className="w-full px-3 py-2.5 rounded-xl border border-[#D5EAEB] text-xs focus:outline-none focus:border-[#0D5C63]"
                 />
               </div>
 
@@ -359,7 +359,7 @@ export function VisitorsModule() {
                 <select
                   value={formData.arrivalTime}
                   onChange={(e) => setFormData({ ...formData, arrivalTime: e.target.value })}
-                  className="w-full px-3 py-2.5 rounded-xl border border-[#EAE2F2] text-xs focus:outline-none focus:border-[#6B21A8] bg-white"
+                  className="w-full px-3 py-2.5 rounded-xl border border-[#D5EAEB] text-xs focus:outline-none focus:border-[#0D5C63] bg-white"
                 >
                   <option>8:00 AM</option>
                   <option>10:00 AM</option>
@@ -381,7 +381,7 @@ export function VisitorsModule() {
                 <select
                   value={formData.purpose}
                   onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
-                  className="w-full px-3 py-2.5 rounded-xl border border-[#EAE2F2] text-xs focus:outline-none focus:border-[#6B21A8] bg-white"
+                  className="w-full px-3 py-2.5 rounded-xl border border-[#D5EAEB] text-xs focus:outline-none focus:border-[#0D5C63] bg-white"
                 >
                   <option>Personal Visit</option>
                   <option>Family & Friends</option>
@@ -401,7 +401,7 @@ export function VisitorsModule() {
                   max="10"
                   value={formData.visitorCount}
                   onChange={(e) => setFormData({ ...formData, visitorCount: Number(e.target.value) })}
-                  className="w-full px-3 py-2.5 rounded-xl border border-[#EAE2F2] text-xs focus:outline-none focus:border-[#6B21A8]"
+                  className="w-full px-3 py-2.5 rounded-xl border border-[#D5EAEB] text-xs focus:outline-none focus:border-[#0D5C63]"
                 />
               </div>
             </div>
@@ -420,7 +420,7 @@ export function VisitorsModule() {
                       vehicleType: e.target.value as 'None' | 'Two-Wheeler' | 'Car',
                     })
                   }
-                  className="w-full px-3 py-2.5 rounded-xl border border-[#EAE2F2] text-xs focus:outline-none focus:border-[#6B21A8] bg-white"
+                  className="w-full px-3 py-2.5 rounded-xl border border-[#D5EAEB] text-xs focus:outline-none focus:border-[#0D5C63] bg-white"
                 >
                   <option>Car</option>
                   <option>Two-Wheeler</option>
@@ -437,7 +437,7 @@ export function VisitorsModule() {
                   value={formData.vehicleNumber}
                   onChange={(e) => setFormData({ ...formData, vehicleNumber: e.target.value.toUpperCase() })}
                   placeholder="e.g. MH 02 AB 1234"
-                  className="w-full px-3 py-2.5 rounded-xl border border-[#EAE2F2] text-xs focus:outline-none focus:border-[#6B21A8] uppercase font-mono"
+                  className="w-full px-3 py-2.5 rounded-xl border border-[#D5EAEB] text-xs focus:outline-none focus:border-[#0D5C63] uppercase font-mono"
                 />
               </div>
             </div>
@@ -452,7 +452,7 @@ export function VisitorsModule() {
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 placeholder="Optional instructions for gate security..."
-                className="w-full px-3 py-2 rounded-xl border border-[#EAE2F2] text-xs focus:outline-none focus:border-[#6B21A8]"
+                className="w-full px-3 py-2 rounded-xl border border-[#D5EAEB] text-xs focus:outline-none focus:border-[#0D5C63]"
               />
             </div>
 
@@ -460,7 +460,7 @@ export function VisitorsModule() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3 rounded-xl bg-[#6B21A8] hover:bg-[#581C87] text-white font-semibold text-sm transition-all shadow-md active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-xl bg-[#0D5C63] hover:bg-[#094449] text-white font-semibold text-sm transition-all shadow-md active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
             >
               <ShieldCheck className="w-4 h-4" />
               <span>{isSubmitting ? 'Generating Pass...' : 'Submit Request & Generate Pass'}</span>
@@ -499,7 +499,7 @@ export function VisitorsModule() {
                 level="M"
                 includeMargin
               />
-              <p className="font-mono text-base font-bold text-[#6B21A8] mt-2 tracking-widest">
+              <p className="font-mono text-base font-bold text-[#0D5C63] mt-2 tracking-widest">
                 {selectedVisitorForPass.passCode}
               </p>
             </div>
@@ -540,7 +540,7 @@ export function VisitorsModule() {
               </button>
               <button
                 onClick={() => setSelectedVisitorForPass(null)}
-                className="flex-1 py-2 rounded-xl bg-[#6B21A8] hover:bg-[#581C87] text-white text-xs font-semibold"
+                className="flex-1 py-2 rounded-xl bg-[#0D5C63] hover:bg-[#094449] text-white text-xs font-semibold"
               >
                 Done
               </button>

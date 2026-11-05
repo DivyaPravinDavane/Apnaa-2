@@ -1,12 +1,17 @@
 -- ============================================================================
---  Apnaa Smart Society - MySQL 8.0+ schema
+--  Apnaentry Society (Westend Heights D...) - MySQL 8.0+ / MariaDB Schema
 --  WARNING: this script drops and recreates every table.
---  Run with:  npm run db:setup
+--  Run with:  npm run db:setup   or import directly in phpMyAdmin
 -- ============================================================================
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS service_requests;
+DROP TABLE IF EXISTS gate_updates;
+DROP TABLE IF EXISTS unit_bills;
+DROP TABLE IF EXISTS poll_votes;
+DROP TABLE IF EXISTS community_polls;
 DROP TABLE IF EXISTS audit_logs;
 DROP TABLE IF EXISTS facility_check_ins;
 DROP TABLE IF EXISTS security_logs;
@@ -52,6 +57,11 @@ CREATE TABLE users (
   floor            VARCHAR(32)  NOT NULL DEFAULT '',
   avatar           VARCHAR(512) NOT NULL DEFAULT '',
   membership_type  ENUM('Owner', 'Tenant', 'Family Member') NOT NULL DEFAULT 'Owner',
+  pin_code         VARCHAR(16)  NOT NULL DEFAULT '107864',
+  gender           VARCHAR(24)  NOT NULL DEFAULT 'Male',
+  date_of_birth    VARCHAR(32)  NOT NULL DEFAULT 'Not Available',
+  blood_group      VARCHAR(16)  NOT NULL DEFAULT 'O+',
+  govt_id_number   VARCHAR(64)  NOT NULL DEFAULT '********435E',
   bio              TEXT         NULL,
   interests        JSON         NULL,
   is_phone_public  TINYINT(1)   NOT NULL DEFAULT 0,
@@ -373,6 +383,102 @@ CREATE TABLE audit_logs (
   KEY idx_audit_society (society_id, created_at),
   CONSTRAINT fk_audit_society FOREIGN KEY (society_id) REFERENCES societies (id),
   CONSTRAINT fk_audit_actor FOREIGN KEY (actor_id) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- ============================================================================
+--  Community Corner Polls & Candidate Votes (Mobile UI)
+-- ============================================================================
+CREATE TABLE community_polls (
+  id                VARCHAR(64)  NOT NULL,
+  society_id        VARCHAR(64)  NOT NULL,
+  author_name       VARCHAR(120) NOT NULL,
+  author_initial    VARCHAR(8)   NOT NULL DEFAULT 'E',
+  group_name        VARCHAR(160) NOT NULL,
+  publish_timestamp VARCHAR(64)  NOT NULL,
+  title             VARCHAR(200) NOT NULL,
+  subtitle          VARCHAR(255) NOT NULL,
+  expires_on        VARCHAR(64)  NOT NULL,
+  responses_count   INT UNSIGNED NOT NULL DEFAULT 0,
+  min_select        INT UNSIGNED NOT NULL DEFAULT 15,
+  max_select        INT UNSIGNED NOT NULL DEFAULT 15,
+  candidates_json   JSON         NOT NULL,
+  created_at        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_polls_society (society_id, created_at),
+  CONSTRAINT fk_polls_society FOREIGN KEY (society_id) REFERENCES societies (id)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE poll_votes (
+  id                       VARCHAR(64) NOT NULL,
+  poll_id                  VARCHAR(64) NOT NULL,
+  user_id                  VARCHAR(64) NOT NULL,
+  unit                     VARCHAR(32) NOT NULL,
+  selected_candidates_json JSON        NOT NULL,
+  created_at               TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_poll_user_vote (poll_id, user_id),
+  CONSTRAINT fk_votes_poll FOREIGN KEY (poll_id) REFERENCES community_polls (id) ON DELETE CASCADE,
+  CONSTRAINT fk_votes_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- ============================================================================
+--  Bills & Payments (Statement, Dues, Payment History)
+-- ============================================================================
+CREATE TABLE unit_bills (
+  id             VARCHAR(64)   NOT NULL,
+  society_id     VARCHAR(64)   NOT NULL,
+  unit           VARCHAR(32)   NOT NULL,
+  user_id        VARCHAR(64)   NOT NULL,
+  invoice_no     VARCHAR(64)   NOT NULL,
+  title          VARCHAR(190)  NOT NULL,
+  category       ENUM('Statement', 'Dues', 'Payment history') NOT NULL DEFAULT 'Dues',
+  billing_period VARCHAR(64)   NOT NULL,
+  amount         DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  status         ENUM('unpaid', 'paid', 'overdue') NOT NULL DEFAULT 'unpaid',
+  due_date       DATE          NOT NULL,
+  paid_at        DATETIME      NULL,
+  payment_method VARCHAR(64)   NULL,
+  created_at     TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_bills_unit (society_id, unit, status),
+  CONSTRAINT fk_bills_society FOREIGN KEY (society_id) REFERENCES societies (id),
+  CONSTRAINT fk_bills_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- ============================================================================
+--  Gate Updates (Cab, Exit pass, School bus) & Helpdesk Service Requests
+-- ============================================================================
+CREATE TABLE gate_updates (
+  id          VARCHAR(64)  NOT NULL,
+  society_id  VARCHAR(64)  NOT NULL,
+  unit        VARCHAR(32)  NOT NULL,
+  user_id     VARCHAR(64)  NOT NULL,
+  update_type ENUM('Cab', 'Exit pass', 'School bus') NOT NULL,
+  details     VARCHAR(255) NOT NULL,
+  pass_code   VARCHAR(32)  NOT NULL,
+  status      ENUM('active', 'completed', 'expired') NOT NULL DEFAULT 'active',
+  created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_gate_updates_unit (society_id, unit, status),
+  CONSTRAINT fk_gate_updates_society FOREIGN KEY (society_id) REFERENCES societies (id),
+  CONSTRAINT fk_gate_updates_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE service_requests (
+  id          VARCHAR(64)  NOT NULL,
+  society_id  VARCHAR(64)  NOT NULL,
+  unit        VARCHAR(32)  NOT NULL,
+  user_id     VARCHAR(64)  NOT NULL,
+  desk_type   ENUM('Service Desk', 'Request Desk', 'Helpdesk') NOT NULL DEFAULT 'Helpdesk',
+  category    VARCHAR(120) NOT NULL,
+  title       VARCHAR(190) NOT NULL,
+  description TEXT         NOT NULL,
+  status      ENUM('open', 'in_progress', 'resolved') NOT NULL DEFAULT 'open',
+  created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_service_requests_unit (society_id, unit, status),
+  CONSTRAINT fk_service_requests_society FOREIGN KEY (society_id) REFERENCES societies (id),
+  CONSTRAINT fk_service_requests_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;

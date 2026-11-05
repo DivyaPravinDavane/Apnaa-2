@@ -71,7 +71,7 @@ export function GlobalSearchModal({ isOpen, onClose, onNavigate }: GlobalSearchM
       <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[75vh]">
         {/* Search Input Bar */}
         <div className="px-5 py-4 border-b border-slate-200 flex items-center gap-3">
-          <Search className="w-5 h-5 text-[#6B21A8]" />
+          <Search className="w-5 h-5 text-[#0D5C63]" />
           <input
             type="text"
             value={query}
@@ -122,20 +122,20 @@ export function GlobalSearchModal({ isOpen, onClose, onNavigate }: GlobalSearchM
                       onNavigate('resident_amenities');
                       onClose();
                     }}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-[#F8F6FC] text-left transition-colors group"
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-[#F4F9F9] text-left transition-colors group"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-purple-50 text-[#6B21A8] flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-lg bg-purple-50 text-[#0D5C63] flex items-center justify-center">
                         <CalendarCheck className="w-4 h-4" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-slate-900 group-hover:text-[#6B21A8]">
+                        <p className="text-sm font-semibold text-slate-900 group-hover:text-[#0D5C63]">
                           {a.name}
                         </p>
                         <p className="text-xs text-slate-500">{a.category} • {a.operatingHours}</p>
                       </div>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-[#6B21A8]" />
+                    <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-[#0D5C63]" />
                   </button>
                 ))}
               </div>
@@ -154,20 +154,20 @@ export function GlobalSearchModal({ isOpen, onClose, onNavigate }: GlobalSearchM
                       onNavigate('resident_notices');
                       onClose();
                     }}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-[#F8F6FC] text-left transition-colors group"
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-[#F4F9F9] text-left transition-colors group"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
                         <BellRing className="w-4 h-4" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-slate-900 group-hover:text-[#6B21A8]">
+                        <p className="text-sm font-semibold text-slate-900 group-hover:text-[#0D5C63]">
                           {n.title}
                         </p>
                         <p className="text-xs text-slate-500">{n.category} • {n.publishDate}</p>
                       </div>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-[#6B21A8]" />
+                    <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-[#0D5C63]" />
                   </button>
                 ))}
               </div>
@@ -186,20 +186,20 @@ export function GlobalSearchModal({ isOpen, onClose, onNavigate }: GlobalSearchM
                       onNavigate('resident_events');
                       onClose();
                     }}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-[#F8F6FC] text-left transition-colors group"
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-[#F4F9F9] text-left transition-colors group"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-700 flex items-center justify-center">
                         <Calendar className="w-4 h-4" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-slate-900 group-hover:text-[#6B21A8]">
+                        <p className="text-sm font-semibold text-slate-900 group-hover:text-[#0D5C63]">
                           {e.title}
                         </p>
                         <p className="text-xs text-slate-500">{e.date} • {e.venue}</p>
                       </div>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-[#6B21A8]" />
+                    <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-[#0D5C63]" />
                   </button>
                 ))}
               </div>
@@ -218,20 +218,20 @@ export function GlobalSearchModal({ isOpen, onClose, onNavigate }: GlobalSearchM
                       onNavigate('resident_visitors');
                       onClose();
                     }}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-[#F8F6FC] text-left transition-colors group"
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-[#F4F9F9] text-left transition-colors group"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
                         <Users className="w-4 h-4" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-slate-900 group-hover:text-[#6B21A8]">
+                        <p className="text-sm font-semibold text-slate-900 group-hover:text-[#0D5C63]">
                           {v.name} ({v.passCode})
                         </p>
                         <p className="text-xs text-slate-500">{v.purpose} • Flat {v.unit}</p>
                       </div>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-[#6B21A8]" />
+                    <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-[#0D5C63]" />
                   </button>
                 ))}
               </div>
