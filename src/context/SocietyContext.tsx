@@ -335,12 +335,8 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    const savedCode = typeof window !== 'undefined' ? window.sessionStorage.getItem('apnaa_society_code_v1') : null;
-    if (savedCode === '1234') {
-      applyPersisted(window.localStorage.getItem(STORAGE_KEY));
-    } else {
-      setIsAuthenticated(false);
-    }
+    // Always start unauthenticated so society passcode must be manually typed
+    setIsAuthenticated(false);
     hydratedLocalRef.current = true;
     setAuthReady(true);
 
@@ -532,19 +528,8 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
           setBaseSociety(overviewRes.data.society);
           setAmenities(overviewRes.data.amenities);
         }
-        const savedCode = typeof window !== 'undefined' ? window.sessionStorage.getItem('apnaa_society_code_v1') : null;
-        if (session.data && savedCode === '1234') {
-          setRoleState(session.data.role);
-          setUsers((prev) => ({
-            ...prev,
-            [session.data!.role]: session.data!,
-            resident: session.data!.role === 'resident' ? session.data! : prev.resident,
-          }));
-          setIsAuthenticated(true);
-          await hydrate(session.data.role);
-        } else {
-          setIsAuthenticated(false);
-        }
+        // Always require manually entering the society passcode
+        setIsAuthenticated(false);
       } finally {
         if (active) setAuthReady(true);
       }
@@ -761,9 +746,6 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
       return { success: false, message: 'Incorrect Society Passcode. Please try again.' };
     }
 
-    if (typeof window !== 'undefined') {
-      window.sessionStorage.setItem('apnaa_society_code_v1', '1234');
-    }
 
     if (API_MODE) {
       try {
@@ -817,7 +799,7 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     if (typeof window !== 'undefined') {
-      window.sessionStorage.removeItem('apnaa_society_code_v1');
+      window.sessionStorage.clear();
       window.localStorage.removeItem(STORAGE_KEY);
     }
     if (API_MODE) {
@@ -826,7 +808,7 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
     setIsAuthenticated(false);
     setRoleState('resident');
     setUsers(INITIAL_USERS);
-    addToast('Portal Locked', 'Please enter society passcode to enter.', 'info');
+    addToast('Portal Locked', 'Please manually type society passcode to enter.', 'info');
   };
 
   const setRole = (role: UserRole) => {

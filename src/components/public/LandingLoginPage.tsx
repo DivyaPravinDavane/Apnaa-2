@@ -73,12 +73,12 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
     }
 
     if (!trimmed) {
-      setError('Please enter the 4-digit society passcode.');
+      setError('Please manually type the 4-digit society passcode.');
       return;
     }
 
     if (trimmed !== REQUIRED_SOCIETY_CODE) {
-      setError('Incorrect Society Passcode. Please try again.');
+      setError('Incorrect Society Passcode. Please manually enter 1234.');
       return;
     }
 
@@ -102,15 +102,6 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
     const cleaned = val.replace(/\D/g, '').slice(0, 4);
     setSocietyCode(cleaned);
     setError('');
-    if (cleaned.length === 4) {
-      if (cleaned === REQUIRED_SOCIETY_CODE) {
-        if (selectedRole !== 'resident' || (residentName.trim() && residentPhone.trim())) {
-          void handleEnterWithCode(selectedRole, cleaned);
-        }
-      } else {
-        setError('Incorrect Society Passcode. Please try again.');
-      }
-    }
   };
 
   const handleQuickRoleSelect = (role: UserRole) => {
@@ -190,7 +181,13 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
         </div>
 
         {/* 3. RESIDENT ENTRY & PROFILE REGISTRATION CARD */}
-        <div className="p-4 rounded-3xl bg-white border border-[#0D5C63]/30 shadow-sm space-y-3.5">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            void handleEnterWithCode();
+          }}
+          className="p-4 rounded-3xl bg-white border border-[#0D5C63]/30 shadow-sm space-y-3.5"
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-xl bg-[#E6F3F3] text-[#0D5C63] flex items-center justify-center">
@@ -293,31 +290,40 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
                 {[0, 1, 2, 3].map((idx) => {
                   const char = societyCode[idx] || '';
                   const isCorrect = societyCode === REQUIRED_SOCIETY_CODE;
+                  const isFilled = Boolean(char);
                   return (
                     <div
                       key={idx}
                       className={`w-12 h-14 rounded-2xl flex items-center justify-center text-xl font-bold font-mono border-2 transition-all shadow-2xs ${
                         isCorrect
                           ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                          : char
+                          : isFilled
                           ? 'border-[#0D5C63] bg-[#E6F3F3] text-[#0D5C63]'
                           : error
-                          ? 'border-rose-400 bg-rose-50 text-rose-600 animate-pulse'
-                          : 'border-slate-200 bg-slate-50 text-slate-400'
+                          ? 'border-rose-400 bg-rose-50 text-rose-600'
+                          : 'border-slate-200 bg-slate-50/70 text-transparent'
                       }`}
                     >
-                      {char ? (showPin ? char : '●') : '—'}
+                      {char ? (showPin ? char : '●') : ''}
                     </div>
                   );
                 })}
               </div>
 
-              {/* Invisible Real Numeric Input for Seamless Typing */}
+              {/* Invisible Real Numeric Input for Manual Typing (Suppresses Autofill) */}
               <input
-                type="password"
+                type={showPin ? 'text' : 'password'}
                 inputMode="numeric"
                 pattern="[0-9]*"
                 maxLength={4}
+                autoComplete="new-password"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
+                data-lpignore="true"
+                data-form-type="other"
+                name="society_passcode_manual"
+                id="society_passcode_manual"
                 value={societyCode}
                 onChange={(e) => handleCodeChange(e.target.value)}
                 placeholder=""
@@ -352,16 +358,15 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
           {societyCode === REQUIRED_SOCIETY_CODE && (
             <div className="p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-              <span>Passcode Verified! Ready to enter.</span>
+              <span>Passcode Verified! Click below to enter.</span>
             </div>
           )}
 
           {/* Enter Button */}
           <button
-            type="button"
-            onClick={() => handleEnterWithCode(selectedRole, societyCode)}
+            type="submit"
             disabled={busy}
-            className="w-full py-3 rounded-2xl bg-[#0D5C63] hover:bg-[#073B3E] active:scale-[0.99] text-white text-xs font-bold shadow-sm flex items-center justify-center gap-2 transition-all"
+            className="w-full py-3 rounded-2xl bg-[#0D5C63] hover:bg-[#073B3E] active:scale-[0.99] text-white text-xs font-bold shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
           >
             {busy ? (
               <span>Saving Profile &amp; Entering…</span>
@@ -373,7 +378,7 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
               </>
             )}
           </button>
-        </div>
+        </form>
 
         {/* 4. QUICK FEATURE PILLS */}
         <div className="grid grid-cols-4 gap-2">
