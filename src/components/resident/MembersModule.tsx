@@ -86,7 +86,7 @@ export function MembersModule() {
             <div className="flex items-start gap-4">
               <div className="relative w-14 h-14 rounded-2xl overflow-hidden flex-shrink-0 border border-slate-100 bg-purple-100 flex items-center justify-center text-[#0D5C63] font-bold text-lg">
                 {member.avatar ? (
-                  <Image src={member.avatar} alt={member.name} fill className="object-cover" />
+                  <Image src={member.avatar} alt={member.name} fill className="object-cover" unoptimized />
                 ) : (
                   <span>{member.name.charAt(0)}</span>
                 )}
@@ -126,7 +126,7 @@ export function MembersModule() {
               <div className="flex items-center gap-3">
                 <div className="relative w-16 h-16 rounded-2xl overflow-hidden border bg-purple-100 flex items-center justify-center text-[#0D5C63] font-bold text-xl">
                   {selectedMember.avatar ? (
-                    <Image src={selectedMember.avatar} alt={selectedMember.name} fill className="object-cover" />
+                    <Image src={selectedMember.avatar} alt={selectedMember.name} fill className="object-cover" unoptimized />
                   ) : (
                     <span>{selectedMember.name.charAt(0)}</span>
                   )}

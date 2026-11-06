@@ -24,6 +24,8 @@ export function ProfileSettingsModule() {
   const [qrOpen, setQrOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  const [avatarError, setAvatarError] = useState(false);
+
   useEffect(() => {
     setName(currentUser.name);
     setEmail(currentUser.email);
@@ -35,6 +37,7 @@ export function ProfileSettingsModule() {
     setGovtId(currentUser.govtIdNumber || 'NOT_SET');
     setIsPhonePublic(currentUser.isPhonePublic || false);
     setIsEmailPublic(currentUser.isEmailPublic || false);
+    setAvatarError(false);
   }, [currentUser]);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
@@ -73,11 +76,26 @@ export function ProfileSettingsModule() {
 
       {/* Sub-banner Preview Card behind sheet */}
       <div className="px-4 py-3 bg-[#E9E8EE] flex items-center gap-3">
-        <div className="relative w-12 h-12 rounded-full overflow-hidden border border-white/60 bg-[#0D5C63] text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
-          {currentUser.avatar ? (
-            <Image src={currentUser.avatar} alt={currentUser.name} fill className="object-cover" />
+        <div className="relative w-12 h-12 rounded-full overflow-hidden border border-white/60 bg-[#0D5C63] text-white flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-xs">
+          {!avatarError && currentUser.avatar ? (
+            <Image
+              src={currentUser.avatar}
+              alt={currentUser.name}
+              fill
+              className="object-cover"
+              unoptimized
+              onError={() => setAvatarError(true)}
+            />
           ) : (
-            <span>{currentUser.name.charAt(0)}</span>
+            <span className="font-bold text-sm tracking-wider uppercase">
+              {currentUser.name
+                ? currentUser.name
+                    .split(' ')
+                    .map((n) => n[0])
+                    .slice(0, 2)
+                    .join('')
+                : 'R'}
+            </span>
           )}
         </div>
         <div>
@@ -96,10 +114,25 @@ export function ProfileSettingsModule() {
         {/* Centered Avatar + Name + PIN + Role */}
         <div className="text-center space-y-1.5 pt-1">
           <div className="relative w-16 h-16 rounded-full overflow-hidden mx-auto border-2 border-[#E6F3F3] bg-[#0D5C63] text-white flex items-center justify-center font-bold text-xl shadow-xs">
-            {currentUser.avatar ? (
-              <Image src={currentUser.avatar} alt={currentUser.name} fill className="object-cover" />
+            {!avatarError && currentUser.avatar ? (
+              <Image
+                src={currentUser.avatar}
+                alt={currentUser.name}
+                fill
+                className="object-cover"
+                unoptimized
+                onError={() => setAvatarError(true)}
+              />
             ) : (
-              <span>{currentUser.name.charAt(0)}</span>
+              <span className="font-bold text-base tracking-wider uppercase">
+                {currentUser.name
+                  ? currentUser.name
+                      .split(' ')
+                      .map((n) => n[0])
+                      .slice(0, 2)
+                      .join('')
+                  : 'R'}
+              </span>
             )}
           </div>
           <h2 className="text-sm font-bold text-[#0E2628] pt-1">{currentUser.name}</h2>

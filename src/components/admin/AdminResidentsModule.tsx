@@ -205,7 +205,7 @@ export function AdminResidentsModule() {
                       <div className="flex items-center gap-3">
                         <div className="relative w-9 h-9 rounded-xl overflow-hidden border bg-purple-50 flex-shrink-0">
                           {res.avatar ? (
-                            <Image src={res.avatar} alt={res.name} fill className="object-cover" />
+                            <Image src={res.avatar} alt={res.name} fill className="object-cover" unoptimized />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-[#0D5C63] font-bold text-xs">
                               {res.name.charAt(0)}
