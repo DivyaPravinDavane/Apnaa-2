@@ -34,6 +34,11 @@ export const demoLoginSchema = z.object({
   role: z.enum(['resident', 'admin', 'security', 'facility']),
 });
 
+export const societyCodeLoginSchema = z.object({
+  code: z.string().trim(),
+  role: z.enum(['resident', 'admin', 'security', 'facility']).optional(),
+});
+
 export const profileUpdateSchema = z
   .object({
     name: z.string().trim().min(2).max(120).optional(),

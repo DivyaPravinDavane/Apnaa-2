@@ -190,6 +190,11 @@ export const SocietyApi = {
         method: 'POST',
         body: JSON.stringify({ role }),
       }),
+    societyCodeLogin: (code: string, role?: string) =>
+      apiFetch<User>('/auth/society-code', {
+        method: 'POST',
+        body: JSON.stringify({ code, role }),
+      }),
     logout: () => apiFetch<{ success: boolean }>('/auth/logout', { method: 'POST' }),
     getMe: () => apiFetch<User>('/me'),
     updateProfile: (profile: Partial<User>) =>

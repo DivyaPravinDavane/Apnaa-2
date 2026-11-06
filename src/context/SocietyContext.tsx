@@ -47,6 +47,7 @@ interface SocietyContextType {
   currentUser: User;
   authReady: boolean;
   isAuthenticated: boolean;
+  enterWithSocietyCode: (code: string, role?: UserRole) => Promise<{ success: boolean; message?: string }>;
   loginWithPassword: (login: string, password: string) => Promise<{ success: boolean; message?: string }>;
   requestOtp: (mobile: string) => Promise<{ success: boolean; message?: string; devOtp?: string }>;
   verifyOtp: (mobile: string, otp: string) => Promise<{ success: boolean; message?: string }>;
@@ -330,7 +331,12 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    applyPersisted(window.localStorage.getItem(STORAGE_KEY));
+    const savedCode = typeof window !== 'undefined' ? window.sessionStorage.getItem('apnaa_society_code_v1') : null;
+    if (savedCode === '1234') {
+      applyPersisted(window.localStorage.getItem(STORAGE_KEY));
+    } else {
+      setIsAuthenticated(false);
+    }
     hydratedLocalRef.current = true;
     setAuthReady(true);
 
@@ -522,11 +528,14 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
           setBaseSociety(overviewRes.data.society);
           setAmenities(overviewRes.data.amenities);
         }
-        if (session.data) {
+        const savedCode = typeof window !== 'undefined' ? window.sessionStorage.getItem('apnaa_society_code_v1') : null;
+        if (session.data && savedCode === '1234') {
           setRoleState(session.data.role);
           setUsers((prev) => ({ ...prev, [session.data!.role]: session.data! }));
           setIsAuthenticated(true);
           await hydrate(session.data.role);
+        } else {
+          setIsAuthenticated(false);
         }
       } finally {
         if (active) setAuthReady(true);
@@ -730,13 +739,58 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
     return { success: true };
   };
 
+  const enterWithSocietyCode = async (code: string, role: UserRole = currentRole) => {
+    if (code.trim() !== '1234') {
+      addToast('Invalid Code', 'Invalid Society Code. Please enter 1234 to enter.', 'error');
+      return { success: false, message: 'Invalid Society Code. Please enter 1234.' };
+    }
+
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem('apnaa_society_code_v1', '1234');
+    }
+
+    if (!API_MODE) {
+      setRoleState(role);
+      setIsAuthenticated(true);
+      logAudit('Society Code Access', `Entered Apnaa Society with code 1234 as ${role}`, users[role]?.name || 'Resident');
+      addToast('Access Granted', `Welcome to ${society.name}!`, 'success');
+      return { success: true };
+    }
+
+    try {
+      const result = await SocietyApi.auth.societyCodeLogin(code, role);
+      if (result.data) {
+        await applySessionUser(result.data);
+        addToast('Access Granted', `Welcome to ${society.name}!`, 'success');
+        return { success: true };
+      }
+    } catch {
+      // fallback
+    }
+
+    const demoRes = await SocietyApi.auth.demoLogin(role);
+    if (demoRes.data) {
+      await applySessionUser(demoRes.data);
+      addToast('Access Granted', `Welcome to ${society.name}!`, 'success');
+      return { success: true };
+    }
+
+    setIsAuthenticated(true);
+    setRoleState(role);
+    addToast('Access Granted', `Welcome to ${society.name}!`, 'success');
+    return { success: true };
+  };
+
   const logout = async () => {
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.removeItem('apnaa_society_code_v1');
+    }
     if (API_MODE) {
-      await SocietyApi.auth.logout();
+      await SocietyApi.auth.logout().catch(() => undefined);
     }
     setIsAuthenticated(false);
     setRoleState('resident');
-    addToast('Signed Out', 'Your secure session has ended.', 'info');
+    addToast('Portal Locked', 'Please enter society code 1234 to enter.', 'info');
   };
 
   const setRole = (role: UserRole) => {
@@ -1559,6 +1613,7 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
         currentUser,
         authReady,
         isAuthenticated,
+        enterWithSocietyCode,
         loginWithPassword,
         requestOtp,
         verifyOtp,
