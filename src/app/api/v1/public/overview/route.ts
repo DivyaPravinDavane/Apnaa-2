@@ -99,8 +99,8 @@ export const GET = route(async () => {
     },
     personas: {
       resident: {
-        name: String(residentUser?.name || 'Priya Sharma'),
-        unit: String(residentUser?.unit || 'A-1204'),
+        name: String(residentUser?.name || 'Resident Member'),
+        unit: String(residentUser?.unit || 'A-101'),
         membershipType: String(residentUser?.membership_type || 'Owner'),
       },
       admin: {

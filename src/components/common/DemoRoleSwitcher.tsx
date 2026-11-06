@@ -21,7 +21,7 @@ export function DemoRoleSwitcher({ onOpenLanding, onSelectRole }: DemoRoleSwitch
     {
       role: 'resident',
       title: 'Resident',
-      subtitle: `Flat ${personas?.resident.unit || 'A-1204'} (${personas?.resident.name || 'Priya Sharma'})`,
+      subtitle: `Flat ${currentUser.role === 'resident' ? currentUser.unit : (personas?.resident.unit || 'A-101')} (${currentUser.role === 'resident' ? currentUser.name : (personas?.resident.name || 'Resident')})`,
       icon: Home,
       color: 'bg-[#0D5C63] text-white',
     },

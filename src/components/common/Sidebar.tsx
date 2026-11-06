@@ -218,10 +218,10 @@ export function Sidebar({ currentTab, onSelectTab, isOpen, onClose }: SidebarPro
                 void logout();
                 onClose();
               }}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 text-[11px] font-semibold"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-rose-500/25 hover:bg-rose-500/40 border border-rose-400/30 text-rose-100 text-[11px] font-bold transition-all"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span>Lock App</span>
+              <span>Logout</span>
             </button>
           </div>
         </div>

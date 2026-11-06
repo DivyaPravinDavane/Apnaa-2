@@ -47,7 +47,11 @@ interface SocietyContextType {
   currentUser: User;
   authReady: boolean;
   isAuthenticated: boolean;
-  enterWithSocietyCode: (code: string, role?: UserRole) => Promise<{ success: boolean; message?: string }>;
+  enterWithSocietyCode: (
+    code: string,
+    role?: UserRole,
+    details?: { name?: string; phone?: string; unit?: string }
+  ) => Promise<{ success: boolean; message?: string }>;
   loginWithPassword: (login: string, password: string) => Promise<{ success: boolean; message?: string }>;
   requestOtp: (mobile: string) => Promise<{ success: boolean; message?: string; devOtp?: string }>;
   verifyOtp: (mobile: string, otp: string) => Promise<{ success: boolean; message?: string }>;
@@ -257,8 +261,8 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
       },
       personas: {
         resident: {
-          name: users.resident?.name || 'Priya Sharma',
-          unit: users.resident?.unit || 'A-1204',
+          name: users.resident?.name || 'Resident Member',
+          unit: users.resident?.unit || 'A-101',
           membershipType: users.resident?.membershipType || 'Owner',
         },
         admin: {
@@ -739,7 +743,11 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
     return { success: true };
   };
 
-  const enterWithSocietyCode = async (code: string, role: UserRole = currentRole) => {
+  const enterWithSocietyCode = async (
+    code: string,
+    role: UserRole = currentRole,
+    details?: { name?: string; phone?: string; unit?: string }
+  ) => {
     if (code.trim() !== '1234') {
       addToast('Access Denied', 'Incorrect Society Passcode. Please try again.', 'error');
       return { success: false, message: 'Incorrect Society Passcode. Please try again.' };
@@ -749,35 +757,53 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
       window.sessionStorage.setItem('apnaa_society_code_v1', '1234');
     }
 
-    if (!API_MODE) {
-      setRoleState(role);
-      setIsAuthenticated(true);
-      logAudit('Society Code Access', `Entered Apnaa Society with code 1234 as ${role}`, users[role]?.name || 'Resident');
-      addToast('Access Granted', `Welcome to ${society.name}!`, 'success');
-      return { success: true };
-    }
-
-    try {
-      const result = await SocietyApi.auth.societyCodeLogin(code, role);
-      if (result.data) {
-        await applySessionUser(result.data);
-        addToast('Access Granted', `Welcome to ${society.name}!`, 'success');
-        return { success: true };
+    if (API_MODE) {
+      try {
+        const result = await SocietyApi.auth.societyCodeLogin({
+          code,
+          role,
+          name: details?.name,
+          phone: details?.phone,
+          unit: details?.unit,
+        });
+        if (result.data) {
+          await applySessionUser(result.data);
+          addToast('Access Granted', `Welcome ${result.data.name}!`, 'success');
+          return { success: true };
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Authentication failed';
+        addToast('Access Denied', msg, 'error');
+        return { success: false, message: msg };
       }
-    } catch {
-      // fallback
     }
 
-    const demoRes = await SocietyApi.auth.demoLogin(role);
-    if (demoRes.data) {
-      await applySessionUser(demoRes.data);
-      addToast('Access Granted', `Welcome to ${society.name}!`, 'success');
-      return { success: true };
-    }
-
-    setIsAuthenticated(true);
+    // Local / offline fallback
+    const fallbackUser: User = {
+      id: 'usr_res_' + Date.now(),
+      name: details?.name || users[role]?.name || 'Resident',
+      email: `${details?.name?.toLowerCase().replace(/\s+/g, '.') || 'resident'}@apnaaentry.local`,
+      phone: details?.phone || '+91 98765 00000',
+      role,
+      unit: details?.unit || 'A-101',
+      wing: 'A Wing',
+      floor: '1st Floor',
+      societyName: society.name,
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(details?.name || 'Resident')}&background=0D5C63&color=fff&size=200`,
+      membershipType: 'Owner',
+      pinCode: '107864',
+      gender: 'Not Specified',
+      dateOfBirth: 'Not Available',
+      bloodGroup: 'O+',
+      govtIdNumber: 'NOT_SET',
+      interests: [],
+      isPhonePublic: true,
+      isEmailPublic: false,
+    };
+    setUsers((prev) => ({ ...prev, [role]: fallbackUser }));
     setRoleState(role);
-    addToast('Access Granted', `Welcome to ${society.name}!`, 'success');
+    setIsAuthenticated(true);
+    addToast('Access Granted', `Welcome ${fallbackUser.name}!`, 'success');
     return { success: true };
   };
 

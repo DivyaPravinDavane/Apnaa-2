@@ -5,6 +5,7 @@ import { useSociety } from '@/context/SocietyContext';
 import { UserRole } from '@/types';
 import {
   User,
+  Phone,
   ShieldCheck,
   Calendar,
   Lock,
@@ -43,6 +44,9 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
   } = useSociety();
 
   const [activeTab, setActiveTab] = useState<'access' | 'amenities' | 'features'>('access');
+  const [residentName, setResidentName] = useState('');
+  const [residentPhone, setResidentPhone] = useState('');
+  const [residentUnit, setResidentUnit] = useState('A-101');
   const [societyCode, setSocietyCode] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole>('resident');
   const [showPin, setShowPin] = useState(false);
@@ -52,6 +56,21 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
   const handleEnterWithCode = async (roleToUse: UserRole = selectedRole, codeToUse: string = societyCode) => {
     setError('');
     const trimmed = codeToUse.trim();
+
+    if (roleToUse === 'resident') {
+      if (!residentName.trim()) {
+        setError('Please enter your full name.');
+        return;
+      }
+      if (!residentPhone.trim() || residentPhone.replace(/\D/g, '').length < 5) {
+        setError('Please enter a valid mobile number.');
+        return;
+      }
+      if (!residentUnit.trim()) {
+        setError('Please enter your flat or unit number.');
+        return;
+      }
+    }
 
     if (!trimmed) {
       setError('Please enter the 4-digit society passcode.');
@@ -64,7 +83,11 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
     }
 
     setBusy(true);
-    const result = await enterWithSocietyCode(trimmed, roleToUse);
+    const result = await enterWithSocietyCode(trimmed, roleToUse, {
+      name: residentName.trim(),
+      phone: residentPhone.trim(),
+      unit: residentUnit.trim(),
+    });
     setBusy(false);
 
     if (!result.success) {
@@ -81,7 +104,9 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
     setError('');
     if (cleaned.length === 4) {
       if (cleaned === REQUIRED_SOCIETY_CODE) {
-        void handleEnterWithCode(selectedRole, cleaned);
+        if (selectedRole !== 'resident' || (residentName.trim() && residentPhone.trim())) {
+          void handleEnterWithCode(selectedRole, cleaned);
+        }
       } else {
         setError('Incorrect Society Passcode. Please try again.');
       }
@@ -90,9 +115,7 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
 
   const handleQuickRoleSelect = (role: UserRole) => {
     setSelectedRole(role);
-    if (societyCode === REQUIRED_SOCIETY_CODE) {
-      void handleEnterWithCode(role, societyCode);
-    }
+    setError('');
   };
 
   return (
@@ -166,8 +189,8 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
           </div>
         </div>
 
-        {/* 3. PROMINENT SOCIETY CODE ENTRY CARD */}
-        <div className="p-4 rounded-3xl bg-white border border-[#0D5C63]/30 shadow-sm space-y-3">
+        {/* 3. RESIDENT ENTRY & PROFILE REGISTRATION CARD */}
+        <div className="p-4 rounded-3xl bg-white border border-[#0D5C63]/30 shadow-sm space-y-3.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-xl bg-[#E6F3F3] text-[#0D5C63] flex items-center justify-center">
@@ -175,9 +198,9 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
               </div>
               <div>
                 <h3 className="text-xs font-bold text-[#0E2628] uppercase tracking-wider">
-                  Society Passcode
+                  Resident Access Portal
                 </h3>
-                <p className="text-[11px] text-[#4E6E70]">Enter 4-digit code to enter app</p>
+                <p className="text-[11px] text-[#4E6E70]">Enter details &amp; passcode to enter</p>
               </div>
             </div>
 
@@ -187,43 +210,120 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
             </div>
           </div>
 
-          {/* 4-Digit PIN Boxes */}
-          <div className="relative">
-            <div className="flex justify-center gap-3 my-1">
-              {[0, 1, 2, 3].map((idx) => {
-                const char = societyCode[idx] || '';
-                const isCorrect = societyCode === REQUIRED_SOCIETY_CODE;
-                return (
-                  <div
-                    key={idx}
-                    className={`w-12 h-14 rounded-2xl flex items-center justify-center text-xl font-bold font-mono border-2 transition-all shadow-2xs ${
-                      isCorrect
-                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                        : char
-                        ? 'border-[#0D5C63] bg-[#E6F3F3] text-[#0D5C63]'
-                        : error
-                        ? 'border-rose-400 bg-rose-50 text-rose-600 animate-pulse'
-                        : 'border-slate-200 bg-slate-50 text-slate-400'
-                    }`}
-                  >
-                    {char ? (showPin ? char : '●') : '—'}
+          {/* Resident Details: Name, Phone, Flat */}
+          {selectedRole === 'resident' && (
+            <div className="space-y-2.5 pt-1">
+              {/* Full Name */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                  Full Name
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <User className="w-3.5 h-3.5" />
                   </div>
-                );
-              })}
-            </div>
+                  <input
+                    type="text"
+                    value={residentName}
+                    onChange={(e) => {
+                      setResidentName(e.target.value);
+                      setError('');
+                    }}
+                    placeholder="e.g. Ramesh Patel"
+                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-[#0D5C63] focus:ring-1 focus:ring-[#0D5C63] bg-slate-50/50"
+                  />
+                </div>
+              </div>
 
-            {/* Invisible Real Numeric Input for Seamless Typing */}
-            <input
-              type="password"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              maxLength={4}
-              value={societyCode}
-              onChange={(e) => handleCodeChange(e.target.value)}
-              placeholder=""
-              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-              autoFocus
-            />
+              {/* Mobile Number & Flat Number Grid */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Mobile Number
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                      <Phone className="w-3.5 h-3.5" />
+                    </div>
+                    <input
+                      type="tel"
+                      value={residentPhone}
+                      onChange={(e) => {
+                        setResidentPhone(e.target.value);
+                        setError('');
+                      }}
+                      placeholder="98765 43210"
+                      className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-[#0D5C63] focus:ring-1 focus:ring-[#0D5C63] bg-slate-50/50"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Flat / Unit No.
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                      <Home className="w-3.5 h-3.5" />
+                    </div>
+                    <input
+                      type="text"
+                      value={residentUnit}
+                      onChange={(e) => {
+                        setResidentUnit(e.target.value);
+                        setError('');
+                      }}
+                      placeholder="e.g. A-101"
+                      className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-[#0D5C63] focus:ring-1 focus:ring-[#0D5C63] bg-slate-50/50"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 4-Digit Passcode Label */}
+          <div className="pt-1">
+            <label className="block text-[11px] font-bold text-slate-700 mb-1">
+              4-Digit Society Passcode
+            </label>
+            {/* 4-Digit PIN Boxes */}
+            <div className="relative">
+              <div className="flex justify-center gap-3 my-1">
+                {[0, 1, 2, 3].map((idx) => {
+                  const char = societyCode[idx] || '';
+                  const isCorrect = societyCode === REQUIRED_SOCIETY_CODE;
+                  return (
+                    <div
+                      key={idx}
+                      className={`w-12 h-14 rounded-2xl flex items-center justify-center text-xl font-bold font-mono border-2 transition-all shadow-2xs ${
+                        isCorrect
+                          ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                          : char
+                          ? 'border-[#0D5C63] bg-[#E6F3F3] text-[#0D5C63]'
+                          : error
+                          ? 'border-rose-400 bg-rose-50 text-rose-600 animate-pulse'
+                          : 'border-slate-200 bg-slate-50 text-slate-400'
+                      }`}
+                    >
+                      {char ? (showPin ? char : '●') : '—'}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Invisible Real Numeric Input for Seamless Typing */}
+              <input
+                type="password"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={4}
+                value={societyCode}
+                onChange={(e) => handleCodeChange(e.target.value)}
+                placeholder=""
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+              />
+            </div>
           </div>
 
           <div className="flex items-center justify-between px-1 text-[11px] text-[#4E6E70]">
@@ -252,7 +352,7 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
           {societyCode === REQUIRED_SOCIETY_CODE && (
             <div className="p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-              <span>Passcode Verified! Access Granted.</span>
+              <span>Passcode Verified! Ready to enter.</span>
             </div>
           )}
 
@@ -264,11 +364,11 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
             className="w-full py-3 rounded-2xl bg-[#0D5C63] hover:bg-[#073B3E] active:scale-[0.99] text-white text-xs font-bold shadow-sm flex items-center justify-center gap-2 transition-all"
           >
             {busy ? (
-              <span>Verifying Passcode…</span>
+              <span>Saving Profile &amp; Entering…</span>
             ) : (
               <>
                 <KeyRound className="w-4 h-4" />
-                <span>Enter Society</span>
+                <span>Enter Apnaa Society</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -355,45 +455,40 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
           </button>
         </div>
 
-        {/* TAB 1: PERSONAS */}
+        {/* TAB 1: COMMITTEE & STAFF ROLES */}
         {activeTab === 'access' && (
           <div className="space-y-2.5">
             <div className="flex items-center justify-between px-1">
-              <p className="text-xs font-bold text-[#0E2628]">Select Role to Access</p>
+              <p className="text-xs font-bold text-[#0E2628]">Committee &amp; Staff Access</p>
               <span className="text-[10px] font-semibold text-[#0D5C63]">Passcode required</span>
             </div>
 
-            {/* Resident Persona Card */}
-            <div
-              onClick={() => handleQuickRoleSelect('resident')}
-              className="p-3.5 rounded-2xl bg-white border border-[#D5EAEB] hover:border-[#0D5C63] shadow-2xs active:scale-[0.99] transition-all cursor-pointer flex items-center gap-3.5"
-            >
-              <div className="w-11 h-11 rounded-2xl bg-[#0D5C63] text-white flex items-center justify-center flex-shrink-0 shadow-sm">
-                <Home className="w-5 h-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold text-[#0E2628] truncate">
-                    {publicOverview?.personas.resident.name || 'Priya Sharma'}
-                  </h3>
-                  <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full bg-[#E6F3F3] text-[#0D5C63]">
-                    Resident
-                  </span>
+            {selectedRole !== 'resident' && (
+              <div
+                onClick={() => handleQuickRoleSelect('resident')}
+                className="p-3 rounded-2xl bg-emerald-50 border border-emerald-300 shadow-2xs active:scale-[0.99] transition-all cursor-pointer flex items-center justify-between"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-[#0D5C63] text-white flex items-center justify-center">
+                    <User className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-[#0D5C63]">Switch back to Resident Entry</p>
+                    <p className="text-[10px] text-emerald-800">Enter your name and mobile to sign in</p>
+                  </div>
                 </div>
-                <p className="text-[11px] font-semibold text-[#0D5C63]">
-                  Flat {publicOverview?.personas.resident.unit || 'A-1204'} • {publicOverview?.stats.confirmedBookings ?? 2} Bookings • {publicOverview?.stats.expectedVisitors ?? 2} Guests
-                </p>
-                <p className="text-[11px] text-[#4E6E70] truncate mt-0.5">
-                  Book amenities, invite guests & view notices
-                </p>
+                <ArrowRight className="w-4 h-4 text-[#0D5C63]" />
               </div>
-              <ArrowRight className="w-4 h-4 text-[#0D5C63] flex-shrink-0" />
-            </div>
+            )}
 
             {/* Admin Persona Card */}
             <div
               onClick={() => handleQuickRoleSelect('admin')}
-              className="p-3.5 rounded-2xl bg-white border border-[#D5EAEB] hover:border-[#0D5C63] shadow-2xs active:scale-[0.99] transition-all cursor-pointer flex items-center gap-3.5"
+              className={`p-3.5 rounded-2xl bg-white border transition-all cursor-pointer flex items-center gap-3.5 ${
+                selectedRole === 'admin'
+                  ? 'border-[#0D5C63] ring-2 ring-[#0D5C63]/20 shadow-md'
+                  : 'border-[#D5EAEB] hover:border-[#0D5C63] shadow-2xs'
+              }`}
             >
               <div className="w-11 h-11 rounded-2xl bg-[#073B3E] text-white flex items-center justify-center flex-shrink-0 shadow-sm">
                 <Building2 className="w-5 h-5" />
@@ -408,10 +503,10 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
                   </span>
                 </div>
                 <p className="text-[11px] font-semibold text-[#073B3E]">
-                  Flat {publicOverview?.personas.admin.unit || 'C-402'} • {publicOverview?.stats.activeResidents ?? society.activeResidents} Active Units
+                  Flat {publicOverview?.personas.admin.unit || 'C-402'} • Society Secretary
                 </p>
                 <p className="text-[11px] text-[#4E6E70] truncate mt-0.5">
-                  Manage residents, notices, moderation & audits
+                  Manage residents, notices, moderation &amp; audits
                 </p>
               </div>
               <ArrowRight className="w-4 h-4 text-[#073B3E] flex-shrink-0" />

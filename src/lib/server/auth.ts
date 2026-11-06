@@ -241,3 +241,85 @@ export async function findUserByLogin(login: string): Promise<(AuthUser & { pass
   if (!rows[0]) return null;
   return { ...rowToAuthUser(rows[0]), passwordHash: rows[0].password_hash };
 }
+
+export async function upsertResidentUser(
+  name: string,
+  phone: string,
+  unit?: string
+): Promise<AuthUser> {
+  const cleanPhone = phone.trim();
+  const phoneDigits = cleanPhone.replace(/[^\d]/g, '');
+  const cleanName = name.trim();
+  const cleanUnit = (unit || 'A-101').trim();
+
+  // 1. Check if user already exists by phone
+  const existingRows = await query<UserRow>(
+    `${USER_SELECT}
+     WHERE (u.phone = ? OR REPLACE(REPLACE(u.phone, ' ', ''), '+', '') = ?) AND u.is_active = 1
+     LIMIT 1`,
+    [cleanPhone, phoneDigits]
+  );
+
+  if (existingRows.length > 0 && existingRows[0]) {
+    const existing = existingRows[0];
+    await execute(
+      `UPDATE users
+       SET name = ?, unit = ?, updated_at = NOW()
+       WHERE id = ?`,
+      [cleanName, cleanUnit, existing.id]
+    );
+
+    const refreshed = await query<UserRow>(
+      `${USER_SELECT} WHERE u.id = ? LIMIT 1`,
+      [existing.id]
+    );
+    return refreshed[0] ? rowToAuthUser(refreshed[0]) : rowToAuthUser(existing);
+  }
+
+  // 2. Otherwise insert new resident into Hostinger MySQL
+  const newId = 'usr_res_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6);
+  const parts = cleanUnit.split('-');
+  const wingPart = parts[0] ? `${parts[0].toUpperCase()} Wing` : 'A Wing';
+  const floorNum = parts[1] ? parts[1].charAt(0) : '1';
+  const floorPart = `${floorNum}${floorNum === '1' ? 'st' : floorNum === '2' ? 'nd' : floorNum === '3' ? 'rd' : 'th'} Floor`;
+  const emailSlug = cleanName.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const uniqueSuffix = phoneDigits.slice(-4) || Math.floor(1000 + Math.random() * 9000).toString();
+  const userEmail = `${emailSlug || 'resident'}.${uniqueSuffix}@apnaaentry.local`;
+  const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanName)}&background=0D5C63&color=fff&size=200`;
+
+  await execute(
+    `INSERT INTO users (
+      id, society_id, name, email, phone, role, unit, wing, floor,
+      avatar, membership_type, pin_code, gender, date_of_birth,
+      blood_group, govt_id_number, bio, interests,
+      is_phone_public, is_email_public, is_active, created_at, updated_at
+    ) VALUES (
+      ?, 'soc_green_valley_01', ?, ?, ?, 'resident', ?, ?, ?,
+      ?, 'Owner', '107864', 'Not Specified', 'Not Specified',
+      'O+', 'NOT_SET', ?, '[]',
+      1, 0, 1, NOW(), NOW()
+    )`,
+    [
+      newId,
+      cleanName,
+      userEmail,
+      cleanPhone,
+      cleanUnit,
+      wingPart,
+      floorPart,
+      avatarUrl,
+      `Resident of ${cleanUnit}, Apnaa Society`,
+    ]
+  );
+
+  const inserted = await query<UserRow>(
+    `${USER_SELECT} WHERE u.id = ? LIMIT 1`,
+    [newId]
+  );
+
+  if (!inserted[0]) {
+    throw new ApiError(500, 'DB_ERROR', 'Could not create resident user record.');
+  }
+
+  return rowToAuthUser(inserted[0]);
+}

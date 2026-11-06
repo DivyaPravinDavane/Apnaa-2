@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSociety } from '@/context/SocietyContext';
-import { QrCode, Pencil, PhoneCall, X } from 'lucide-react';
+import { QrCode, Pencil, PhoneCall, X, LogOut } from 'lucide-react';
 import Image from 'next/image';
 import { QRCodeSVG } from 'qrcode.react';
 
 export function ProfileSettingsModule() {
-  const { currentUser, updateUserProfile } = useSociety();
+  const { currentUser, updateUserProfile, logout } = useSociety();
 
   const [name, setName] = useState(currentUser.name);
   const [email, setEmail] = useState(currentUser.email);
@@ -183,6 +183,18 @@ export function ProfileSettingsModule() {
               {currentUser.membershipType}
             </span>
           </div>
+        </div>
+
+        {/* Section 4: Logout Button */}
+        <div className="pt-2">
+          <button
+            type="button"
+            onClick={() => void logout()}
+            className="w-full py-3 rounded-2xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.99]"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Logout & Return to Home Screen</span>
+          </button>
         </div>
       </div>
 

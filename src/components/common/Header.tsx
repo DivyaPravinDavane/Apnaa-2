@@ -67,6 +67,20 @@ export function Header({ onToggleSidebar, onNavigate, onLogout }: HeaderProps) {
             <span>{currentRole}</span>
           </button>
 
+          {/* Direct Always-Visible Logout Button */}
+          <button
+            type="button"
+            onClick={() => {
+              if (onLogout) onLogout();
+              else void setRole('resident');
+            }}
+            className="px-2.5 py-1 rounded-full bg-rose-500/25 hover:bg-rose-500/40 border border-rose-300/40 text-[10px] font-bold text-white flex items-center gap-1 transition-all shadow-2xs active:scale-95"
+            title="Logout and return to home"
+          >
+            <LogOut className="w-3 h-3 text-rose-200" />
+            <span>Logout</span>
+          </button>
+
           {profileDropdownOpen && (
             <div className="absolute right-0 mt-2 w-56 bg-white text-slate-800 rounded-2xl shadow-2xl border border-slate-200 py-1.5 z-50 text-xs">
               <div className="px-3.5 py-2 border-b border-slate-100">

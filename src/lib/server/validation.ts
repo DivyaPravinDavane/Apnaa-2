@@ -36,6 +36,9 @@ export const demoLoginSchema = z.object({
 
 export const societyCodeLoginSchema = z.object({
   code: z.string().trim(),
+  name: z.string().trim().min(2, 'Name must be at least 2 characters').max(120).optional(),
+  phone: z.string().trim().min(5, 'Phone number must be at least 5 digits').max(32).optional(),
+  unit: z.string().trim().max(32).optional(),
   role: z.enum(['resident', 'admin', 'security', 'facility']).optional(),
 });
 
