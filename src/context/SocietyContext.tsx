@@ -92,7 +92,7 @@ interface SocietyContextType {
 
   // Members
   members: Member[];
-  updateUserProfile: (profileData: Partial<User>) => void;
+  updateUserProfile: (profileData: Partial<User>) => Promise<void>;
   createResident: (data: {
     name: string;
     email: string;
@@ -535,7 +535,11 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
         const savedCode = typeof window !== 'undefined' ? window.sessionStorage.getItem('apnaa_society_code_v1') : null;
         if (session.data && savedCode === '1234') {
           setRoleState(session.data.role);
-          setUsers((prev) => ({ ...prev, [session.data!.role]: session.data! }));
+          setUsers((prev) => ({
+            ...prev,
+            [session.data!.role]: session.data!,
+            resident: session.data!.role === 'resident' ? session.data! : prev.resident,
+          }));
           setIsAuthenticated(true);
           await hydrate(session.data.role);
         } else {
@@ -592,7 +596,11 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
   };
 
   const applySessionUser = async (user: User) => {
-    setUsers((prev) => ({ ...prev, [user.role]: user }));
+    setUsers((prev) => ({
+      ...prev,
+      [user.role]: user,
+      resident: user.role === 'resident' ? user : prev.resident,
+    }));
     setRoleState(user.role);
     setIsAuthenticated(true);
     await hydrate(user.role);
@@ -810,12 +818,14 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     if (typeof window !== 'undefined') {
       window.sessionStorage.removeItem('apnaa_society_code_v1');
+      window.localStorage.removeItem(STORAGE_KEY);
     }
     if (API_MODE) {
       await SocietyApi.auth.logout().catch(() => undefined);
     }
     setIsAuthenticated(false);
     setRoleState('resident');
+    setUsers(INITIAL_USERS);
     addToast('Portal Locked', 'Please enter society passcode to enter.', 'info');
   };
 
@@ -1326,7 +1336,7 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Profile - updates both currentUser AND the corresponding member record in the directory
-  const updateUserProfile = (data: Partial<User>) => {
+  const updateUserProfile = async (data: Partial<User>) => {
     const active = users[currentRole] || users.resident;
     const updatedUser: User = {
       ...active,
@@ -1336,6 +1346,7 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
     setUsers((prev) => ({
       ...prev,
       [currentRole]: updatedUser,
+      resident: currentRole === 'resident' ? updatedUser : prev.resident,
     }));
 
     setMembers((prev) =>
@@ -1360,8 +1371,22 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
     );
 
     logAudit('Profile Updated', `Updated household profile and privacy settings for Flat ${active.unit}`);
-    addToast('Profile Updated', 'Your profile information and directory privacy preferences have been saved.');
-    apiSync(SocietyApi.auth.updateProfile(data));
+    addToast('Profile Updated', 'Your profile details have been saved to the database.', 'success');
+
+    if (API_MODE) {
+      try {
+        const res = await SocietyApi.auth.updateProfile(data);
+        if (res.data) {
+          setUsers((prev) => ({
+            ...prev,
+            [currentRole]: res.data!,
+            resident: currentRole === 'resident' ? res.data! : prev.resident,
+          }));
+        }
+      } catch (err) {
+        console.error('Failed to sync profile to database:', err);
+      }
+    }
   };
 
   // Resident administration (admin only)

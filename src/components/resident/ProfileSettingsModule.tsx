@@ -22,23 +22,25 @@ export function ProfileSettingsModule() {
 
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setName(currentUser.name);
     setEmail(currentUser.email);
     setPhone(currentUser.phone);
     setBio(currentUser.bio || '');
-    setGender(currentUser.gender || 'Male');
+    setGender(currentUser.gender || 'Not Specified');
     setDob(currentUser.dateOfBirth || 'Not Available');
     setBloodGroup(currentUser.bloodGroup || 'O+');
-    setGovtId(currentUser.govtIdNumber || '********435E');
+    setGovtId(currentUser.govtIdNumber || 'NOT_SET');
     setIsPhonePublic(currentUser.isPhonePublic || false);
     setIsEmailPublic(currentUser.isEmailPublic || false);
   }, [currentUser]);
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateUserProfile({
+    setSaving(true);
+    await updateUserProfile({
       name,
       email,
       phone,
@@ -50,6 +52,7 @@ export function ProfileSettingsModule() {
       isPhonePublic,
       isEmailPublic,
     });
+    setSaving(false);
     setEditModalOpen(false);
   };
 
@@ -302,9 +305,10 @@ export function ProfileSettingsModule() {
               </button>
               <button
                 type="submit"
-                className="py-2.5 rounded-full bg-[#0D5C63] text-white text-xs font-bold"
+                disabled={saving}
+                className="py-2.5 rounded-full bg-[#0D5C63] hover:bg-[#073B3E] text-white text-xs font-bold disabled:opacity-50 transition-colors"
               >
-                Save Changes
+                {saving ? 'Saving to Database...' : 'Save Changes'}
               </button>
             </div>
           </form>

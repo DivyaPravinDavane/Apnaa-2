@@ -46,7 +46,7 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
   const [activeTab, setActiveTab] = useState<'access' | 'amenities' | 'features'>('access');
   const [residentName, setResidentName] = useState('');
   const [residentPhone, setResidentPhone] = useState('');
-  const [residentUnit, setResidentUnit] = useState('A-101');
+  const [residentUnit, setResidentUnit] = useState('');
   const [societyCode, setSocietyCode] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole>('resident');
   const [showPin, setShowPin] = useState(false);
@@ -67,7 +67,7 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
         return;
       }
       if (!residentUnit.trim()) {
-        setError('Please enter your flat or unit number.');
+        setError('Please enter your flat or unit number (e.g. A-101, B-404).');
         return;
       }
     }
