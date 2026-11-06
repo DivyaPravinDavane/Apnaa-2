@@ -15,7 +15,7 @@ export const POST = route(async (request) => {
   await enforceRateLimit(`auth:society-code:ip:${ip}`, 30, 600);
 
   if (code.trim() !== REQUIRED_SOCIETY_CODE) {
-    throw new ApiError(401, 'INVALID_SOCIETY_CODE', 'Invalid society code. Please enter 1234 to enter.');
+    throw new ApiError(401, 'INVALID_SOCIETY_CODE', 'Incorrect Society Passcode. Access denied.');
   }
 
   const selectedRole: UserRole = role || 'resident';
@@ -34,3 +34,4 @@ export const POST = route(async (request) => {
 
   return apiSuccess(user);
 });
+

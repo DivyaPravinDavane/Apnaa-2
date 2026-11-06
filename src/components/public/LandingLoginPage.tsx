@@ -24,6 +24,8 @@ import {
   Users,
   CheckCircle2,
   AlertCircle,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -44,6 +46,7 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
   const [activeTab, setActiveTab] = useState<'access' | 'amenities' | 'features'>('access');
   const [societyCode, setSocietyCode] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole>('resident');
+  const [showPin, setShowPin] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -51,8 +54,13 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
     setError('');
     const trimmed = codeToUse.trim();
 
+    if (!trimmed) {
+      setError('Please enter the 4-digit society passcode.');
+      return;
+    }
+
     if (trimmed !== REQUIRED_SOCIETY_CODE) {
-      setError('Invalid Society Code. Please enter 1234 to enter.');
+      setError('Incorrect Society Passcode. Please try again.');
       return;
     }
 
@@ -72,8 +80,12 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
     const cleaned = val.replace(/\D/g, '').slice(0, 4);
     setSocietyCode(cleaned);
     setError('');
-    if (cleaned === REQUIRED_SOCIETY_CODE) {
-      void handleEnterWithCode(selectedRole, cleaned);
+    if (cleaned.length === 4) {
+      if (cleaned === REQUIRED_SOCIETY_CODE) {
+        void handleEnterWithCode(selectedRole, cleaned);
+      } else {
+        setError('Incorrect Society Passcode. Please try again.');
+      }
     }
   };
 
@@ -81,9 +93,6 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
     setSelectedRole(role);
     if (societyCode === REQUIRED_SOCIETY_CODE) {
       void handleEnterWithCode(role, societyCode);
-    } else {
-      setSocietyCode(REQUIRED_SOCIETY_CODE);
-      void handleEnterWithCode(role, REQUIRED_SOCIETY_CODE);
     }
   };
 
@@ -109,10 +118,10 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
           </div>
         </div>
 
-        {/* Society Code Status Badge */}
+        {/* Confidential Passcode Status Badge */}
         <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E6F3F3] border border-[#0D5C63]/30 text-[11px] font-bold text-[#0D5C63]">
-          <KeyRound className="w-3.5 h-3.5" />
-          <span>Code: 1234</span>
+          <Lock className="w-3.5 h-3.5" />
+          <span>Passcode Protected</span>
         </div>
       </header>
 
@@ -183,17 +192,10 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => {
-                setSocietyCode(REQUIRED_SOCIETY_CODE);
-                setError('');
-                void handleEnterWithCode(selectedRole, REQUIRED_SOCIETY_CODE);
-              }}
-              className="px-2.5 py-1 rounded-full bg-[#E6F3F3] hover:bg-[#C4E4E6] text-[#0D5C63] text-[11px] font-bold border border-[#0D5C63]/30 transition-colors"
-            >
-              Auto-fill 1234
-            </button>
+            <div className="flex items-center gap-1 text-[11px] font-semibold text-[#0D5C63] px-2.5 py-1 rounded-full bg-[#E6F3F3] border border-[#0D5C63]/20">
+              <Lock className="w-3 h-3" />
+              <span>Confidential</span>
+            </div>
           </div>
 
           {/* 4-Digit PIN Boxes */}
@@ -215,7 +217,7 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
                         : 'border-slate-200 bg-slate-50 text-slate-400'
                     }`}
                   >
-                    {char || '•'}
+                    {char ? (showPin ? char : '●') : '—'}
                   </div>
                 );
               })}
@@ -223,16 +225,30 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
 
             {/* Invisible Real Numeric Input for Seamless Typing */}
             <input
-              type="tel"
+              type="password"
               inputMode="numeric"
               pattern="[0-9]*"
               maxLength={4}
               value={societyCode}
               onChange={(e) => handleCodeChange(e.target.value)}
-              placeholder="1234"
+              placeholder=""
               className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
               autoFocus
             />
+          </div>
+
+          <div className="flex items-center justify-between px-1 text-[11px] text-[#4E6E70]">
+            <span>Confidential society passcode</span>
+            {societyCode.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowPin((prev) => !prev)}
+                className="flex items-center gap-1 text-[#0D5C63] font-semibold hover:underline"
+              >
+                {showPin ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                <span>{showPin ? 'Hide' : 'Show'}</span>
+              </button>
+            )}
           </div>
 
           {/* Error Alert */}
@@ -247,7 +263,7 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
           {societyCode === REQUIRED_SOCIETY_CODE && (
             <div className="p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-              <span>Society Code 1234 Verified! Ready to enter.</span>
+              <span>Passcode Verified! Access Granted.</span>
             </div>
           )}
 
@@ -259,11 +275,11 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
             className="w-full py-3 rounded-2xl bg-[#0D5C63] hover:bg-[#073B3E] active:scale-[0.99] text-white text-xs font-bold shadow-sm flex items-center justify-center gap-2 transition-all"
           >
             {busy ? (
-              <span>Verifying Code…</span>
+              <span>Verifying Passcode…</span>
             ) : (
               <>
                 <KeyRound className="w-4 h-4" />
-                <span>Enter Society with Code 1234</span>
+                <span>Enter Society</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -350,11 +366,11 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
           </button>
         </div>
 
-        {/* TAB 1: PERSONAS (Requires code 1234 to enter) */}
+        {/* TAB 1: PERSONAS */}
         {activeTab === 'access' && (
           <div className="space-y-2.5">
             <div className="flex items-center justify-between px-1">
-              <p className="text-xs font-bold text-[#0E2628]">Tap persona to enter with Code 1234</p>
+              <p className="text-xs font-bold text-[#0E2628]">Select Role to Access</p>
               <span className="text-[10px] font-semibold text-[#0D5C63]">Passcode required</span>
             </div>
 
@@ -568,22 +584,17 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
         )}
       </div>
 
-      {/* 5. STICKY MOBILE BOTTOM BAR (Clean single button to enter with code 1234) */}
+      {/* 5. STICKY MOBILE BOTTOM BAR */}
       <div className="sticky bottom-0 z-30 bg-white/95 backdrop-blur-md border-t border-[#D5EAEB] px-4 pt-2.5 pb-3 shadow-[0_-8px_24px_rgba(13,92,99,0.08)] mt-auto">
         <button
           onClick={() => {
-            if (societyCode !== REQUIRED_SOCIETY_CODE) {
-              setSocietyCode(REQUIRED_SOCIETY_CODE);
-              void handleEnterWithCode(selectedRole, REQUIRED_SOCIETY_CODE);
-            } else {
-              void handleEnterWithCode(selectedRole, societyCode);
-            }
+            void handleEnterWithCode(selectedRole, societyCode);
           }}
           disabled={busy}
           className="w-full py-3.5 rounded-2xl bg-[#0D5C63] hover:bg-[#073B3E] text-white font-bold text-xs shadow-md flex items-center justify-center gap-2 active:scale-95 transition-all"
         >
           <KeyRound className="w-4 h-4" />
-          <span>Enter Society (Code: 1234)</span>
+          <span>Enter Society</span>
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>

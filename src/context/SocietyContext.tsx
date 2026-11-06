@@ -741,8 +741,8 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
 
   const enterWithSocietyCode = async (code: string, role: UserRole = currentRole) => {
     if (code.trim() !== '1234') {
-      addToast('Invalid Code', 'Invalid Society Code. Please enter 1234 to enter.', 'error');
-      return { success: false, message: 'Invalid Society Code. Please enter 1234.' };
+      addToast('Access Denied', 'Incorrect Society Passcode. Please try again.', 'error');
+      return { success: false, message: 'Incorrect Society Passcode. Please try again.' };
     }
 
     if (typeof window !== 'undefined') {
@@ -790,7 +790,7 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
     }
     setIsAuthenticated(false);
     setRoleState('resident');
-    addToast('Portal Locked', 'Please enter society code 1234 to enter.', 'info');
+    addToast('Portal Locked', 'Please enter society passcode to enter.', 'info');
   };
 
   const setRole = (role: UserRole) => {
