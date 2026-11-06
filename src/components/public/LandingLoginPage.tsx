@@ -9,7 +9,6 @@ import {
   Calendar,
   Lock,
   ArrowRight,
-  Sparkles,
   Building2,
   Shield,
   UserCheck,
@@ -97,8 +96,8 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
   };
 
   return (
-    <div className="min-h-full bg-[#F4F9F9] text-[#0E2628] flex flex-col justify-between pb-24">
-      {/* 1. MOBILE APP TOP HEADER (Clean without old "Sign In" button) */}
+    <div className="min-h-full bg-[#F4F9F9] text-[#0E2628] flex flex-col justify-between pb-6">
+      {/* 1. MOBILE APP TOP HEADER */}
       <header className="sticky top-0 z-30 bg-[#F4F9F9]/95 backdrop-blur-md border-b border-[#D5EAEB] px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <svg viewBox="0 0 36 36" fill="none" className="w-8 h-8 flex-shrink-0" xmlns="http://www.w3.org/2000/svg">
@@ -116,12 +115,6 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
               {society.name}
             </span>
           </div>
-        </div>
-
-        {/* Confidential Passcode Status Badge */}
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E6F3F3] border border-[#0D5C63]/30 text-[11px] font-bold text-[#0D5C63]">
-          <Lock className="w-3.5 h-3.5" />
-          <span>Passcode Protected</span>
         </div>
       </header>
 
@@ -145,13 +138,9 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
               <span>{society.name}</span>
             </div>
 
-            <div className="absolute bottom-3 left-3.5 right-3.5">
-              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/30 backdrop-blur-xs text-[10px] font-semibold text-emerald-100 mb-1">
-                <Sparkles className="w-3 h-3" />
-                <span>Protected Residential Portal</span>
-              </div>
-              <h1 className="font-serif text-lg font-bold leading-snug text-white">
-                Enter Society Code to Access
+            <div className="absolute bottom-3.5 left-4 right-4">
+              <h1 className="font-serif text-xl font-bold leading-snug text-white drop-shadow-sm">
+                Apnaa Society
               </h1>
             </div>
           </div>
@@ -582,21 +571,6 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
             })}
           </div>
         )}
-      </div>
-
-      {/* 5. STICKY MOBILE BOTTOM BAR */}
-      <div className="sticky bottom-0 z-30 bg-white/95 backdrop-blur-md border-t border-[#D5EAEB] px-4 pt-2.5 pb-3 shadow-[0_-8px_24px_rgba(13,92,99,0.08)] mt-auto">
-        <button
-          onClick={() => {
-            void handleEnterWithCode(selectedRole, societyCode);
-          }}
-          disabled={busy}
-          className="w-full py-3.5 rounded-2xl bg-[#0D5C63] hover:bg-[#073B3E] text-white font-bold text-xs shadow-md flex items-center justify-center gap-2 active:scale-95 transition-all"
-        >
-          <KeyRound className="w-4 h-4" />
-          <span>Enter Society</span>
-          <ArrowRight className="w-4 h-4" />
-        </button>
       </div>
     </div>
   );
