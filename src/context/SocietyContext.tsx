@@ -831,12 +831,20 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
 
   const setRole = (role: UserRole) => {
     setRoleState(role);
-    addToast('Demonstration Role Changed', `Now viewing as ${role.toUpperCase()}: ${users[role]?.name || role}`, 'info');
+    addToast('Role Changed', `Now viewing as ${role.toUpperCase()}: ${users[role]?.name || role}`, 'info');
 
     if (!API_MODE) {
       setIsAuthenticated(true);
       return;
     }
+
+    // Preserve custom dynamic resident profile if entered
+    if (role === 'resident' && users.resident && users.resident.id !== 'usr_res_01' && users.resident.name !== 'Resident Member') {
+      setIsAuthenticated(true);
+      void hydrate(role);
+      return;
+    }
+
     void (async () => {
       const result = await SocietyApi.auth.demoLogin(role);
       if (result.error) {

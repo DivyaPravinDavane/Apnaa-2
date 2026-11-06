@@ -138,7 +138,7 @@ export function Header({ onToggleSidebar, onNavigate, onLogout }: HeaderProps) {
                 className="w-full text-left flex items-center gap-2 px-3.5 py-2 text-rose-600 hover:bg-rose-50 font-semibold"
               >
                 <LogOut className="w-3.5 h-3.5" />
-                <span>Exit / Sign Out</span>
+                <span>Log Out</span>
               </button>
             </div>
           )}

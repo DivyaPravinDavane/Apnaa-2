@@ -163,7 +163,7 @@ function MainAppShell() {
             </div>
           ) : !isAuthenticated ? (
             <div className="flex-1 overflow-y-auto relative">
-              <LandingLoginPage onLoginSuccess={(role) => setRole(role)} />
+              <LandingLoginPage onLoginSuccess={(role) => handleSelectTab(defaultTab[role] || 'resident_home')} />
               <ToastContainer />
             </div>
           ) : (

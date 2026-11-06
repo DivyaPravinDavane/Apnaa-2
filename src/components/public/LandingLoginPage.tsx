@@ -474,7 +474,7 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-[#0D5C63]">Switch back to Resident Entry</p>
-                    <p className="text-[10px] text-emerald-800">Enter your name and mobile to sign in</p>
+                    <p className="text-[10px] text-emerald-800">Enter your name and mobile to enter</p>
                   </div>
                 </div>
                 <ArrowRight className="w-4 h-4 text-[#0D5C63]" />

@@ -184,11 +184,7 @@ export async function getSessionUser(): Promise<AuthUser | null> {
 }
 
 export async function requireUser(roles?: UserRole[]): Promise<AuthUser> {
-  let user = await getSessionUser();
-  if (!user && !isProduction()) {
-    const preferredRole = roles?.[0] || 'resident';
-    user = (await findUserByRole(preferredRole)) || (await findUserByRole('admin')) || (await findUserByRole('resident'));
-  }
+  const user = await getSessionUser();
   if (!user) {
     throw new ApiError(401, 'UNAUTHENTICATED', 'Please sign in to continue.');
   }
