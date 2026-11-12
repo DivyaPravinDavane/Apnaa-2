@@ -29,7 +29,6 @@ import {
   LogIn,
   LogOut,
   MapPin,
-  Sparkles,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -665,15 +664,6 @@ export function LandingLoginPage({
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>{society.name}</span>
             </div>
-
-            <button
-              type="button"
-              onClick={() => triggerNextPage('resident_home')}
-              className="absolute top-3 right-3 px-3 py-1.5 rounded-full bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 text-[11px] font-bold shadow-lg backdrop-blur-md flex items-center gap-1.5 border border-emerald-300/80 transition-all cursor-pointer"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-slate-950" />
-              <span>Open Full Dashboard</span>
-            </button>
 
             <div className="absolute bottom-3.5 left-4 right-4 flex items-end justify-between">
               <div>
