@@ -264,7 +264,7 @@ export function LandingLoginPage({
                         Registered Member Login
                       </h2>
                       <p className="text-[11px] text-[#4E6E70]">
-                        Login with Quick Passcode to open Society Landing
+                        Enter registered mobile &amp; 4-digit quick passcode
                       </p>
                     </div>
                   </div>
@@ -364,7 +364,7 @@ export function LandingLoginPage({
                   {activePinValue === REQUIRED_SOCIETY_CODE && (
                     <div className="p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-                      <span>Passcode Verified! Click below to proceed to Landing Page.</span>
+                      <span>Passcode Verified! Click below to continue.</span>
                     </div>
                   )}
 
@@ -378,8 +378,7 @@ export function LandingLoginPage({
                     ) : (
                       <>
                         <LogIn className="w-4 h-4" />
-                        <span>Login as Resident &amp; Go to Landing</span>
-                        <ArrowRight className="w-4 h-4" />
+                        <span>Login as Resident</span>
                       </>
                     )}
                   </button>
@@ -558,7 +557,7 @@ export function LandingLoginPage({
                   {activePinValue === REQUIRED_SOCIETY_CODE && (
                     <div className="p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-                      <span>Passcode Verified! Click below to proceed to Landing Page.</span>
+                      <span>Passcode Verified! Click below to continue.</span>
                     </div>
                   )}
 
@@ -572,8 +571,7 @@ export function LandingLoginPage({
                     ) : (
                       <>
                         <UserCheck className="w-4 h-4" />
-                        <span>Login as Visitor &amp; Go to Landing</span>
-                        <ArrowRight className="w-4 h-4" />
+                        <span>Login as Visitor</span>
                       </>
                     )}
                   </button>
