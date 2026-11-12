@@ -224,6 +224,7 @@ export function LandingLoginPage({
               height={56}
               className="h-12 w-auto object-contain"
               priority
+              unoptimized
             />
           </div>
 
