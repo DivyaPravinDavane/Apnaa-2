@@ -40,7 +40,6 @@ const REQUIRED_SOCIETY_CODE = '1234';
 export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
   const {
     enterWithSocietyCode,
-    loginWithPassword,
     society,
     amenities,
     publicOverview,
@@ -56,12 +55,10 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  // Registered Member Login state
+  // Registered Member Login state (Quick Passcode only)
   const [registeredLoginOpen, setRegisteredLoginOpen] = useState(false);
   const [registeredPhone, setRegisteredPhone] = useState('');
   const [registeredCode, setRegisteredCode] = useState('');
-  const [registeredPassword, setRegisteredPassword] = useState('');
-  const [registeredAuthMethod, setRegisteredAuthMethod] = useState<'passcode' | 'password'>('passcode');
   const [showRegisteredPin, setShowRegisteredPin] = useState(false);
   const [registeredBusy, setRegisteredBusy] = useState(false);
   const [registeredError, setRegisteredError] = useState('');
@@ -95,34 +92,6 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
 
     if (!result.success) {
       setRegisteredError(result.message || 'Could not verify registered member.');
-      return;
-    }
-
-    setRegisteredLoginOpen(false);
-    onLoginSuccess('resident');
-  };
-
-  const handleRegisteredPasswordLogin = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    setRegisteredError('');
-
-    const cleanLogin = registeredPhone.trim();
-    if (!cleanLogin) {
-      setRegisteredError('Please enter your registered email or mobile number.');
-      return;
-    }
-
-    if (!registeredPassword.trim()) {
-      setRegisteredError('Please enter your password.');
-      return;
-    }
-
-    setRegisteredBusy(true);
-    const result = await loginWithPassword(cleanLogin, registeredPassword);
-    setRegisteredBusy(false);
-
-    if (!result.success) {
-      setRegisteredError(result.message || 'Invalid credentials.');
       return;
     }
 
@@ -806,230 +775,126 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
               </button>
             </div>
 
-            {/* Auth Method Selector */}
+            {/* Quick Passcode Login Form */}
             <div className="p-4 space-y-4">
-              <div className="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-slate-100 border border-slate-200 text-xs font-bold">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRegisteredAuthMethod('passcode');
-                    setRegisteredError('');
-                  }}
-                  className={`py-2 rounded-xl transition-all cursor-pointer ${
-                    registeredAuthMethod === 'passcode'
-                      ? 'bg-[#0D5C63] text-white shadow-xs'
-                      : 'text-[#4E6E70] hover:text-[#0E2628]'
-                  }`}
-                >
-                  Quick Passcode
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRegisteredAuthMethod('password');
-                    setRegisteredError('');
-                  }}
-                  className={`py-2 rounded-xl transition-all cursor-pointer ${
-                    registeredAuthMethod === 'password'
-                      ? 'bg-[#0D5C63] text-white shadow-xs'
-                      : 'text-[#4E6E70] hover:text-[#0E2628]'
-                  }`}
-                >
-                  Password Login
-                </button>
+              <div className="px-3 py-2 rounded-xl bg-[#E6F3F3] border border-[#0D5C63]/20 flex items-center justify-between">
+                <span className="text-xs font-bold text-[#073B3E]">Quick Passcode Access</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-[#0D5C63] text-white px-2 py-0.5 rounded-full">
+                  4-Digit PIN
+                </span>
               </div>
 
-              {/* METHOD 1: QUICK PASSCODE (REGISTERED MOBILE + SOCIETY CODE) */}
-              {registeredAuthMethod === 'passcode' && (
-                <form onSubmit={handleRegisteredPasscodeLogin} className="space-y-3.5">
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                      Registered Mobile Number
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                        <Phone className="w-3.5 h-3.5" />
-                      </div>
-                      <input
-                        type="tel"
-                        value={registeredPhone}
-                        onChange={(e) => {
-                          setRegisteredPhone(e.target.value);
-                          setRegisteredError('');
-                        }}
-                        placeholder="e.g. 9812345678"
-                        className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-[#0D5C63] focus:ring-1 focus:ring-[#0D5C63] bg-slate-50/50"
-                      />
+              <form onSubmit={handleRegisteredPasscodeLogin} className="space-y-3.5">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Registered Mobile Number
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                      <Phone className="w-3.5 h-3.5" />
                     </div>
+                    <input
+                      type="tel"
+                      value={registeredPhone}
+                      onChange={(e) => {
+                        setRegisteredPhone(e.target.value);
+                        setRegisteredError('');
+                      }}
+                      placeholder="e.g. 9812345678"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-[#0D5C63] focus:ring-1 focus:ring-[#0D5C63] bg-slate-50/50"
+                    />
                   </div>
+                </div>
 
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="block text-[11px] font-bold text-slate-700">
-                        4-Digit Society Passcode
-                      </label>
-                      {registeredCode.length > 0 && (
-                        <button
-                          type="button"
-                          onClick={() => setShowRegisteredPin((prev) => !prev)}
-                          className="flex items-center gap-1 text-[11px] text-[#0D5C63] font-semibold hover:underline cursor-pointer"
-                        >
-                          {showRegisteredPin ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                          <span>{showRegisteredPin ? 'Hide' : 'Show'}</span>
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="relative">
-                      <div className="flex justify-center gap-3 my-1">
-                        {[0, 1, 2, 3].map((idx) => {
-                          const char = registeredCode[idx] || '';
-                          const isCorrect = registeredCode === REQUIRED_SOCIETY_CODE;
-                          const isFilled = Boolean(char);
-                          return (
-                            <div
-                              key={idx}
-                              className={`w-12 h-14 rounded-2xl flex items-center justify-center text-xl font-bold font-mono border-2 transition-all shadow-2xs ${
-                                isCorrect
-                                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                                  : isFilled
-                                  ? 'border-[#0D5C63] bg-[#E6F3F3] text-[#0D5C63]'
-                                  : registeredError
-                                  ? 'border-rose-400 bg-rose-50 text-rose-600'
-                                  : 'border-slate-200 bg-slate-50/70 text-transparent'
-                              }`}
-                            >
-                              {char ? (showRegisteredPin ? char : '●') : ''}
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      <input
-                        type={showRegisteredPin ? 'text' : 'password'}
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        maxLength={4}
-                        autoComplete="new-password"
-                        autoCorrect="off"
-                        autoCapitalize="off"
-                        spellCheck="false"
-                        data-lpignore="true"
-                        data-form-type="other"
-                        name="registered_passcode_manual"
-                        id="registered_passcode_manual"
-                        value={registeredCode}
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/\D/g, '').slice(0, 4);
-                          setRegisteredCode(val);
-                          setRegisteredError('');
-                        }}
-                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                      />
-                    </div>
-                  </div>
-
-                  {registeredError && (
-                    <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-1.5">
-                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                      <span>{registeredError}</span>
-                    </div>
-                  )}
-
-                  <button
-                    type="submit"
-                    disabled={registeredBusy}
-                    className="w-full py-3 rounded-2xl bg-[#0D5C63] hover:bg-[#073B3E] active:scale-[0.99] text-white text-xs font-bold shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
-                  >
-                    {registeredBusy ? (
-                      <span>Verifying Registered Profile…</span>
-                    ) : (
-                      <>
-                        <LogIn className="w-4 h-4" />
-                        <span>Sign In to My Flat</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
-                  </button>
-                </form>
-              )}
-
-              {/* METHOD 2: PASSWORD LOGIN */}
-              {registeredAuthMethod === 'password' && (
-                <form onSubmit={handleRegisteredPasswordLogin} className="space-y-3.5">
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                      Registered Email or Mobile
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] font-bold text-slate-700">
+                      4-Digit Society Passcode
                     </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                        <User className="w-3.5 h-3.5" />
-                      </div>
-                      <input
-                        type="text"
-                        value={registeredPhone}
-                        onChange={(e) => {
-                          setRegisteredPhone(e.target.value);
-                          setRegisteredError('');
-                        }}
-                        placeholder="registered@email.com or 9812345678"
-                        className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-[#0D5C63] focus:ring-1 focus:ring-[#0D5C63] bg-slate-50/50"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                      Password
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                        <Lock className="w-3.5 h-3.5" />
-                      </div>
-                      <input
-                        type={showRegisteredPin ? 'text' : 'password'}
-                        value={registeredPassword}
-                        onChange={(e) => {
-                          setRegisteredPassword(e.target.value);
-                          setRegisteredError('');
-                        }}
-                        placeholder="••••••••"
-                        className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-[#0D5C63] focus:ring-1 focus:ring-[#0D5C63] bg-slate-50/50"
-                      />
+                    {registeredCode.length > 0 && (
                       <button
                         type="button"
                         onClick={() => setShowRegisteredPin((prev) => !prev)}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
+                        className="flex items-center gap-1 text-[11px] text-[#0D5C63] font-semibold hover:underline cursor-pointer"
                       >
-                        {showRegisteredPin ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                        {showRegisteredPin ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                        <span>{showRegisteredPin ? 'Hide' : 'Show'}</span>
                       </button>
-                    </div>
+                    )}
                   </div>
 
-                  {registeredError && (
-                    <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-1.5">
-                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                      <span>{registeredError}</span>
+                  <div className="relative">
+                    <div className="flex justify-center gap-3 my-1">
+                      {[0, 1, 2, 3].map((idx) => {
+                        const char = registeredCode[idx] || '';
+                        const isCorrect = registeredCode === REQUIRED_SOCIETY_CODE;
+                        const isFilled = Boolean(char);
+                        return (
+                          <div
+                            key={idx}
+                            className={`w-12 h-14 rounded-2xl flex items-center justify-center text-xl font-bold font-mono border-2 transition-all shadow-2xs ${
+                              isCorrect
+                                ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                : isFilled
+                                ? 'border-[#0D5C63] bg-[#E6F3F3] text-[#0D5C63]'
+                                : registeredError
+                                ? 'border-rose-400 bg-rose-50 text-rose-600'
+                                : 'border-slate-200 bg-slate-50/70 text-transparent'
+                            }`}
+                          >
+                            {char ? (showRegisteredPin ? char : '●') : ''}
+                          </div>
+                        );
+                      })}
                     </div>
-                  )}
 
-                  <button
-                    type="submit"
-                    disabled={registeredBusy}
-                    className="w-full py-3 rounded-2xl bg-[#0D5C63] hover:bg-[#073B3E] active:scale-[0.99] text-white text-xs font-bold shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
-                  >
-                    {registeredBusy ? (
-                      <span>Signing in…</span>
-                    ) : (
-                      <>
-                        <LogIn className="w-4 h-4" />
-                        <span>Sign In with Password</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
-                  </button>
-                </form>
-              )}
+                    <input
+                      type={showRegisteredPin ? 'text' : 'password'}
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={4}
+                      autoComplete="new-password"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck="false"
+                      data-lpignore="true"
+                      data-form-type="other"
+                      name="registered_passcode_manual"
+                      id="registered_passcode_manual"
+                      value={registeredCode}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 4);
+                        setRegisteredCode(val);
+                        setRegisteredError('');
+                      }}
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    />
+                  </div>
+                </div>
+
+                {registeredError && (
+                  <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-1.5">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    <span>{registeredError}</span>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={registeredBusy}
+                  className="w-full py-3 rounded-2xl bg-[#0D5C63] hover:bg-[#073B3E] active:scale-[0.99] text-white text-xs font-bold shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
+                >
+                  {registeredBusy ? (
+                    <span>Verifying Registered Profile…</span>
+                  ) : (
+                    <>
+                      <LogIn className="w-4 h-4" />
+                      <span>Sign In to My Flat</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </form>
 
               {/* Bottom switch to registration form */}
               <div className="text-center pt-2 border-t border-slate-100">
