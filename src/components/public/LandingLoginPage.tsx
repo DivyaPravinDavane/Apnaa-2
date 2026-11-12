@@ -214,7 +214,19 @@ export function LandingLoginPage({
     return (
       <div className="min-h-full bg-[#F4F9F9] text-[#0E2628] flex flex-col justify-between pb-6">
         {/* Centered Login Container (No Landing Content Here) */}
-        <div className="px-4 pt-5 space-y-4 flex-1 flex flex-col justify-center">
+        <div className="px-4 pt-6 space-y-5 flex-1 flex flex-col justify-center">
+          {/* APNAA ENTRY Logo Above Login */}
+          <div className="flex justify-center pb-1">
+            <Image
+              src="/images/apnaa-entry-logo.png"
+              alt="Apnaa Entry Logo"
+              width={260}
+              height={56}
+              className="h-12 w-auto object-contain"
+              priority
+            />
+          </div>
+
           {/* Primary Actor Switcher: RESIDENT LOGIN vs VISITOR LOGIN */}
           <div className="p-1.5 rounded-2xl bg-white border border-[#D5EAEB] shadow-2xs grid grid-cols-2 gap-1.5">
             <button
