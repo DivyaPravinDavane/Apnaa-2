@@ -67,13 +67,6 @@ export function LandingLoginPage({
   // STEP 1 STATE: RESIDENT & VISITOR LOGIN ONLY (NO LANDING)
   // =========================================================================
   const [loginActor, setLoginActor] = useState<'resident' | 'visitor'>('resident');
-  const [residentAuthMode, setResidentAuthMode] = useState<'new' | 'registered'>('new');
-
-  // Resident Login Fields
-  const [residentName, setResidentName] = useState('');
-  const [residentPhone, setResidentPhone] = useState('');
-  const [residentUnit, setResidentUnit] = useState('');
-  const [societyCode, setSocietyCode] = useState('');
 
   // Registered Resident Quick Passcode Fields
   const [registeredPhone, setRegisteredPhone] = useState('');
@@ -95,51 +88,7 @@ export function LandingLoginPage({
   // =========================================================================
   const [landingTab, setLandingTab] = useState<'all' | 'amenities' | 'events' | 'features' | 'roles'>('all');
 
-  // Handler 1: New Resident Login
-  const handleResidentNewLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    if (!residentName.trim()) {
-      setError('Please enter your full name.');
-      return;
-    }
-    if (!residentPhone.trim() || residentPhone.replace(/\D/g, '').length < 5) {
-      setError('Please enter a valid mobile number.');
-      return;
-    }
-    if (!residentUnit.trim()) {
-      setError('Please enter your flat or unit number (e.g. A-101, B-404).');
-      return;
-    }
-
-    const trimmed = societyCode.trim();
-    if (!trimmed) {
-      setError('Please manually type the 4-digit society passcode.');
-      return;
-    }
-    if (trimmed !== REQUIRED_SOCIETY_CODE) {
-      setError('Incorrect Society Passcode. Please manually enter 1234.');
-      return;
-    }
-
-    setBusy(true);
-    const result = await enterWithSocietyCode(trimmed, 'resident', {
-      name: residentName.trim(),
-      phone: residentPhone.trim(),
-      unit: residentUnit.trim().toUpperCase(),
-    });
-    setBusy(false);
-
-    if (!result.success) {
-      setError(result.message || 'Invalid Society Passcode.');
-      return;
-    }
-
-    onLoginSuccess('resident');
-  };
-
-  // Handler 2: Registered Resident Quick Passcode Login
+  // Handler 1: Registered Resident Quick Passcode Login
   const handleRegisteredPasscodeLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -250,22 +199,15 @@ export function LandingLoginPage({
   // RENDER MODE 1: FIRST PAGE — RESIDENT & VISITOR LOGIN ONLY (NO LANDING)
   // =========================================================================
   if (mode === 'login') {
-    const activePinValue =
-      loginActor === 'visitor'
-        ? visitorCode
-        : residentAuthMode === 'registered'
-        ? registeredCode
-        : societyCode;
+    const activePinValue = loginActor === 'visitor' ? visitorCode : registeredCode;
 
     const handleActivePinChange = (raw: string) => {
       const val = raw.replace(/\D/g, '').slice(0, 4);
       setError('');
       if (loginActor === 'visitor') {
         setVisitorCode(val);
-      } else if (residentAuthMode === 'registered') {
-        setRegisteredCode(val);
       } else {
-        setSocietyCode(val);
+        setRegisteredCode(val);
       }
     };
 
@@ -319,7 +261,7 @@ export function LandingLoginPage({
                     </div>
                     <div>
                       <h2 className="text-sm font-bold text-[#0E2628]">
-                        Resident Access Login
+                        Registered Member Login
                       </h2>
                       <p className="text-[11px] text-[#4E6E70]">
                         Login with Quick Passcode to open Society Landing
@@ -328,135 +270,27 @@ export function LandingLoginPage({
                   </div>
                 </div>
 
-                {/* Sub-toggle: New Resident Details vs Registered Mobile Only */}
-                <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-slate-100 border border-slate-200 text-[11px] font-bold">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setResidentAuthMode('new');
-                      setError('');
-                    }}
-                    className={`py-2 rounded-lg transition-all cursor-pointer ${
-                      residentAuthMode === 'new'
-                        ? 'bg-white text-[#0D5C63] shadow-2xs'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    Resident Details
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setResidentAuthMode('registered');
-                      setError('');
-                    }}
-                    className={`py-2 rounded-lg transition-all cursor-pointer ${
-                      residentAuthMode === 'registered'
-                        ? 'bg-white text-[#0D5C63] shadow-2xs'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    Registered Member
-                  </button>
-                </div>
-
-                <form
-                  onSubmit={
-                    residentAuthMode === 'registered'
-                      ? handleRegisteredPasscodeLogin
-                      : handleResidentNewLogin
-                  }
-                  className="space-y-3.5"
-                >
-                  {residentAuthMode === 'new' ? (
-                    <div className="space-y-2.5">
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                          Resident Full Name
-                        </label>
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                            <User className="w-3.5 h-3.5" />
-                          </div>
-                          <input
-                            type="text"
-                            value={residentName}
-                            onChange={(e) => {
-                              setResidentName(e.target.value);
-                              setError('');
-                            }}
-                            placeholder="e.g. Ramesh Patel"
-                            className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-[#0D5C63] focus:ring-1 focus:ring-[#0D5C63] bg-slate-50/50"
-                          />
-                        </div>
+                <form onSubmit={handleRegisteredPasscodeLogin} className="space-y-3.5">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      Registered Mobile Number
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <Phone className="w-3.5 h-3.5" />
                       </div>
-
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                            Mobile Number
-                          </label>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                              <Phone className="w-3.5 h-3.5" />
-                            </div>
-                            <input
-                              type="tel"
-                              value={residentPhone}
-                              onChange={(e) => {
-                                setResidentPhone(e.target.value);
-                                setError('');
-                              }}
-                              placeholder="98765 43210"
-                              className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-[#0D5C63] focus:ring-1 focus:ring-[#0D5C63] bg-slate-50/50"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                            Flat / Unit No.
-                          </label>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                              <Home className="w-3.5 h-3.5" />
-                            </div>
-                            <input
-                              type="text"
-                              value={residentUnit}
-                              onChange={(e) => {
-                                setResidentUnit(e.target.value);
-                                setError('');
-                              }}
-                              placeholder="e.g. A-101"
-                              className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-[#0D5C63] focus:ring-1 focus:ring-[#0D5C63] bg-slate-50/50"
-                            />
-                          </div>
-                        </div>
-                      </div>
+                      <input
+                        type="tel"
+                        value={registeredPhone}
+                        onChange={(e) => {
+                          setRegisteredPhone(e.target.value);
+                          setError('');
+                        }}
+                        placeholder="Enter registered mobile (e.g. 9812345678)"
+                        className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-[#0D5C63] focus:ring-1 focus:ring-[#0D5C63] bg-slate-50/50"
+                      />
                     </div>
-                  ) : (
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                        Registered Mobile Number
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                          <Phone className="w-3.5 h-3.5" />
-                        </div>
-                        <input
-                          type="tel"
-                          value={registeredPhone}
-                          onChange={(e) => {
-                            setRegisteredPhone(e.target.value);
-                            setError('');
-                          }}
-                          placeholder="Enter registered mobile (e.g. 9812345678)"
-                          className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-[#0D5C63] focus:ring-1 focus:ring-[#0D5C63] bg-slate-50/50"
-                        />
-                      </div>
-                    </div>
-                  )}
+                  </div>
 
                   {/* 4-Digit Quick Passcode Boxes */}
                   <div>
