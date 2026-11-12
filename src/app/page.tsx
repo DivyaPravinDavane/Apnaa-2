@@ -40,6 +40,7 @@ import { LandingLoginPage } from '@/components/public/LandingLoginPage';
 function MainAppShell() {
   const { currentRole, setRole, isAuthenticated, authReady, logout } = useSociety();
   const [currentTab, setCurrentTab] = useState<string>('resident_home');
+  const [showLandingPage, setShowLandingPage] = useState<boolean>(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [notificationDrawerOpen, setNotificationDrawerOpen] = useState(false);
@@ -162,11 +163,40 @@ function MainAppShell() {
               </div>
             </div>
           ) : !isAuthenticated ? (
+            /* STEP 1: FIRST PAGE — RESIDENT & VISITOR LOGIN ONLY (NO LANDING) */
             <div className="flex-1 overflow-y-auto relative">
-              <LandingLoginPage onLoginSuccess={(role) => handleSelectTab(defaultTab[role] || 'resident_home')} />
+              <LandingLoginPage
+                mode="login"
+                onLoginSuccess={(role) => {
+                  setShowLandingPage(true);
+                  handleSelectTab(defaultTab[role] || 'resident_home');
+                }}
+              />
+              <ToastContainer />
+            </div>
+          ) : showLandingPage ? (
+            /* STEP 2: SECOND PAGE — SOCIETY LANDING PAGE (CLICKING AMENITIES / EVENTS REDIRECTS TO NEXT PAGE) */
+            <div className="flex-1 overflow-y-auto relative">
+              <LandingLoginPage
+                mode="landing"
+                onLoginSuccess={(role) => {
+                  setShowLandingPage(false);
+                  handleSelectTab(defaultTab[role] || 'resident_home');
+                }}
+                onNavigateToPage={(tab, role) => {
+                  if (role) setRole(role);
+                  handleSelectTab(tab);
+                  setShowLandingPage(false);
+                }}
+                onLogout={() => {
+                  setShowLandingPage(true);
+                  void logout();
+                }}
+              />
               <ToastContainer />
             </div>
           ) : (
+            /* STEP 3: THIRD PAGE — REDIRECTED MODULE / DASHBOARD PAGE */
             <>
               {/* Slide-over Mobile App Drawer */}
               <Sidebar
@@ -176,16 +206,33 @@ function MainAppShell() {
                 onClose={() => setSidebarOpen(false)}
               />
 
-              {/* Top Purple Curved Banner Header (shown on Home & main screens) */}
+              {/* Top Banner Header (shown on Home & main screens) */}
               {!hideBannerHeader && (
                 <Header
                   onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
                   onOpenNotifications={() => setNotificationDrawerOpen(true)}
                   onOpenSearch={() => setSearchOpen(true)}
                   onNavigate={(tab) => handleSelectTab(tab)}
-                  onLogout={() => void logout()}
+                  onLogout={() => {
+                    setShowLandingPage(true);
+                    void logout();
+                  }}
                 />
               )}
+
+              {/* Quick Back-to-Landing Strip */}
+              <div className="bg-[#E6F3F3] border-b border-[#0D5C63]/15 px-3.5 py-1.5 flex items-center justify-between text-[11px]">
+                <button
+                  type="button"
+                  onClick={() => setShowLandingPage(true)}
+                  className="font-bold text-[#0D5C63] hover:text-[#073B3E] flex items-center gap-1 cursor-pointer"
+                >
+                  <span>&larr; Back to Society Landing Page</span>
+                </button>
+                <span className="text-[10px] font-semibold text-slate-500 capitalize">
+                  {activeTab.replace('_', ' • ')}
+                </span>
+              </div>
 
               {/* Scrollable Mobile Screen Content */}
               <main className="flex-1 overflow-y-auto bg-white px-3.5 pb-6 pt-1">
@@ -204,7 +251,7 @@ function MainAppShell() {
               )}
 
               {/* Scoped Overlays inside the Mobile Screen */}
-              <DemoRoleSwitcher onOpenLanding={() => void logout()} />
+              <DemoRoleSwitcher onOpenLanding={() => setShowLandingPage(true)} />
               <ToastContainer />
               <GlobalSearchModal
                 isOpen={searchOpen}
