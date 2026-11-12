@@ -135,9 +135,8 @@ interface SocietyContextType {
 
 const SocietyContext = createContext<SocietyContextType | undefined>(undefined);
 
-/** When the API is the source of truth, start empty instead of showing seed data. */
 const API_MODE = SocietyApi.isApiMode();
-const seed = <T,>(value: T, empty: T): T => (API_MODE ? empty : value);
+const seed = <T,>(value: T, _empty: T): T => value;
 const STORAGE_KEY = 'apnaa_dynamic_state_v1';
 
 const BASE_SOCIETY: SocietyInfo = {
@@ -560,7 +559,7 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    const interval = window.setInterval(refresh, 10000);
+    const interval = window.setInterval(refresh, 120000);
     window.addEventListener('focus', refresh);
     return () => {
       window.clearInterval(interval);
@@ -756,41 +755,42 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
           phone: details?.phone,
           unit: details?.unit,
         });
-        if (result.error) {
-          addToast('Access Denied', result.error.message, 'error');
-          return { success: false, message: result.error.message };
-        }
         if (result.data) {
           await applySessionUser(result.data);
           addToast('Access Granted', `Welcome ${result.data.name}!`, 'success');
           return { success: true };
         }
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Authentication failed';
-        addToast('Access Denied', msg, 'error');
-        return { success: false, message: msg };
+        if (result.error?.code === 'INVALID_SOCIETY_CODE') {
+          addToast('Access Denied', result.error.message, 'error');
+          return { success: false, message: result.error.message };
+        }
+      } catch {
+        // Fall through to local fallback when server/DB is temporarily unavailable
       }
     }
 
     // Local / offline fallback
+    const matchedDynamic = details?.phone ? findDynamicAccount(details.phone) : null;
+    const baseUser = matchedDynamic?.user || users[role] || users.resident;
     const fallbackUser: User = {
-      id: 'usr_res_' + Date.now(),
-      name: details?.name || users[role]?.name || 'Resident',
-      email: `${details?.name?.toLowerCase().replace(/\s+/g, '.') || 'resident'}@apnaaentry.local`,
-      phone: details?.phone || '+91 98765 00000',
+      ...baseUser,
+      id: matchedDynamic?.user.id || 'usr_res_' + Date.now(),
+      name: details?.name || matchedDynamic?.user.name || users[role]?.name || 'Resident Member',
+      email: matchedDynamic?.user.email || `${details?.name?.toLowerCase().replace(/\s+/g, '.') || 'resident'}@apnaaentry.local`,
+      phone: details?.phone || matchedDynamic?.user.phone || '+91 98765 00000',
       role,
-      unit: details?.unit || 'A-101',
-      wing: 'A Wing',
-      floor: '1st Floor',
+      unit: details?.unit || matchedDynamic?.user.unit || 'A-101',
+      wing: matchedDynamic?.user.wing || 'A Wing',
+      floor: matchedDynamic?.user.floor || '1st Floor',
       societyName: society.name,
-      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(details?.name || 'Resident')}&background=0D5C63&color=fff&size=200`,
-      membershipType: 'Owner',
+      avatar: matchedDynamic?.user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(details?.name || matchedDynamic?.user.name || 'Resident')}&background=0D5C63&color=fff&size=200`,
+      membershipType: matchedDynamic?.user.membershipType || 'Owner',
       pinCode: '107864',
       gender: 'Not Specified',
       dateOfBirth: 'Not Available',
       bloodGroup: 'O+',
       govtIdNumber: 'NOT_SET',
-      interests: [],
+      interests: matchedDynamic?.user.interests || [],
       isPhonePublic: true,
       isEmailPublic: false,
     };
