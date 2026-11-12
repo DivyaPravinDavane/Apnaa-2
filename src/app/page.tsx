@@ -60,6 +60,12 @@ function MainAppShell() {
       setNotificationDrawerOpen(true);
       return;
     }
+    if (tab === 'resident_home') {
+      setShowLandingPage(true);
+      setCurrentTab('resident_home');
+      return;
+    }
+    setShowLandingPage(false);
     setCurrentTab(tab);
   };
 
@@ -179,14 +185,12 @@ function MainAppShell() {
             <div className="flex-1 overflow-y-auto relative">
               <LandingLoginPage
                 mode="landing"
-                onLoginSuccess={(role) => {
-                  setShowLandingPage(false);
-                  handleSelectTab(defaultTab[role] || 'resident_home');
+                onLoginSuccess={() => {
+                  setShowLandingPage(true);
                 }}
                 onNavigateToPage={(tab, role) => {
                   if (role) setRole(role);
                   handleSelectTab(tab);
-                  setShowLandingPage(false);
                 }}
                 onLogout={() => {
                   setShowLandingPage(true);
@@ -220,14 +224,14 @@ function MainAppShell() {
                 />
               )}
 
-              {/* Quick Back-to-Landing Strip */}
+              {/* Quick Back-to-Home Strip */}
               <div className="bg-[#E6F3F3] border-b border-[#0D5C63]/15 px-3.5 py-1.5 flex items-center justify-between text-[11px]">
                 <button
                   type="button"
-                  onClick={() => setShowLandingPage(true)}
+                  onClick={() => handleSelectTab('resident_home')}
                   className="font-bold text-[#0D5C63] hover:text-[#073B3E] flex items-center gap-1 cursor-pointer"
                 >
-                  <span>&larr; Back to Society Landing Page</span>
+                  <span>&larr; Back to Home</span>
                 </button>
                 <span className="text-[10px] font-semibold text-slate-500 capitalize">
                   {activeTab.replace('_', ' • ')}

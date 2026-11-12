@@ -138,6 +138,7 @@ const SocietyContext = createContext<SocietyContextType | undefined>(undefined);
 const API_MODE = SocietyApi.isApiMode();
 const seed = <T,>(value: T, _empty: T): T => value;
 const STORAGE_KEY = 'apnaa_dynamic_state_v1';
+const AUTH_SESSION_KEY = 'apnaa_auth_session_v1';
 
 const BASE_SOCIETY: SocietyInfo = {
   id: 'soc_green_valley_01',
@@ -509,9 +510,39 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
       });
   };
 
-  // Restore an existing HTTP-only session and load public MySQL overview on page load.
+  // Restore an existing HTTP-only session or persisted localStorage session on page load.
   useEffect(() => {
-    if (!API_MODE) return;
+    let restoredFromStorage = false;
+    if (typeof window !== 'undefined') {
+      const savedSession = window.localStorage.getItem(AUTH_SESSION_KEY);
+      if (savedSession) {
+        try {
+          const parsed = JSON.parse(savedSession) as {
+            isAuthenticated?: boolean;
+            user?: User;
+            role?: UserRole;
+          };
+          if (parsed.isAuthenticated && parsed.user) {
+            setUsers((prev) => ({
+              ...prev,
+              [parsed.user!.role]: parsed.user!,
+              resident: parsed.user!.role === 'resident' ? parsed.user! : prev.resident,
+            }));
+            setRoleState(parsed.role || parsed.user.role);
+            setIsAuthenticated(true);
+            restoredFromStorage = true;
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    if (!API_MODE) {
+      setAuthReady(true);
+      return;
+    }
+
     let active = true;
 
     (async () => {
@@ -527,8 +558,11 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
           setBaseSociety(overviewRes.data.society);
           setAmenities(overviewRes.data.amenities);
         }
-        // Always require manually entering the society passcode
-        setIsAuthenticated(false);
+        if (session.data) {
+          await applySessionUser(session.data);
+        } else if (!restoredFromStorage) {
+          setIsAuthenticated(false);
+        }
       } finally {
         if (active) setAuthReady(true);
       }
@@ -587,6 +621,16 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
     }));
     setRoleState(user.role);
     setIsAuthenticated(true);
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.setItem(
+          AUTH_SESSION_KEY,
+          JSON.stringify({ isAuthenticated: true, user, role: user.role })
+        );
+      } catch {
+        // ignore
+      }
+    }
     await hydrate(user.role);
   };
 
@@ -797,6 +841,16 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
     setUsers((prev) => ({ ...prev, [role]: fallbackUser }));
     setRoleState(role);
     setIsAuthenticated(true);
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.setItem(
+          AUTH_SESSION_KEY,
+          JSON.stringify({ isAuthenticated: true, user: fallbackUser, role })
+        );
+      } catch {
+        // ignore
+      }
+    }
     addToast('Access Granted', `Welcome ${fallbackUser.name}!`, 'success');
     return { success: true };
   };
@@ -805,6 +859,7 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== 'undefined') {
       window.sessionStorage.clear();
       window.localStorage.removeItem(STORAGE_KEY);
+      window.localStorage.removeItem(AUTH_SESSION_KEY);
     }
     if (API_MODE) {
       await SocietyApi.auth.logout().catch(() => undefined);

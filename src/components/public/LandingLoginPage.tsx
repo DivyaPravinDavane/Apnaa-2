@@ -623,14 +623,6 @@ export function LandingLoginPage({
         </div>
 
         <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => triggerNextPage('resident_home')}
-            className="px-2.5 py-1.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-[10px] font-bold flex items-center gap-1 shadow-xs active:scale-95 transition-all cursor-pointer"
-          >
-            <span>App Home</span>
-            <ArrowRight className="w-3 h-3" />
-          </button>
           {onLogout && (
             <button
               type="button"
@@ -996,9 +988,9 @@ export function LandingLoginPage({
               <span className="text-[10px] font-semibold text-[#0D5C63]">Click to open</span>
             </div>
 
-            {/* Resident Dashboard Card */}
+            {/* Resident Profile Card */}
             <div
-              onClick={() => triggerNextPage('resident_home', 'resident')}
+              onClick={() => triggerNextPage('resident_profile', 'resident')}
               className="p-3.5 rounded-2xl bg-white border border-[#0D5C63] shadow-xs active:scale-[0.99] transition-all cursor-pointer flex items-center gap-3.5"
             >
               <div className="w-11 h-11 rounded-2xl bg-[#0D5C63] text-white flex items-center justify-center flex-shrink-0 shadow-sm">
@@ -1014,7 +1006,7 @@ export function LandingLoginPage({
                   </span>
                 </div>
                 <p className="text-[11px] font-semibold text-[#0D5C63]">
-                  Flat {currentUser.unit} • ANACITY Smart Dashboard
+                  Flat {currentUser.unit} • View Resident Profile
                 </p>
               </div>
               <ArrowRight className="w-4 h-4 text-[#0D5C63] flex-shrink-0" />
@@ -1093,18 +1085,6 @@ export function LandingLoginPage({
             </div>
           </div>
         )}
-
-        {/* Bottom Primary CTA Button */}
-        <div className="pt-2">
-          <button
-            type="button"
-            onClick={() => triggerNextPage('resident_home')}
-            className="w-full py-3.5 rounded-2xl bg-[#0D5C63] hover:bg-[#073B3E] text-white text-xs font-bold shadow-md flex items-center justify-center gap-2 active:scale-[0.99] transition-all cursor-pointer"
-          >
-            <span>Continue to Full Resident Dashboard</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
       </div>
     </div>
   );
