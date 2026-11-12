@@ -271,31 +271,6 @@ export function LandingLoginPage({
 
     return (
       <div className="min-h-full bg-[#F4F9F9] text-[#0E2628] flex flex-col justify-between pb-6">
-        {/* Clean Top Header */}
-        <header className="sticky top-0 z-30 bg-[#073B3E] text-white px-4 py-3.5 flex items-center justify-between shadow-sm">
-          <div className="flex items-center gap-2.5">
-            <svg viewBox="0 0 36 36" fill="none" className="w-8 h-8 flex-shrink-0" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="18" cy="18" r="17" fill="#0D5C63" stroke="#34D399" strokeWidth="1.5" />
-              <path d="M18 7C18 7 10 11.5 10 19C10 23 13.5 26 18 26C22.5 26 26 23 26 19C26 11.5 18 7 18 7Z" fill="#E6F3F3"/>
-              <path d="M18 10V25" stroke="#0D5C63" strokeWidth="1.5" strokeLinecap="round"/>
-              <path d="M18 15.5C15 14 12.5 15.5 12.5 15.5" stroke="#0D5C63" strokeWidth="1.2" strokeLinecap="round"/>
-              <path d="M18 19.5C21 18 23.5 19.5 23.5 19.5" stroke="#0D5C63" strokeWidth="1.2" strokeLinecap="round"/>
-            </svg>
-            <div>
-              <span className="font-bold text-sm text-white tracking-tight leading-tight block">
-                Apnaa Society
-              </span>
-              <span className="text-[10px] text-emerald-200 font-medium block">
-                Step 1 of 2 • Resident &amp; Visitor Gate Login
-              </span>
-            </div>
-          </div>
-
-          <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-[10px] font-bold text-emerald-200">
-            Quick Passcode
-          </span>
-        </header>
-
         {/* Centered Login Container (No Landing Content Here) */}
         <div className="px-4 pt-5 space-y-4 flex-1 flex flex-col justify-center">
           {/* Primary Actor Switcher: RESIDENT LOGIN vs VISITOR LOGIN */}
