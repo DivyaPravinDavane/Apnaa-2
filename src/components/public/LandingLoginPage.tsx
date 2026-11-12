@@ -614,7 +614,7 @@ export function LandingLoginPage({
           </svg>
           <div>
             <span className="font-bold text-sm text-white tracking-tight leading-tight block">
-              Apnaa Society Landing
+              Apnaa Society
             </span>
             <span className="text-[10px] text-emerald-200 font-medium block">
               Welcome, {currentUser.name} (Flat {currentUser.unit})
