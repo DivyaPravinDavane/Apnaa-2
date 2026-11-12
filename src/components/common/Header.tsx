@@ -7,8 +7,11 @@ import {
   LogOut,
   Settings,
   ChevronsDown,
+  ChevronDown,
   RefreshCw,
   Shield,
+  Building2,
+  Check,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -22,6 +25,14 @@ interface HeaderProps {
 export function Header({ onToggleSidebar, onNavigate, onLogout }: HeaderProps) {
   const { currentUser, currentRole, visitors, setRole, refreshData, addToast } = useSociety();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [complexDropdownOpen, setComplexDropdownOpen] = useState(false);
+  const [activeComplex, setActiveComplex] = useState('Smart Community');
+
+  const complexes = [
+    { name: 'Smart Community', unit: currentUser.unit || 'A-101', society: 'Apnaa Green Valley' },
+    { name: 'Westend Heights', unit: 'C-404', society: 'Westend Residency' },
+    { name: 'Royal Palms', unit: 'B-202', society: 'Royal Palms Enclave' },
+  ];
 
   const visitorCount = visitors.filter(
     (v) =>
@@ -44,19 +55,66 @@ export function Header({ onToggleSidebar, onNavigate, onLogout }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-gradient-to-r from-[#073B3E] via-[#0D5C63] to-[#2A9296] text-white px-4 pt-3.5 pb-7 relative select-none">
-      {/* Top Row: Society Title on Left + Role/Account Menu on Right */}
+    <header className="sticky top-0 z-30 bg-gradient-to-r from-[#073B3E] via-[#0D5C63] to-[#147A7F] text-white px-4 pt-2 pb-7 relative select-none">
+      {/* Phone status bar simulation (Matching ANACITY screenshot) */}
+      <div className="flex items-center justify-between text-[11px] font-semibold text-white/80 mb-2 px-0.5">
+        <span>12:55</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] font-bold">5G</span>
+          <div className="w-5 h-2.5 rounded-xs border border-white/80 p-0.5 flex items-center">
+            <div className="w-full h-full bg-emerald-400 rounded-2xs" />
+          </div>
+        </div>
+      </div>
+
+      {/* Top Row: Society Switcher Dropdown on Left + Role/Logout Menu on Right */}
       <div className="flex items-center justify-between gap-2">
-        <button
-          type="button"
-          onClick={onToggleSidebar}
-          className="text-left min-w-0 group"
-          title="Open Society Menu"
-        >
-          <h1 className="font-bold text-[17px] tracking-tight text-white truncate max-w-[260px]">
-            Westend Heights D...
-          </h1>
-        </button>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setComplexDropdownOpen(!complexDropdownOpen)}
+            className="flex items-center gap-1.5 text-left group cursor-pointer"
+            title="Switch Complex / Apartment"
+          >
+            <h1 className="font-bold text-[17px] tracking-tight text-white flex items-center gap-1">
+              <span>{activeComplex}</span>
+              <ChevronDown className={`w-4 h-4 text-emerald-300 transition-transform ${complexDropdownOpen ? 'rotate-180' : ''}`} />
+            </h1>
+          </button>
+
+          {/* Apartment Complex Switcher Dropdown */}
+          {complexDropdownOpen && (
+            <div className="absolute left-0 mt-2 w-64 bg-white text-slate-800 rounded-2xl shadow-2xl border border-slate-200 py-1.5 z-50 text-xs animate-in fade-in zoom-in-95 duration-150">
+              <div className="px-3.5 py-2 border-b border-slate-100">
+                <p className="text-[10px] uppercase font-bold text-slate-400">Switch Apartment</p>
+                <p className="font-bold text-slate-900">Your Linked Properties</p>
+              </div>
+              {complexes.map((c) => {
+                const isActive = activeComplex === c.name;
+                return (
+                  <button
+                    key={c.name}
+                    type="button"
+                    onClick={() => {
+                      setActiveComplex(c.name);
+                      setComplexDropdownOpen(false);
+                      addToast('Apartment Switched', `Now viewing ${c.name} (Flat ${c.unit})`, 'success');
+                    }}
+                    className={`w-full text-left px-3.5 py-2.5 flex items-center justify-between hover:bg-slate-50 transition-colors ${
+                      isActive ? 'bg-[#E6F3F3] text-[#0D5C63] font-bold' : 'text-slate-700'
+                    }`}
+                  >
+                    <div>
+                      <p className="font-bold">{c.name}</p>
+                      <p className="text-[11px] text-slate-500">Flat {c.unit} • {c.society}</p>
+                    </div>
+                    {isActive && <Check className="w-4 h-4 text-[#0D5C63]" />}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         <div className="relative flex-shrink-0 flex items-center gap-1.5">
           <button
