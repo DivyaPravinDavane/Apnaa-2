@@ -1,6 +1,6 @@
 import { ApiError, apiSuccess, getClientIp, readJson, route } from '@/lib/server/http';
 import { enforceRateLimit } from '@/lib/server/rate-limit';
-import { createSession, findUserByRole, upsertResidentUser, type AuthUser } from '@/lib/server/auth';
+import { createSession, findUserByLogin, findUserByRole, upsertResidentUser, type AuthUser } from '@/lib/server/auth';
 import { writeAudit } from '@/lib/server/audit';
 import { societyCodeLoginSchema } from '@/lib/server/validation';
 import type { UserRole } from '@/types';
@@ -23,6 +23,13 @@ export const POST = route(async (request) => {
 
   if (selectedRole === 'resident' && name && phone) {
     user = await upsertResidentUser(name, phone, unit);
+  } else if (phone) {
+    // Registered member login via registered mobile + society passcode
+    const existing = await findUserByLogin(phone);
+    if (!existing) {
+      throw new ApiError(404, 'MEMBER_NOT_FOUND', 'No registered society member found with this mobile number. Please register below.');
+    }
+    user = existing;
   } else {
     user = await findUserByRole(selectedRole);
   }

@@ -26,6 +26,8 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
+  LogIn,
+  X,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -38,6 +40,7 @@ const REQUIRED_SOCIETY_CODE = '1234';
 export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
   const {
     enterWithSocietyCode,
+    loginWithPassword,
     society,
     amenities,
     publicOverview,
@@ -52,6 +55,80 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
   const [showPin, setShowPin] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+
+  // Registered Member Login state
+  const [registeredLoginOpen, setRegisteredLoginOpen] = useState(false);
+  const [registeredPhone, setRegisteredPhone] = useState('');
+  const [registeredCode, setRegisteredCode] = useState('');
+  const [registeredPassword, setRegisteredPassword] = useState('');
+  const [registeredAuthMethod, setRegisteredAuthMethod] = useState<'passcode' | 'password'>('passcode');
+  const [showRegisteredPin, setShowRegisteredPin] = useState(false);
+  const [registeredBusy, setRegisteredBusy] = useState(false);
+  const [registeredError, setRegisteredError] = useState('');
+
+  const handleRegisteredPasscodeLogin = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setRegisteredError('');
+
+    const cleanPhone = registeredPhone.trim();
+    if (!cleanPhone || cleanPhone.replace(/\D/g, '').length < 5) {
+      setRegisteredError('Please enter your registered mobile number.');
+      return;
+    }
+
+    const trimmedCode = registeredCode.trim();
+    if (!trimmedCode) {
+      setRegisteredError('Please manually type the 4-digit society passcode.');
+      return;
+    }
+
+    if (trimmedCode !== REQUIRED_SOCIETY_CODE) {
+      setRegisteredError('Incorrect Society Passcode. Please enter 1234.');
+      return;
+    }
+
+    setRegisteredBusy(true);
+    const result = await enterWithSocietyCode(trimmedCode, 'resident', {
+      phone: cleanPhone,
+    });
+    setRegisteredBusy(false);
+
+    if (!result.success) {
+      setRegisteredError(result.message || 'Could not verify registered member.');
+      return;
+    }
+
+    setRegisteredLoginOpen(false);
+    onLoginSuccess('resident');
+  };
+
+  const handleRegisteredPasswordLogin = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setRegisteredError('');
+
+    const cleanLogin = registeredPhone.trim();
+    if (!cleanLogin) {
+      setRegisteredError('Please enter your registered email or mobile number.');
+      return;
+    }
+
+    if (!registeredPassword.trim()) {
+      setRegisteredError('Please enter your password.');
+      return;
+    }
+
+    setRegisteredBusy(true);
+    const result = await loginWithPassword(cleanLogin, registeredPassword);
+    setRegisteredBusy(false);
+
+    if (!result.success) {
+      setRegisteredError(result.message || 'Invalid credentials.');
+      return;
+    }
+
+    setRegisteredLoginOpen(false);
+    onLoginSuccess('resident');
+  };
 
   const handleEnterWithCode = async (roleToUse: UserRole = selectedRole, codeToUse: string = societyCode) => {
     setError('');
@@ -136,7 +213,7 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
       <div className="px-4 pt-3 space-y-4 flex-1">
         {/* Hero Campus Card */}
         <div className="relative rounded-3xl overflow-hidden shadow-md border border-[#D5EAEB] bg-[#073B3E] text-white">
-          <div className="relative h-40 w-full">
+          <div className="relative h-44 w-full">
             <Image
               src="/images/smart_society_campus_isometric.jpg"
               alt="Westend Heights Residency Campus"
@@ -152,10 +229,38 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
               <span>{society.name}</span>
             </div>
 
-            <div className="absolute bottom-3.5 left-4 right-4">
-              <h1 className="font-serif text-xl font-bold leading-snug text-white drop-shadow-sm">
-                Apnaa Society
-              </h1>
+            {/* Login for Registered Society Members ON THE PICTURE */}
+            <button
+              type="button"
+              onClick={() => {
+                setRegisteredLoginOpen(true);
+                setRegisteredError('');
+              }}
+              className="absolute top-3 right-3 px-3 py-1.5 rounded-full bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 text-[11px] font-bold shadow-lg backdrop-blur-md flex items-center gap-1.5 border border-emerald-300/80 transition-all cursor-pointer"
+            >
+              <LogIn className="w-3.5 h-3.5 text-slate-950" />
+              <span>Registered Member Login</span>
+            </button>
+
+            <div className="absolute bottom-3.5 left-4 right-4 flex items-end justify-between">
+              <div>
+                <h1 className="font-serif text-xl font-bold leading-snug text-white drop-shadow-sm">
+                  Apnaa Society
+                </h1>
+                <p className="text-[10px] text-emerald-200 font-medium">Smart Residential Super-App</p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setRegisteredLoginOpen(true);
+                  setRegisteredError('');
+                }}
+                className="px-2.5 py-1 rounded-xl bg-white/20 hover:bg-white/30 text-white text-[10px] font-bold flex items-center gap-1 border border-white/30 backdrop-blur-md active:scale-95 transition-all cursor-pointer"
+              >
+                <UserCheck className="w-3 h-3 text-emerald-300" />
+                <span>Existing Member?</span>
+              </button>
             </div>
           </div>
 
@@ -672,6 +777,277 @@ export function LandingLoginPage({ onLoginSuccess }: LandingLoginPageProps) {
           </div>
         )}
       </div>
+      {/* REGISTERED SOCIETY MEMBER LOGIN MODAL / BOTTOM SHEET */}
+      {registeredLoginOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4">
+          <div className="w-full max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
+            {/* Modal Header */}
+            <div className="px-5 py-4 bg-[#073B3E] text-white flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center border border-emerald-400/30">
+                  <UserCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold leading-tight">Registered Member Login</h3>
+                  <p className="text-[11px] text-emerald-200/80">Welcome back to {society.name}</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setRegisteredLoginOpen(false);
+                  setRegisteredError('');
+                }}
+                className="p-1.5 rounded-full text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Auth Method Selector */}
+            <div className="p-4 space-y-4">
+              <div className="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-slate-100 border border-slate-200 text-xs font-bold">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRegisteredAuthMethod('passcode');
+                    setRegisteredError('');
+                  }}
+                  className={`py-2 rounded-xl transition-all cursor-pointer ${
+                    registeredAuthMethod === 'passcode'
+                      ? 'bg-[#0D5C63] text-white shadow-xs'
+                      : 'text-[#4E6E70] hover:text-[#0E2628]'
+                  }`}
+                >
+                  Quick Passcode
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRegisteredAuthMethod('password');
+                    setRegisteredError('');
+                  }}
+                  className={`py-2 rounded-xl transition-all cursor-pointer ${
+                    registeredAuthMethod === 'password'
+                      ? 'bg-[#0D5C63] text-white shadow-xs'
+                      : 'text-[#4E6E70] hover:text-[#0E2628]'
+                  }`}
+                >
+                  Password Login
+                </button>
+              </div>
+
+              {/* METHOD 1: QUICK PASSCODE (REGISTERED MOBILE + SOCIETY CODE) */}
+              {registeredAuthMethod === 'passcode' && (
+                <form onSubmit={handleRegisteredPasscodeLogin} className="space-y-3.5">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      Registered Mobile Number
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <Phone className="w-3.5 h-3.5" />
+                      </div>
+                      <input
+                        type="tel"
+                        value={registeredPhone}
+                        onChange={(e) => {
+                          setRegisteredPhone(e.target.value);
+                          setRegisteredError('');
+                        }}
+                        placeholder="e.g. 9812345678"
+                        className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-[#0D5C63] focus:ring-1 focus:ring-[#0D5C63] bg-slate-50/50"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-[11px] font-bold text-slate-700">
+                        4-Digit Society Passcode
+                      </label>
+                      {registeredCode.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setShowRegisteredPin((prev) => !prev)}
+                          className="flex items-center gap-1 text-[11px] text-[#0D5C63] font-semibold hover:underline cursor-pointer"
+                        >
+                          {showRegisteredPin ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                          <span>{showRegisteredPin ? 'Hide' : 'Show'}</span>
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="relative">
+                      <div className="flex justify-center gap-3 my-1">
+                        {[0, 1, 2, 3].map((idx) => {
+                          const char = registeredCode[idx] || '';
+                          const isCorrect = registeredCode === REQUIRED_SOCIETY_CODE;
+                          const isFilled = Boolean(char);
+                          return (
+                            <div
+                              key={idx}
+                              className={`w-12 h-14 rounded-2xl flex items-center justify-center text-xl font-bold font-mono border-2 transition-all shadow-2xs ${
+                                isCorrect
+                                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                  : isFilled
+                                  ? 'border-[#0D5C63] bg-[#E6F3F3] text-[#0D5C63]'
+                                  : registeredError
+                                  ? 'border-rose-400 bg-rose-50 text-rose-600'
+                                  : 'border-slate-200 bg-slate-50/70 text-transparent'
+                              }`}
+                            >
+                              {char ? (showRegisteredPin ? char : '●') : ''}
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <input
+                        type={showRegisteredPin ? 'text' : 'password'}
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={4}
+                        autoComplete="new-password"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        data-lpignore="true"
+                        data-form-type="other"
+                        name="registered_passcode_manual"
+                        id="registered_passcode_manual"
+                        value={registeredCode}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, '').slice(0, 4);
+                          setRegisteredCode(val);
+                          setRegisteredError('');
+                        }}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      />
+                    </div>
+                  </div>
+
+                  {registeredError && (
+                    <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-1.5">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                      <span>{registeredError}</span>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={registeredBusy}
+                    className="w-full py-3 rounded-2xl bg-[#0D5C63] hover:bg-[#073B3E] active:scale-[0.99] text-white text-xs font-bold shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  >
+                    {registeredBusy ? (
+                      <span>Verifying Registered Profile…</span>
+                    ) : (
+                      <>
+                        <LogIn className="w-4 h-4" />
+                        <span>Sign In to My Flat</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
+
+              {/* METHOD 2: PASSWORD LOGIN */}
+              {registeredAuthMethod === 'password' && (
+                <form onSubmit={handleRegisteredPasswordLogin} className="space-y-3.5">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      Registered Email or Mobile
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <User className="w-3.5 h-3.5" />
+                      </div>
+                      <input
+                        type="text"
+                        value={registeredPhone}
+                        onChange={(e) => {
+                          setRegisteredPhone(e.target.value);
+                          setRegisteredError('');
+                        }}
+                        placeholder="registered@email.com or 9812345678"
+                        className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-[#0D5C63] focus:ring-1 focus:ring-[#0D5C63] bg-slate-50/50"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <Lock className="w-3.5 h-3.5" />
+                      </div>
+                      <input
+                        type={showRegisteredPin ? 'text' : 'password'}
+                        value={registeredPassword}
+                        onChange={(e) => {
+                          setRegisteredPassword(e.target.value);
+                          setRegisteredError('');
+                        }}
+                        placeholder="••••••••"
+                        className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-[#0D5C63] focus:ring-1 focus:ring-[#0D5C63] bg-slate-50/50"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowRegisteredPin((prev) => !prev)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
+                      >
+                        {showRegisteredPin ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {registeredError && (
+                    <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-1.5">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                      <span>{registeredError}</span>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={registeredBusy}
+                    className="w-full py-3 rounded-2xl bg-[#0D5C63] hover:bg-[#073B3E] active:scale-[0.99] text-white text-xs font-bold shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  >
+                    {registeredBusy ? (
+                      <span>Signing in…</span>
+                    ) : (
+                      <>
+                        <LogIn className="w-4 h-4" />
+                        <span>Sign In with Password</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
+
+              {/* Bottom switch to registration form */}
+              <div className="text-center pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRegisteredLoginOpen(false);
+                    setRegisteredError('');
+                  }}
+                  className="text-xs font-semibold text-[#0D5C63] hover:underline cursor-pointer"
+                >
+                  New resident? Enter your details below &darr;
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

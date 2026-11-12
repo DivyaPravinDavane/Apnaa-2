@@ -756,6 +756,10 @@ export function SocietyProvider({ children }: { children: React.ReactNode }) {
           phone: details?.phone,
           unit: details?.unit,
         });
+        if (result.error) {
+          addToast('Access Denied', result.error.message, 'error');
+          return { success: false, message: result.error.message };
+        }
         if (result.data) {
           await applySessionUser(result.data);
           addToast('Access Granted', `Welcome ${result.data.name}!`, 'success');
