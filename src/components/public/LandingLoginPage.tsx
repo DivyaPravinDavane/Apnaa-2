@@ -29,6 +29,8 @@ import {
   LogIn,
   LogOut,
   MapPin,
+  MessageSquare,
+  ShoppingBag,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -708,6 +710,7 @@ export function LandingLoginPage({
 
         {/* 3. CLICKABLE QUICK NAVIGATION PILLS (DIRECT REDIRECT TO NEXT PAGE) */}
         <div className="grid grid-cols-4 gap-2">
+          {/* Row 1 */}
           <button
             type="button"
             onClick={() => triggerNextPage('resident_visitors')}
@@ -750,6 +753,51 @@ export function LandingLoginPage({
               <BellRing className="w-4 h-4" />
             </div>
             <span className="text-[10px] font-bold text-[#0E2628] leading-tight">Notices</span>
+          </button>
+
+          {/* Row 2: ANACITY Smart Living Features */}
+          <button
+            type="button"
+            onClick={() => triggerNextPage('resident_vehicles')}
+            className="p-2.5 rounded-2xl bg-[#E6F3F3] border border-[#0D5C63]/30 hover:border-[#0D5C63] flex flex-col items-center text-center gap-1 shadow-2xs active:scale-95 transition-all cursor-pointer"
+          >
+            <div className="w-9 h-9 rounded-full bg-[#0D5C63] text-white flex items-center justify-center">
+              <Car className="w-4 h-4" />
+            </div>
+            <span className="text-[10px] font-bold text-[#0D5C63] leading-tight">Vehicles</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => triggerNextPage('resident_domestic_help')}
+            className="p-2.5 rounded-2xl bg-white border border-[#D5EAEB] hover:border-[#0D5C63] flex flex-col items-center text-center gap-1 shadow-2xs active:scale-95 transition-all cursor-pointer"
+          >
+            <div className="w-9 h-9 rounded-full bg-[#E6F3F3] text-[#0D5C63] flex items-center justify-center">
+              <UserCheck className="w-4 h-4" />
+            </div>
+            <span className="text-[10px] font-bold text-[#0E2628] leading-tight">Daily Help</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => triggerNextPage('resident_forums')}
+            className="p-2.5 rounded-2xl bg-white border border-[#D5EAEB] hover:border-[#0D5C63] flex flex-col items-center text-center gap-1 shadow-2xs active:scale-95 transition-all cursor-pointer"
+          >
+            <div className="w-9 h-9 rounded-full bg-[#E6F3F3] text-[#0D5C63] flex items-center justify-center">
+              <MessageSquare className="w-4 h-4" />
+            </div>
+            <span className="text-[10px] font-bold text-[#0E2628] leading-tight">Forums</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => triggerNextPage('resident_local_services')}
+            className="p-2.5 rounded-2xl bg-white border border-[#D5EAEB] hover:border-[#0D5C63] flex flex-col items-center text-center gap-1 shadow-2xs active:scale-95 transition-all cursor-pointer"
+          >
+            <div className="w-9 h-9 rounded-full bg-[#E6F3F3] text-[#0D5C63] flex items-center justify-center">
+              <ShoppingBag className="w-4 h-4" />
+            </div>
+            <span className="text-[10px] font-bold text-[#0E2628] leading-tight">Stores</span>
           </button>
         </div>
 
@@ -924,6 +972,30 @@ export function LandingLoginPage({
               <p className="text-[10px] text-[#4E6E70]">Click any feature to launch its module</p>
             </div>
             {[
+              {
+                icon: Car,
+                title: 'Vehicle Security & Digital Wheel Lock',
+                desc: 'Lock/unlock your vehicles from the app to prevent unauthorized gate exits.',
+                targetTab: 'resident_vehicles',
+              },
+              {
+                icon: UserCheck,
+                title: 'Domestic Help & Staff Passes',
+                desc: 'Daily maid, cook & driver attendance with digital entry gate passes.',
+                targetTab: 'resident_domestic_help',
+              },
+              {
+                icon: MessageSquare,
+                title: 'Apartment Discussion Forums',
+                desc: 'Owner forum threads and interest groups to stay connected with neighbors.',
+                targetTab: 'resident_forums',
+              },
+              {
+                icon: ShoppingBag,
+                title: 'Local Stores & 1-Tap Ordering',
+                desc: 'Order milk, water, groceries, and services with automatic gate delivery passes.',
+                targetTab: 'resident_local_services',
+              },
               {
                 icon: QrCode,
                 title: 'Instant QR Visitor Passes',
