@@ -22,6 +22,13 @@ import { EventsModule } from '@/components/resident/EventsModule';
 import { MembersModule } from '@/components/resident/MembersModule';
 import { GalleryModule } from '@/components/resident/GalleryModule';
 import { ProfileSettingsModule } from '@/components/resident/ProfileSettingsModule';
+import { VehicleSecurityModule } from '@/components/resident/VehicleSecurityModule';
+import { DomesticHelpModule } from '@/components/resident/DomesticHelpModule';
+import { CommunityForumsModule } from '@/components/resident/CommunityForumsModule';
+import { LocalServicesModule } from '@/components/resident/LocalServicesModule';
+
+// Facility & Utilities
+import { UtilityMetersModule } from '@/components/facility/UtilityMetersModule';
 
 // Admin Screens
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
@@ -29,6 +36,7 @@ import { AdminResidentsModule } from '@/components/admin/AdminResidentsModule';
 import { AdminAmenityManagement } from '@/components/admin/AdminAmenityManagement';
 import { AdminGalleryModeration } from '@/components/admin/AdminGalleryModeration';
 import { AdminAuditReports } from '@/components/admin/AdminAuditReports';
+import { CommitteeActionItemsModule } from '@/components/admin/CommitteeActionItemsModule';
 
 // Security & Facility Screens
 import { SecurityGateTerminal } from '@/components/security/SecurityGateTerminal';
@@ -107,6 +115,18 @@ function MainAppShell() {
         return <MembersModule />;
       case 'resident_gallery':
         return <GalleryModule />;
+      case 'resident_vehicles':
+        return <VehicleSecurityModule onBack={() => handleSelectTab('resident_home')} />;
+      case 'resident_domestic_help':
+        return <DomesticHelpModule onBack={() => handleSelectTab('resident_home')} />;
+      case 'resident_forums':
+        return <CommunityForumsModule onBack={() => handleSelectTab('resident_home')} />;
+      case 'resident_local_services':
+        return <LocalServicesModule onBack={() => handleSelectTab('resident_home')} />;
+      case 'resident_utilities':
+        return <UtilityMetersModule onBack={() => handleSelectTab('resident_home')} />;
+      case 'resident_committee_actions':
+        return <CommitteeActionItemsModule onBack={() => handleSelectTab('resident_home')} />;
       case 'resident_profile':
       case 'resident_settings':
         return <ProfileSettingsModule />;
@@ -130,6 +150,10 @@ function MainAppShell() {
         return <AdminGalleryModeration />;
       case 'admin_audit':
         return <AdminAuditReports />;
+      case 'admin_committee':
+        return <CommitteeActionItemsModule onBack={() => handleSelectTab('admin_dashboard')} />;
+      case 'admin_utilities':
+        return <UtilityMetersModule onBack={() => handleSelectTab('admin_dashboard')} />;
       case 'admin_settings':
         return <ProfileSettingsModule />;
 
@@ -147,14 +171,30 @@ function MainAppShell() {
       case 'facility_verify':
       case 'facility_closures':
         return <FacilityDashboard />;
+      case 'facility_utilities':
+        return <UtilityMetersModule onBack={() => handleSelectTab('facility_dashboard')} />;
+      case 'facility_committee':
+        return <CommitteeActionItemsModule onBack={() => handleSelectTab('facility_dashboard')} />;
 
       default:
         return <ResidentDashboard onNavigate={(tab) => handleSelectTab(tab)} />;
     }
   };
 
-  // Hide the purple curved Home banner when viewing screens with their own custom top bars
-  const hideBannerHeader = activeTab === 'resident_poll' || activeTab === 'resident_profile';
+  // Hide the banner when viewing screens with their own custom top bars
+  const hideBannerHeader =
+    activeTab === 'resident_poll' ||
+    activeTab === 'resident_profile' ||
+    activeTab === 'resident_vehicles' ||
+    activeTab === 'resident_domestic_help' ||
+    activeTab === 'resident_forums' ||
+    activeTab === 'resident_local_services' ||
+    activeTab === 'resident_utilities' ||
+    activeTab === 'resident_committee_actions' ||
+    activeTab === 'admin_committee' ||
+    activeTab === 'admin_utilities' ||
+    activeTab === 'facility_utilities' ||
+    activeTab === 'facility_committee';
 
   return (
     <div className="min-h-dvh w-full bg-[#F8F9FA] flex flex-col items-center">

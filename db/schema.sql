@@ -474,11 +474,120 @@ CREATE TABLE service_requests (
   title       VARCHAR(190) NOT NULL,
   description TEXT         NOT NULL,
   status      ENUM('open', 'in_progress', 'resolved') NOT NULL DEFAULT 'open',
+  photo_before VARCHAR(512) NULL,
+  photo_after  VARCHAR(512) NULL,
+  facility_id  VARCHAR(64)  NULL,
+  qr_scanned   TINYINT(1)   NOT NULL DEFAULT 0,
   created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY idx_service_requests_unit (society_id, unit, status),
   CONSTRAINT fk_service_requests_society FOREIGN KEY (society_id) REFERENCES societies (id),
   CONSTRAINT fk_service_requests_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- ============================================================================
+--  ANACITY Gated Community Extensions
+--  (Vehicles with Lock/Unlock, Domestic Help, Utilities, Actions, Forums, Local Services)
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS vehicles (
+  id             VARCHAR(64)  NOT NULL,
+  society_id     VARCHAR(64)  NOT NULL,
+  user_id        VARCHAR(64)  NOT NULL,
+  unit           VARCHAR(32)  NOT NULL,
+  vehicle_type   ENUM('Car', 'Two-Wheeler', 'EV') NOT NULL DEFAULT 'Car',
+  make_model     VARCHAR(120) NOT NULL,
+  vehicle_number VARCHAR(32)  NOT NULL,
+  parking_slot   VARCHAR(32)  NOT NULL DEFAULT '',
+  is_locked      TINYINT(1)   NOT NULL DEFAULT 0,
+  last_movement  VARCHAR(120) NOT NULL DEFAULT 'In Parking Slot',
+  created_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_vehicles_unit (society_id, unit)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS domestic_staff (
+  id         VARCHAR(64)  NOT NULL,
+  society_id VARCHAR(64)  NOT NULL,
+  unit       VARCHAR(32)  NOT NULL,
+  user_id    VARCHAR(64)  NOT NULL,
+  name       VARCHAR(120) NOT NULL,
+  role       VARCHAR(64)  NOT NULL,
+  phone      VARCHAR(32)  NOT NULL,
+  pass_code  VARCHAR(32)  NOT NULL,
+  status     ENUM('inside', 'outside', 'on_leave') NOT NULL DEFAULT 'outside',
+  entry_time VARCHAR(32)  NULL,
+  exit_time  VARCHAR(32)  NULL,
+  rating     DECIMAL(2,1) NOT NULL DEFAULT 4.8,
+  created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_staff_unit (society_id, unit)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS utility_readings (
+  id               VARCHAR(64)   NOT NULL,
+  society_id       VARCHAR(64)   NOT NULL,
+  unit             VARCHAR(32)   NOT NULL,
+  meter_type       ENUM('water', 'gas', 'electricity') NOT NULL,
+  meter_number     VARCHAR(64)   NOT NULL,
+  previous_reading DECIMAL(10,2) NOT NULL DEFAULT 0,
+  current_reading  DECIMAL(10,2) NOT NULL DEFAULT 0,
+  units_consumed   DECIMAL(10,2) NOT NULL DEFAULT 0,
+  recorded_by_name VARCHAR(120)  NOT NULL,
+  recorded_date    DATE          NOT NULL,
+  status           ENUM('billed', 'pending') NOT NULL DEFAULT 'pending',
+  created_at       TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_utility_unit (society_id, unit)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS committee_actions (
+  id            VARCHAR(64)  NOT NULL,
+  society_id    VARCHAR(64)  NOT NULL,
+  title         VARCHAR(190) NOT NULL,
+  description   TEXT         NOT NULL,
+  category      VARCHAR(64)  NOT NULL,
+  assigned_to   VARCHAR(120) NOT NULL,
+  assigned_role VARCHAR(64)  NOT NULL DEFAULT 'Committee Member',
+  due_date      DATE         NOT NULL,
+  priority      ENUM('urgent', 'high', 'medium', 'low') NOT NULL DEFAULT 'medium',
+  status        ENUM('open', 'in_progress', 'completed') NOT NULL DEFAULT 'open',
+  created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_actions_society (society_id, status)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS community_discussions (
+  id             VARCHAR(64)  NOT NULL,
+  society_id     VARCHAR(64)  NOT NULL,
+  user_id        VARCHAR(64)  NOT NULL,
+  author_name    VARCHAR(120) NOT NULL,
+  author_unit    VARCHAR(32)  NOT NULL,
+  author_role    VARCHAR(64)  NOT NULL DEFAULT 'Resident',
+  group_type     ENUM('Forum', 'Interest Group') NOT NULL DEFAULT 'Forum',
+  group_name     VARCHAR(120) NOT NULL,
+  title          VARCHAR(200) NOT NULL,
+  content        TEXT         NOT NULL,
+  likes_count    INT UNSIGNED NOT NULL DEFAULT 0,
+  comments_count INT UNSIGNED NOT NULL DEFAULT 0,
+  image_url      VARCHAR(512) NULL,
+  created_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_discussions_society (society_id, group_type)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS local_services (
+  id             VARCHAR(64)  NOT NULL,
+  society_id     VARCHAR(64)  NOT NULL,
+  title          VARCHAR(120) NOT NULL,
+  category       VARCHAR(64)  NOT NULL,
+  provider_name  VARCHAR(120) NOT NULL,
+  rating         DECIMAL(2,1) NOT NULL DEFAULT 4.9,
+  eta            VARCHAR(32)  NOT NULL DEFAULT '15 mins',
+  price_starting VARCHAR(32)  NOT NULL DEFAULT '₹99',
+  phone          VARCHAR(32)  NOT NULL DEFAULT '1800-200-4455',
+  icon           VARCHAR(64)  NOT NULL DEFAULT 'Store',
+  created_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;

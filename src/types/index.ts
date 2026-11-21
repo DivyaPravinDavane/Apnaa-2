@@ -242,3 +242,100 @@ export interface SocietyInfo {
   nextMaintenanceDate?: string;
   nextMaintenanceNote?: string;
 }
+
+// ============================================================================
+//  ANACITY Feature Interfaces
+// ============================================================================
+export interface Vehicle {
+  id: string;
+  userId: string;
+  unit: string;
+  vehicleType: 'Car' | 'Two-Wheeler' | 'EV';
+  makeModel: string;
+  vehicleNumber: string;
+  parkingSlot: string;
+  isLocked: boolean;
+  lastMovement: string;
+  createdAt?: string;
+}
+
+export interface DomesticStaff {
+  id: string;
+  unit: string;
+  name: string;
+  role: string;
+  phone: string;
+  passCode: string;
+  status: 'inside' | 'outside' | 'on_leave';
+  entryTime?: string | null;
+  exitTime?: string | null;
+  rating: number;
+  avatar?: string;
+}
+
+export interface UtilityReading {
+  id: string;
+  unit: string;
+  meterType: 'water' | 'gas' | 'electricity';
+  meterNumber: string;
+  previousReading: number;
+  currentReading: number;
+  unitsConsumed: number;
+  recordedByName: string;
+  recordedDate: string;
+  status: 'billed' | 'pending';
+}
+
+export interface CommitteeAction {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  assignedTo: string;
+  assignedRole: string;
+  dueDate: string;
+  priority: 'urgent' | 'high' | 'medium' | 'low';
+  status: 'open' | 'in_progress' | 'completed';
+  createdAt?: string;
+}
+
+export interface CommunityDiscussion {
+  id: string;
+  userId: string;
+  authorName: string;
+  authorUnit: string;
+  authorRole: string;
+  groupType: 'Forum' | 'Interest Group';
+  groupName: string;
+  title: string;
+  content: string;
+  likesCount: number;
+  commentsCount: number;
+  imageUrl?: string | null;
+  createdAt: string;
+  isLiked?: boolean;
+}
+
+export interface LocalService {
+  id: string;
+  title: string;
+  category: string;
+  providerName: string;
+  rating: number;
+  eta: string;
+  priceStarting: string;
+  phone: string;
+  icon: string;
+}
+
+export interface ApartmentComplex {
+  id: string;
+  name: string;
+  unit: string;
+  wing: string;
+  role: UserRole;
+  membershipType: string;
+  city: string;
+  isActive: boolean;
+}
+

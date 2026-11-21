@@ -53,9 +53,12 @@ import {
   Plus,
   Radio,
   Trash2,
+  Gauge,
+  MessageSquare,
   type LucideIcon,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { FacilityQRScannerModal } from './FacilityQRScannerModal';
 
 interface ResidentDashboardProps {
   onNavigate: (tab: string) => void;
@@ -79,6 +82,7 @@ export function ResidentDashboard({ onNavigate }: ResidentDashboardProps) {
   const [activeCommunityIdx, setActiveCommunityIdx] = useState(0);
   const [billingSheet, setBillingSheet] = useState<'statement' | 'dues' | 'history' | null>(null);
   const [qrPassOpen, setQrPassOpen] = useState(false);
+  const [facilityQROpen, setFacilityQROpen] = useState(false);
 
   // Live remote MySQL state for bills, gate updates, and service requests
   const [bills, setBills] = useState<UnitBillRecord[]>([]);
@@ -449,16 +453,19 @@ export function ResidentDashboard({ onNavigate }: ResidentDashboardProps) {
 
   const communityServices: { label: string; icon: LucideIcon; tab?: string; action?: () => void }[] = [
     { label: 'Notice', icon: FileText, tab: 'resident_notices' },
-    { label: 'Post', icon: MessageSquarePlus, tab: 'resident_poll' },
-    { label: 'Poll', icon: BarChart2, tab: 'resident_poll' },
-    { label: 'Survey', icon: ClipboardCheck, tab: 'resident_poll' },
+    { label: 'Forums & Groups', icon: MessageSquare, tab: 'resident_forums' },
+    { label: 'Vehicle Lock', icon: Lock, tab: 'resident_vehicles' },
+    { label: 'Daily Help', icon: UserCheck, tab: 'resident_domestic_help' },
+    { label: 'Local Store', icon: ShoppingBag, tab: 'resident_local_services' },
+    { label: 'Utility Meters', icon: Gauge, tab: 'resident_utilities' },
+    { label: 'Poll & Survey', icon: BarChart2, tab: 'resident_poll' },
     { label: 'Gallery', icon: ImageIcon, tab: 'resident_gallery' },
     {
-      label: 'QR code scanner',
+      label: 'Scan Facility QR',
       icon: QrCode,
       action: () => {
         setExploreAllOpen(false);
-        setQrPassOpen(true);
+        setFacilityQROpen(true);
       },
     },
     { label: 'Facilities', icon: Building, tab: 'resident_amenities' },
@@ -471,14 +478,13 @@ export function ResidentDashboard({ onNavigate }: ResidentDashboardProps) {
       },
     },
     {
-      label: 'Request Desk',
-      icon: HelpCircle,
+      label: 'Resident QR ID',
+      icon: TicketCheck,
       action: () => {
         setExploreAllOpen(false);
-        setDeskModal('Request Desk');
+        setQrPassOpen(true);
       },
     },
-    { label: 'MarketPlace', icon: ShoppingBag, tab: 'resident_events' },
   ];
 
   const handlePayBills = async (billId?: string, amount?: number) => {
@@ -528,14 +534,14 @@ export function ResidentDashboard({ onNavigate }: ResidentDashboardProps) {
 
   return (
     <div className="space-y-6 pt-2 pb-6 bg-white">
-      {/* 1. QUICK ACTIONS GRID (4 Duo-Tone Icons: Gate, Facilities, Requests, Explore) */}
+      {/* 1. QUICK ACTIONS GRID (Gate, Facilities, Helpdesk, Explore all + ANACITY Smart Suite) */}
       <section className="px-2 pt-1">
-        <div className="grid grid-cols-4 gap-2 text-center">
+        <div className="grid grid-cols-4 gap-y-4 gap-x-2 text-center">
           {/* Gate */}
           <button
             type="button"
             onClick={() => onNavigate('resident_visitors')}
-            className="flex flex-col items-center gap-2 group cursor-pointer"
+            className="flex flex-col items-center gap-1.5 group cursor-pointer"
           >
             <div className="relative w-12 h-12 rounded-2xl bg-[#E6F3F3] text-[#0D5C63] flex items-center justify-center group-active:scale-95 transition-transform shadow-2xs">
               <DoorOpen className="w-6 h-6 stroke-[1.9]" />
@@ -552,7 +558,7 @@ export function ResidentDashboard({ onNavigate }: ResidentDashboardProps) {
           <button
             type="button"
             onClick={() => onNavigate('resident_amenities')}
-            className="flex flex-col items-center gap-2 group cursor-pointer"
+            className="flex flex-col items-center gap-1.5 group cursor-pointer"
           >
             <div className="w-12 h-12 rounded-2xl bg-[#E6F3F3] text-[#0D5C63] flex items-center justify-center group-active:scale-95 transition-transform shadow-2xs">
               <Building className="w-6 h-6 stroke-[1.9]" />
@@ -560,11 +566,11 @@ export function ResidentDashboard({ onNavigate }: ResidentDashboardProps) {
             <span className="text-xs font-bold text-[#0E2628]">Facilities</span>
           </button>
 
-          {/* Requests */}
+          {/* Helpdesk */}
           <button
             type="button"
             onClick={() => setDeskModal('Helpdesk')}
-            className="flex flex-col items-center gap-2 group cursor-pointer"
+            className="flex flex-col items-center gap-1.5 group cursor-pointer"
           >
             <div className="relative w-12 h-12 rounded-2xl bg-[#E6F3F3] text-[#0D5C63] flex items-center justify-center group-active:scale-95 transition-transform shadow-2xs">
               <Headset className="w-6 h-6 stroke-[1.9]" />
@@ -574,19 +580,67 @@ export function ResidentDashboard({ onNavigate }: ResidentDashboardProps) {
                 </span>
               )}
             </div>
-            <span className="text-xs font-bold text-[#0E2628]">Requests</span>
+            <span className="text-xs font-bold text-[#0E2628]">Helpdesk</span>
           </button>
 
-          {/* Explore */}
+          {/* Explore all */}
           <button
             type="button"
             onClick={() => setExploreAllOpen(true)}
-            className="flex flex-col items-center gap-2 group cursor-pointer"
+            className="flex flex-col items-center gap-1.5 group cursor-pointer"
           >
             <div className="w-12 h-12 rounded-2xl bg-[#073B3E] text-white flex items-center justify-center shadow-sm group-active:scale-95 transition-transform">
               <MoreHorizontal className="w-6 h-6" />
             </div>
-            <span className="text-xs font-bold text-[#0E2628]">Explore</span>
+            <span className="text-xs font-bold text-[#0E2628]">Explore all</span>
+          </button>
+
+          {/* ANACITY Suite: Vehicle Security */}
+          <button
+            type="button"
+            onClick={() => onNavigate('resident_vehicles')}
+            className="flex flex-col items-center gap-1.5 group"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-[#E6F3F3] text-[#0D5C63] flex items-center justify-center group-active:scale-95 transition-transform">
+              <Car className="w-6 h-6 stroke-[1.9]" />
+            </div>
+            <span className="text-xs font-bold text-[#0E2628]">Vehicles</span>
+          </button>
+
+          {/* ANACITY Suite: Daily Help */}
+          <button
+            type="button"
+            onClick={() => onNavigate('resident_domestic_help')}
+            className="flex flex-col items-center gap-1.5 group"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-[#E6F3F3] text-[#0D5C63] flex items-center justify-center group-active:scale-95 transition-transform">
+              <UserCheck className="w-6 h-6 stroke-[1.9]" />
+            </div>
+            <span className="text-xs font-bold text-[#0E2628]">Daily Help</span>
+          </button>
+
+          {/* ANACITY Suite: Scan Facility QR */}
+          <button
+            type="button"
+            onClick={() => setFacilityQROpen(true)}
+            className="flex flex-col items-center gap-1.5 group"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-[#E6F3F3] text-[#0D5C63] flex items-center justify-center group-active:scale-95 transition-transform">
+              <QrCode className="w-6 h-6 stroke-[1.9]" />
+            </div>
+            <span className="text-xs font-bold text-[#0E2628]">Facility QR</span>
+          </button>
+
+          {/* ANACITY Suite: Local Services */}
+          <button
+            type="button"
+            onClick={() => onNavigate('resident_local_services')}
+            className="flex flex-col items-center gap-1.5 group"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-[#E6F3F3] text-[#0D5C63] flex items-center justify-center group-active:scale-95 transition-transform">
+              <ShoppingBag className="w-6 h-6 stroke-[1.9]" />
+            </div>
+            <span className="text-xs font-bold text-[#0E2628]">Stores</span>
           </button>
         </div>
       </section>
@@ -2272,6 +2326,12 @@ export function ResidentDashboard({ onNavigate }: ResidentDashboardProps) {
           </div>
         </div>
       )}
+      {/* ANACITY Unique: Scan Facility QR Code & File Malfunction Complaint Modal */}
+      <FacilityQRScannerModal
+        isOpen={facilityQROpen}
+        onClose={() => setFacilityQROpen(false)}
+        onSuccess={() => void loadServicesFromDb()}
+      />
     </div>
   );
 }

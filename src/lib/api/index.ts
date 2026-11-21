@@ -97,6 +97,10 @@ export interface ServiceRequestRecord {
   title: string;
   description: string;
   status: string;
+  photo_before?: string | null;
+  photo_after?: string | null;
+  facility_id?: string | null;
+  qr_scanned?: number | boolean;
   created_at: string;
 }
 
@@ -336,10 +340,24 @@ export const SocietyApi = {
       category: string;
       title: string;
       description: string;
+      photoBefore?: string;
+      photoAfter?: string;
+      facilityId?: string;
+      qrScanned?: boolean;
     }) =>
-      apiFetch<{ id: string; deskType: string; category: string; title: string; status: string }>('/services', {
+      apiFetch<{ id: string; deskType: string; category: string; title: string; status: string; qrScanned?: boolean }>('/services', {
         method: 'POST',
         body: JSON.stringify({ type: 'service_request', ...payload }),
+      }),
+    updateServiceRequest: (payload: {
+      ticketId: string;
+      status: 'open' | 'in_progress' | 'resolved';
+      photoAfter?: string;
+      resolutionNotes?: string;
+    }) =>
+      apiFetch<{ success: boolean; ticketId: string; status: string }>('/services', {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
       }),
   },
 
@@ -439,6 +457,99 @@ export const SocietyApi = {
 
   society: {
     get: () => apiFetch<import('@/types').SocietyInfo>('/society'),
+  },
+
+  // ANACITY Extended Features
+  vehicles: {
+    list: () => apiFetch<import('@/types').Vehicle[]>('/vehicles'),
+    toggleLock: (id: string, isLocked: boolean) =>
+      apiFetch<{ success: boolean; id: string; isLocked: boolean }>('/vehicles', {
+        method: 'PATCH',
+        body: JSON.stringify({ id, isLocked }),
+      }),
+    add: (data: Partial<import('@/types').Vehicle>) =>
+      apiFetch<import('@/types').Vehicle>('/vehicles', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+  },
+
+  domesticStaff: {
+    list: () => apiFetch<import('@/types').DomesticStaff[]>('/domestic-staff'),
+    issuePass: (id: string) =>
+      apiFetch<{ success: boolean; passCode: string }>(`/domestic-staff/${encodeURIComponent(id)}/pass`, {
+        method: 'POST',
+      }),
+    add: (data: Partial<import('@/types').DomesticStaff>) =>
+      apiFetch<import('@/types').DomesticStaff>('/domestic-staff', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+  },
+
+  utilities: {
+    list: () => apiFetch<import('@/types').UtilityReading[]>('/utilities'),
+    record: (data: Partial<import('@/types').UtilityReading>) =>
+      apiFetch<import('@/types').UtilityReading>('/utilities', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+  },
+
+  committee: {
+    list: () => apiFetch<import('@/types').CommitteeAction[]>('/committee-actions'),
+    create: (data: Partial<import('@/types').CommitteeAction>) =>
+      apiFetch<import('@/types').CommitteeAction>('/committee-actions', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    updateStatus: (id: string, status: string) =>
+      apiFetch<{ success: boolean }>(`/committee-actions/${encodeURIComponent(id)}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      }),
+  },
+
+  discussions: {
+    list: (groupType?: string) =>
+      apiFetch<import('@/types').CommunityDiscussion[]>(
+        `/discussions${groupType ? `?groupType=${encodeURIComponent(groupType)}` : ''}`
+      ),
+    create: (data: Partial<import('@/types').CommunityDiscussion>) =>
+      apiFetch<import('@/types').CommunityDiscussion>('/discussions', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    like: (id: string) =>
+      apiFetch<{ success: boolean; likesCount: number }>(`/discussions/${encodeURIComponent(id)}/like`, {
+        method: 'POST',
+      }),
+  },
+
+  localServices: {
+    list: () => apiFetch<import('@/types').LocalService[]>('/local-services'),
+    order: (serviceId: string, notes?: string) =>
+      apiFetch<{ success: boolean; orderId: string; eta: string; passCode: string }>('/local-services/order', {
+        method: 'POST',
+        body: JSON.stringify({ serviceId, notes }),
+      }),
+  },
+
+  emergency: {
+    broadcast: (title: string, message: string, severity: 'critical' | 'warning' | 'info') =>
+      apiFetch<{ success: boolean; notifiedCount: number }>('/emergency/broadcast', {
+        method: 'POST',
+        body: JSON.stringify({ title, message, severity }),
+      }),
+  },
+
+  complexes: {
+    list: () => apiFetch<import('@/types').ApartmentComplex[]>('/complexes'),
+    switch: (complexId: string) =>
+      apiFetch<{ success: boolean; complex: import('@/types').ApartmentComplex }>('/complexes/switch', {
+        method: 'POST',
+        body: JSON.stringify({ complexId }),
+      }),
   },
 
   public: {

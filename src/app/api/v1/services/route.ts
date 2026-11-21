@@ -39,6 +39,10 @@ export const POST = route(async (request) => {
     category?: string;
     title?: string;
     description?: string;
+    photoBefore?: string;
+    photoAfter?: string;
+    facilityId?: string;
+    qrScanned?: boolean;
   };
 
   if (body.type === 'pay_bill') {
@@ -93,20 +97,66 @@ export const POST = route(async (request) => {
   const category = body.category || 'General';
   const title = body.title || 'Resident Service Request';
   const description = body.description || '';
+  const photoBefore = body.photoBefore || null;
+  const facilityId = body.facilityId || null;
+  const qrScanned = body.qrScanned ? 1 : 0;
 
-  await execute(
-    `INSERT INTO service_requests (id, society_id, unit, user_id, desk_type, category, title, description, status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'open')`,
-    [id, user.societyId, user.unit, user.id, deskType, category, title, description]
-  );
+  try {
+    await execute(
+      `INSERT INTO service_requests (id, society_id, unit, user_id, desk_type, category, title, description, status, photo_before, facility_id, qr_scanned)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'open', ?, ?, ?)`,
+      [id, user.societyId, user.unit, user.id, deskType, category, title, description, photoBefore, facilityId, qrScanned]
+    );
+  } catch {
+    await execute(
+      `INSERT INTO service_requests (id, society_id, unit, user_id, desk_type, category, title, description, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'open')`,
+      [id, user.societyId, user.unit, user.id, deskType, category, title, description]
+    );
+  }
 
   await writeAudit({
     actor: user,
     action: `${deskType} Ticket Logged`,
-    details: `${user.name} (${user.unit}) logged "${title}" (${category})`,
+    details: `${user.name} (${user.unit}) logged "${title}" (${category})${qrScanned ? ' [Facility QR Scanned]' : ''}`,
     ip: getClientIp(request),
   });
 
-  return apiSuccess({ id, deskType, category, title, status: 'open' }, undefined, 201);
+  return apiSuccess({ id, deskType, category, title, status: 'open', qrScanned: Boolean(qrScanned) }, undefined, 201);
+});
+
+export const PATCH = route(async (request) => {
+  const user = await requireUser();
+  const body = (await request.json()) as {
+    ticketId: string;
+    status: 'open' | 'in_progress' | 'resolved';
+    photoAfter?: string;
+    resolutionNotes?: string;
+  };
+
+  try {
+    await execute(
+      `UPDATE service_requests 
+       SET status = ?, photo_after = COALESCE(?, photo_after)
+       WHERE id = ? AND society_id = ?`,
+      [body.status, body.photoAfter || null, body.ticketId, user.societyId]
+    );
+  } catch {
+    await execute(
+      `UPDATE service_requests 
+       SET status = ?
+       WHERE id = ? AND society_id = ?`,
+      [body.status, body.ticketId, user.societyId]
+    );
+  }
+
+  await writeAudit({
+    actor: user,
+    action: 'Helpdesk Ticket Updated',
+    details: `${user.name} updated ticket ${body.ticketId} to ${body.status}${body.photoAfter ? ' [Resolution Photo Attached]' : ''}`,
+    ip: getClientIp(request),
+  });
+
+  return apiSuccess({ success: true, ticketId: body.ticketId, status: body.status });
 });
 

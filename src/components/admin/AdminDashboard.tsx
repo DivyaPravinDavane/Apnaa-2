@@ -14,8 +14,12 @@ import {
   Calendar,
   FileText,
   CheckCircle2,
-  Clock
+  Clock,
+  Radio,
+  ClipboardList,
+  Gauge,
 } from 'lucide-react';
+import { EmergencyBroadcastModal } from './EmergencyBroadcastModal';
 import {
   BarChart,
   Bar,
@@ -47,6 +51,7 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
   const [dateRange] = useState(
     new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
   );
+  const [emergencyModalOpen, setEmergencyModalOpen] = useState(false);
 
   const totalResidents = society.totalHouseholds || members.length;
   const todaysBookings = bookings.filter((b) => b.date === today && b.status !== 'cancelled');
@@ -326,6 +331,57 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
           <h3 className="font-bold text-base text-slate-900">Admin Actions</h3>
 
           <div className="space-y-2.5">
+            {/* ANACITY Emergency Broadcast */}
+            <button
+              onClick={() => setEmergencyModalOpen(true)}
+              className="w-full flex items-center justify-between p-3 rounded-2xl border border-rose-200 bg-rose-50/50 hover:bg-rose-100/60 transition-all text-left group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-rose-600 text-white shadow-xs">
+                  <Radio className="w-4 h-4 animate-pulse" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-rose-950">Emergency Broadcast (SMS/App)</p>
+                  <p className="text-[11px] text-rose-700">Fire, water outage, lockdown alert</p>
+                </div>
+              </div>
+              <ArrowUpRight className="w-4 h-4 text-rose-500 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+
+            {/* ANACITY Managing Committee Actions */}
+            <button
+              onClick={() => onNavigateTab('admin_committee')}
+              className="w-full flex items-center justify-between p-3 rounded-2xl border border-slate-100 hover:border-[#0D5C63] hover:bg-[#E6F3F3]/40 transition-all text-left"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-[#E6F3F3] text-[#0D5C63]">
+                  <ClipboardList className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-900">Committee Action Items</p>
+                  <p className="text-[11px] text-slate-500">Track and assign society tasks</p>
+                </div>
+              </div>
+              <ArrowUpRight className="w-4 h-4 text-slate-400" />
+            </button>
+
+            {/* ANACITY Digital Utility Meters */}
+            <button
+              onClick={() => onNavigateTab('admin_utilities')}
+              className="w-full flex items-center justify-between p-3 rounded-2xl border border-slate-100 hover:border-[#0D5C63] hover:bg-[#E6F3F3]/40 transition-all text-left"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-[#E6F3F3] text-[#0D5C63]">
+                  <Gauge className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-900">Digital Utility Meters</p>
+                  <p className="text-[11px] text-slate-500">Water, gas & energy consumption</p>
+                </div>
+              </div>
+              <ArrowUpRight className="w-4 h-4 text-slate-400" />
+            </button>
+
             <button
               onClick={() => onNavigateTab('admin_residents')}
               className="w-full flex items-center justify-between p-3 rounded-2xl border border-slate-100 hover:border-purple-300 hover:bg-purple-50/50 transition-all text-left"
@@ -392,6 +448,12 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
           </div>
         </div>
       </div>
+
+      {/* ANACITY Emergency Broadcast Modal */}
+      <EmergencyBroadcastModal
+        isOpen={emergencyModalOpen}
+        onClose={() => setEmergencyModalOpen(false)}
+      />
     </div>
   );
 }
